@@ -8,11 +8,13 @@
   <style>
     .battery-workspace {
       flex: 1;
-      padding: 6px 36px 14px;
-      overflow-y: hidden;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      padding: clamp(10px, 1.5vh, 16px) clamp(14px, 3vw, 36px) 24px;
+      overflow-y: auto;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      align-content: start;
     }
 
     .battery-card {
@@ -24,6 +26,7 @@
       flex-direction: column;
       gap: 8px;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      min-width: 0;
     }
 
     .card-header-sm {
@@ -46,7 +49,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 20px;
+      gap: 14px;
+      flex-wrap: wrap;
     }
 
     .battery-hero-left {
@@ -124,19 +128,25 @@
     .kv-item {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
       font-size: 0.82rem;
       line-height: 1.4;
+      gap: 12px;
+      min-width: 0;
     }
 
     .kv-label {
       color: var(--text-muted);
+      flex-shrink: 0;
     }
 
     .kv-value {
       color: #ffffff;
       font-weight: 500;
       text-align: right;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      min-width: 0;
     }
 
     .kv-value.highlight {
@@ -147,6 +157,14 @@
     .font-mono {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 0.8rem;
+    }
+
+    @media (max-width: 768px) {
+      .battery-workspace {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 10px 14px 18px;
+        gap: 10px;
+      }
     }
   </style>
 </head>
