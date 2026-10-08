@@ -1,6 +1,6 @@
 # Monster Control Center (Linux)
 
-A clean-room, zero-dependency Rust CLI and library for hardware control on Uniwill / Tongfang chassis laptops (such as Monster Notebook Tulpar, Abra, and Semruk series) running Linux.
+A clean-room, zero-dependency Rust CLI and Tauri desktop application for hardware control on Uniwill / Tongfang chassis laptops (such as Monster Notebook Tulpar, Abra, and Semruk series) running Linux.
 
 ## Reverse Engineering Background
 
@@ -12,53 +12,48 @@ Key hardware facts established:
 
 ## What Is Implemented
 
-The codebase is organized into modular Rust components with a standalone CLI:
+The codebase is organized into modular Rust components with both a standalone CLI and a Tauri v2 desktop application:
 
+- **Desktop Application (`gui.rs` + `ui/`)**: A native Tauri GUI for single-zone RGB keyboard control, brightness adjustment, preset switching, and custom hex color picking.
 - **EC Communication Layer (`ec.rs`)**: Direct byte-level read and write primitives communicating with `acpi_call`.
 - **Keyboard RGB Backlight (`keyboard.rs`)**:
   - Optically balanced color presets (`red`, `green`, `blue`, `cyan`, `magenta`, `purple`, `orange`, `yellow`, `pink`, `white`, `off`).
   - Raw RGB mapping (0..255) scaled to the hardware 0..50 PWM range.
   - Hardware brightness levels (1..4).
   - 40ms power re-arm pulse for instant color updates without requiring Fn key triggers.
-- **Fan Control & Telemetry (`fan.rs`)**:
-  - Real-time tachometer readings (CPU/GPU fan RPM).
-  - PWM duty cycle telemetry.
-  - Mode switching (`auto`, `turbo`, `boost` / CoolerBoost 100%, `custom`).
-- **Power Profiles (`power.rs`)**:
-  - Platform performance profile switching (`gaming`, `office`, `eco`, `turbo`).
-- **Battery Health (`battery.rs`)**:
-  - Live gas gauge telemetry (State of Charge %, pack temperature, cycle count).
-  - Upper charge threshold limiter with 5% hysteresis.
 - **Raw EC Access (`read` / `write`)**:
   - Direct byte inspection and manual EC register override for debugging.
 
-## Usage
+## Installation & Desktop Integration
 
-Requires the `acpi_call` kernel module loaded and root privileges (`sudo`):
+Run the installer script to build and install both the GUI desktop app and CLI to `~/.local/bin`, register the desktop launcher icon, and ensure `acpi_call` kernel module persistence:
 
 ```bash
-# Build
-cargo build --release
-
-# View hardware status
-sudo ./target/release/monster-control-center status
-
-# Keyboard lighting
-sudo ./target/release/monster-control-center color cyan 4
-sudo ./target/release/monster-control-center color rgb 255 60 0 4
-sudo ./target/release/monster-control-center color off
-
-# Fan modes
-sudo ./target/release/monster-control-center fan boost
-sudo ./target/release/monster-control-center fan auto
-
-# Performance profile
-sudo ./target/release/monster-control-center mode gaming
-
-# Battery charge limit (50-100%)
-sudo ./target/release/monster-control-center limit 80
+./install.sh
 ```
 
-## Scope & Future Development
+Once installed, **Monster Control Center** can be launched from your application launcher or by running:
 
-This project serves as the foundational hardware control core. There are plans to extend the scope into a full-featured Linux control center.
+```bash
+monster-control-center-gui
+```
+
+## CLI Usage
+
+The standalone CLI is available in PATH:
+
+```bash
+# View chassis project ID
+monster-control-center chassis
+
+# Keyboard lighting presets
+monster-control-center color cyan 4
+monster-control-center color off
+
+# Custom RGB
+monster-control-center color rgb 255 60 0 4
+
+# Direct EC register debugging
+monster-control-center read 0x0769
+monster-control-center write 0x078C 0x01
+```
