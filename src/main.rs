@@ -142,8 +142,8 @@ fn main() {
                 }
             } else {
                 match args[2].to_lowercase().as_str() {
-                    "office" | "ofis" => monster_control_center::performance::set_hardware_mode(2)
-                        .map(|_| println!("[ok] Donanım modu 'Ofis' (2) olarak ayarlandı.")),
+                    "office" | "ofis" => monster_control_center::performance::set_hardware_mode(0)
+                        .map(|_| println!("[ok] Donanım modu 'Ofis' (0) olarak ayarlandı.")),
                     "gaming" | "oyun" => monster_control_center::performance::set_hardware_mode(1)
                         .map(|_| println!("[ok] Donanım modu 'Oyun' (1) olarak ayarlandı.")),
                     "battery" | "pil" | "eco" => monster_control_center::performance::set_hardware_mode(3)

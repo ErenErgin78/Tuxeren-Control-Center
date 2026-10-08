@@ -100,9 +100,9 @@ if (btnSync) {
   btnSync.addEventListener("click", async () => {
     if (!currentHwMode) return;
     let targetOs = "balanced";
-    if (currentHwMode === 2 || currentHwMode === 3) targetOs = "power-saver";
+    if (currentHwMode === 0 || currentHwMode === 3) targetOs = "power-saver";
     else if (currentHwMode === 1) targetOs = "balanced";
-    else if (currentHwMode === 4) targetOs = "performance";
+    else if (currentHwMode === 2 || currentHwMode === 4) targetOs = "performance";
 
     try {
       await invoke("set_os_power_profile", { profile: targetOs });

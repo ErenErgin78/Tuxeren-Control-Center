@@ -22,8 +22,8 @@ static DAEMON_RUNNING: AtomicBool = AtomicBool::new(false);
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum PerformanceMode {
+    Office       = 0,
     Gaming       = 1,
-    Office       = 2,
     BatterySaver = 3,
     Turbo        = 4,
 }
@@ -31,10 +31,10 @@ pub enum PerformanceMode {
 impl PerformanceMode {
     pub fn from_u8(val: u8) -> Option<Self> {
         match val {
+            0 => Some(PerformanceMode::Office),
             1 => Some(PerformanceMode::Gaming),
-            2 => Some(PerformanceMode::Office),
+            2 | 4 => Some(PerformanceMode::Turbo),
             3 => Some(PerformanceMode::BatterySaver),
-            4 => Some(PerformanceMode::Turbo),
             _ => None,
         }
     }
@@ -48,13 +48,13 @@ impl PerformanceMode {
         }
     }
 
-    /// Returns (PL1 Watts, PL2 Watts, CPU EPP policy, Fedora OS Profile, Fan Byte 0x0751)
-    pub fn config(&self) -> (u8, u8, &'static str, &'static str, u8) {
+    /// Returns (PL1 Watts, PL2 Watts, CPU EPP policy, Fan Byte 0x0751)
+    pub fn config(&self) -> (u8, u8, &'static str, u8) {
         match self {
-            PerformanceMode::Office => (45, 65, "power", "power-saver", 0x00),
-            PerformanceMode::Gaming => (75, 90, "balance_performance", "balanced", 0x00),
-            PerformanceMode::BatterySaver => (35, 45, "power", "power-saver", 0x00),
-            PerformanceMode::Turbo => (115, 140, "performance", "performance", 0x10),
+            PerformanceMode::Office => (45, 65, "power", 0x00),
+            PerformanceMode::Gaming => (75, 90, "balance_performance", 0x00),
+            PerformanceMode::BatterySaver => (35, 45, "power", 0x00),
+            PerformanceMode::Turbo => (115, 140, "performance", 0x10),
         }
     }
 }
@@ -178,9 +178,10 @@ pub fn send_notification(title: &str, body: &str) {
     let _ = cmd.output();
 }
 
-/// Mod değişimini EC'ye, fan moduna, çekirdeğe (RAPL/EPP) ve Fedora D-Bus'a uygular.
+/// Mod değişimini EC'ye, fan moduna ve çekirdeğe (RAPL/EPP) uygular.
+/// İşletim sistemi pil kipine (D-Bus) dokunmaz; donanım kipi ile OS güç kipi birbirinden bağımsızdır.
 pub fn apply_mode(mode: PerformanceMode) -> Result<(), String> {
-    let (pl1, pl2, epp, os_profile, fan_byte) = mode.config();
+    let (pl1, pl2, epp, fan_byte) = mode.config();
 
     // 1. EC Mod Register (0x07AB)
     ec::write_byte(ADDR_PERF_MODE, mode as u8)?;
@@ -196,19 +197,16 @@ pub fn apply_mode(mode: PerformanceMode) -> Result<(), String> {
     // 4. Linux CPU EPP
     set_cpu_epp(epp)?;
 
-    // 5. Fedora OS Power Profile (D-Bus)
-    set_os_profile(os_profile)?;
-
     Ok(())
 }
 
-/// Sets the hardware mode by raw u8 code (1=Gaming, 2=Office, 3=BatterySaver, 4=Turbo).
+/// Sets the hardware mode by raw u8 code (0=Office, 1=Gaming, 3=BatterySaver, 4=Turbo).
 pub fn set_hardware_mode(mode: u8) -> Result<(), String> {
     if let Some(perf_mode) = PerformanceMode::from_u8(mode) {
         apply_mode(perf_mode)
     } else {
         Err(format!(
-            "Geçersiz performans modu: {}. Geçerli: 1 (Oyun), 2 (Ofis), 3 (Pil), 4 (Turbo)",
+            "Geçersiz performans modu: {}. Geçerli: 0 (Ofis), 1 (Oyun), 3 (Pil), 4 (Turbo)",
             mode
         ))
     }
@@ -259,8 +257,9 @@ mod tests {
 
     #[test]
     fn test_mode_mappings() {
+        assert_eq!(PerformanceMode::from_u8(0), Some(PerformanceMode::Office));
         assert_eq!(PerformanceMode::from_u8(1), Some(PerformanceMode::Gaming));
-        assert_eq!(PerformanceMode::from_u8(2), Some(PerformanceMode::Office));
+        assert_eq!(PerformanceMode::from_u8(2), Some(PerformanceMode::Turbo));
         assert_eq!(PerformanceMode::from_u8(3), Some(PerformanceMode::BatterySaver));
         assert_eq!(PerformanceMode::from_u8(4), Some(PerformanceMode::Turbo));
         assert_eq!(PerformanceMode::from_u8(5), None);
