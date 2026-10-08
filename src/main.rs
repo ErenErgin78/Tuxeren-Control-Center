@@ -16,6 +16,9 @@ COMMANDS:
     color rgb <R> <G> <B> [1-4] Set custom RGB color (0..255) with brightness (1..4)
     chassis                     Display chassis project ID
     info                        Display device and hardware specs
+    perf [office|gaming|turbo]  Get or set hardware and OS performance modes
+    perf os <saver|balanced|perf> Set Fedora OS power profile
+    perf watch                  Watch keyboard mode button and sync OS with OSD notifications
     read <hex_reg>              Read raw EC register byte (e.g. 0x0769)
     write <hex_reg> <hex_val>   Write raw EC register byte (e.g. 0x078C 0x01)
 
@@ -126,6 +129,45 @@ fn main() {
             let reg = u16::from_str_radix(reg_str, 16).expect("Invalid hex register address");
             let val = u8::from_str_radix(val_str, 16).expect("Invalid hex value");
             ec::write_byte(reg, val).map(|_| println!("[ok] Wrote 0x{:02X} to 0x{:04X}", val, reg))
+        }
+        "perf" => {
+            if args.len() < 3 {
+                match monster_control_center::performance::get_performance_state() {
+                    Ok(state) => {
+                        println!("Donanım (BIOS/EC) Modu: {} (Kod: {})", state.hardware_mode_name, state.hardware_mode);
+                        println!("Fedora (OS/D-Bus) Kipi: {}", state.os_profile);
+                        Ok(())
+                    }
+                    Err(e) => Err(e),
+                }
+            } else {
+                match args[2].to_lowercase().as_str() {
+                    "office" | "ofis" => monster_control_center::performance::set_hardware_mode(2)
+                        .map(|_| println!("[ok] Donanım modu 'Ofis' (2) olarak ayarlandı.")),
+                    "gaming" | "oyun" => monster_control_center::performance::set_hardware_mode(1)
+                        .map(|_| println!("[ok] Donanım modu 'Oyun' (1) olarak ayarlandı.")),
+                    "battery" | "pil" | "eco" => monster_control_center::performance::set_hardware_mode(3)
+                        .map(|_| println!("[ok] Donanım modu 'Pil Tasarrufu' (3) olarak ayarlandı.")),
+                    "turbo" => monster_control_center::performance::set_hardware_mode(4)
+                        .map(|_| println!("[ok] Donanım modu 'Turbo' (4) olarak ayarlandı.")),
+                    "os" => {
+                        if args.len() < 4 {
+                            println!("Usage: monster-control-center perf os <power-saver|balanced|performance>");
+                            return;
+                        }
+                        monster_control_center::performance::set_os_profile(&args[3])
+                            .map(|_| println!("[ok] Fedora güç kipi '{}' olarak ayarlandı.", args[3]))
+                    }
+                    "watch" | "daemon" => {
+                        println!("[*] EC Donanım Buton İzleyici başlatıldı (~250ms). Çıkmak için Ctrl+C.");
+                        monster_control_center::performance::start_polling_daemon();
+                        loop {
+                            std::thread::sleep(std::time::Duration::from_secs(3600));
+                        }
+                    }
+                    _ => Err(format!("Bilinmeyen perf parametresi '{}'. Geçerli: office, gaming, turbo, os, watch", args[2])),
+                }
+            }
         }
         "-h" | "--help" | "help" => {
             print_help();

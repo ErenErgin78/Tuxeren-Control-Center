@@ -54,6 +54,8 @@ fn grant_permissions() -> Result<String, String> {
         mkdir -p /etc/tmpfiles.d 2>/dev/null || true
         echo 'z /proc/acpi/call 0666 root root -' > /etc/tmpfiles.d/acpi_call.conf 2>/dev/null || true
         chmod 666 /proc/acpi/call 2>/dev/null || true
+        echo 'z /sys/class/powercap/intel-rapl/intel-rapl:0/constraint_*_power_limit_uw 0666 root root -' > /etc/tmpfiles.d/monster_rapl.conf 2>/dev/null || true
+        chmod 666 /sys/class/powercap/intel-rapl/intel-rapl:0/constraint_*_power_limit_uw 2>/dev/null || true
         test -w /proc/acpi/call
     "#;
     let output = Command::new("pkexec")
@@ -83,7 +85,24 @@ fn get_battery_info() -> Result<battery::BatteryInfo, String> {
     battery::get_battery_info()
 }
 
+#[tauri::command]
+fn get_performance_state() -> Result<monster_control_center::performance::PerformanceState, String> {
+    monster_control_center::performance::get_performance_state()
+}
+
+#[tauri::command]
+fn set_hardware_mode(mode: u8) -> Result<(), String> {
+    monster_control_center::performance::set_hardware_mode(mode)
+}
+
+#[tauri::command]
+fn set_os_power_profile(profile: String) -> Result<(), String> {
+    monster_control_center::performance::set_os_profile(&profile)
+}
+
 fn main() {
+    monster_control_center::performance::start_polling_daemon();
+
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             get_status,
@@ -91,7 +110,10 @@ fn main() {
             set_keyboard_rgb,
             grant_permissions,
             get_device_info,
-            get_battery_info
+            get_battery_info,
+            get_performance_state,
+            set_hardware_mode,
+            set_os_power_profile
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

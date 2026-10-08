@@ -3,29 +3,318 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Performans - Monster Kontrol Merkezi</title>
+  <title>Performans Yönetimi - Monster Kontrol Merkezi</title>
   <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="view view-subpage">
-    <div class="subpage-header">
-      <a href="index.html" class="back-button" title="Geri">
-        <img src="assets/btn-back.png" alt="Geri" class="back-icon">
-        <span>Geri</span>
-      </a>
-      <div class="subpage-title-group">
-        <h2 class="subpage-title">Performans</h2>
-        <span class="subpage-subtitle">Mod Seçimi</span>
-      </div>
-    </div>
+  <style>
+    .perf-workspace {
+      flex: 1;
+      padding: clamp(10px, 1.5vh, 16px) clamp(14px, 3vw, 36px) 24px;
+      overflow-y: auto;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      align-content: start;
+    }
 
-    <div class="placeholder-content">
-      <div class="placeholder-card">
-        <img src="assets/btn-main-performance.png" alt="Performans" class="placeholder-icon">
-        <h3>Performans</h3>
-        <p>Bu modül henüz uygulanmadı.</p>
+    .perf-card {
+      background: rgba(3, 24, 25, 0.85);
+      border: 1px solid rgba(0, 255, 194, 0.2);
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      min-width: 0;
+    }
+
+    .card-header-sm {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(0, 255, 194, 0.15);
+      padding-bottom: 10px;
+    }
+
+    .card-title-sm {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-status {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: rgba(0, 255, 194, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(0, 255, 194, 0.3);
+    }
+
+    .card-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .mode-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .mode-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0, 30, 28, 0.5);
+      border: 1px solid rgba(0, 255, 194, 0.18);
+      border-radius: 8px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .mode-item:hover {
+      background: rgba(0, 255, 194, 0.08);
+      border-color: rgba(0, 255, 194, 0.4);
+    }
+
+    .mode-item.active {
+      background: rgba(0, 255, 194, 0.15);
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 12px rgba(0, 255, 194, 0.25);
+    }
+
+    .mode-item-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .mode-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mode-item.active .mode-title {
+      color: var(--accent-cyan);
+    }
+
+    .mode-detail {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .led-pill {
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #cbd5e1;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      white-space: nowrap;
+    }
+
+    .mode-item.active .led-pill {
+      background: rgba(0, 255, 194, 0.2);
+      border-color: var(--accent-cyan);
+      color: #fff;
+    }
+
+    .sync-bar {
+      grid-column: 1 / -1;
+      background: rgba(3, 24, 25, 0.85);
+      border: 1px solid rgba(0, 255, 194, 0.2);
+      border-radius: 8px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .sync-info {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .sync-info strong {
+      color: #fff;
+    }
+
+    .btn-sync {
+      background: rgba(0, 255, 194, 0.15);
+      border: 1px solid var(--accent-cyan);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-sync:hover {
+      background: var(--accent-cyan);
+      color: #011215;
+      box-shadow: 0 0 10px rgba(0, 255, 194, 0.4);
+    }
+
+    @media (max-width: 800px) {
+      .perf-workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body class="page-performance">
+  <!-- Titlebar -->
+  <header class="titlebar">
+    <div class="header-left">
+      <a href="index.html" class="oem-back-btn" title="Geri">
+        <img src="assets/btn-back.png" alt="Geri" class="back-icon">
+        <span>Ana Menü</span>
+      </a>
+      <div class="header-separator"></div>
+      <div class="oem-page-heading">
+        <h1 class="oem-page-title">Performans Yönetimi</h1>
       </div>
     </div>
-  </div>
+  </header>
+
+  <main class="perf-workspace">
+    <!-- Sol Kolon: BIOS / Donanım Bazlı Ayar -->
+    <section class="perf-card">
+      <div class="card-header-sm">
+        <span class="card-title-sm">
+          <span>Donanım & BIOS Kipi</span>
+        </span>
+        <span class="badge-status" id="hw-active-badge">Yükleniyor...</span>
+      </div>
+
+      <p class="card-desc">
+        Doğrudan Embedded Controller (EC) ve anakart BIOS güç limitlerini (PL1/PL2 Watt) yönetir. Klavyedeki fiziksel mod butonuna ve butonun LED ışıklarına doğrudan bağlıdır.
+      </p>
+
+      <div class="mode-list">
+        <!-- Ofis Modu -->
+        <div class="mode-item" data-hw="2" id="hw-mode-2">
+          <div class="mode-item-left">
+            <div class="mode-title">
+              <span>Ofis / Sessiz</span>
+            </div>
+            <span class="mode-detail">45W CPU Limiti • Düşük Fan Hızı</span>
+          </div>
+          <span class="led-pill">Işık Yanmaz (Kapalı)</span>
+        </div>
+
+        <!-- Oyun Modu -->
+        <div class="mode-item" data-hw="1" id="hw-mode-1">
+          <div class="mode-item-left">
+            <div class="mode-title">
+              <span>Oyun / Standart</span>
+            </div>
+            <span class="mode-detail">75W CPU Limiti • Dengeli Fan Profili</span>
+          </div>
+          <span class="led-pill">1 Işık Yanar</span>
+        </div>
+
+        <!-- Pil Tasarrufu Modu -->
+        <div class="mode-item" data-hw="3" id="hw-mode-3">
+          <div class="mode-item-left">
+            <div class="mode-title">
+              <span>Pil Tasarrufu / Eco</span>
+            </div>
+            <span class="mode-detail">35W CPU Limiti • Maksimum Pil Ömrü</span>
+          </div>
+          <span class="led-pill">Işık Yanmaz (Kapalı)</span>
+        </div>
+
+        <!-- Turbo Modu -->
+        <div class="mode-item" data-hw="4" id="hw-mode-4">
+          <div class="mode-item-left">
+            <div class="mode-title">
+              <span>Turbo / Canavar</span>
+            </div>
+            <span class="mode-detail">115W+ CPU Limiti • Turbo Fan</span>
+          </div>
+          <span class="led-pill">2 Işık (Tam) Yanar</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sağ Kolon: Pil / Fedora İşletim Sistemi Güç Kipi -->
+    <section class="perf-card">
+      <div class="card-header-sm">
+        <span class="card-title-sm">
+          <span>Fedora / Çekirdek Güç Kipi</span>
+        </span>
+        <span class="badge-status" id="os-active-badge">Yükleniyor...</span>
+      </div>
+
+      <p class="card-desc">
+        Linux çekirdeği CPU frekans ölçekleyicisini (EPP) ve <code>tuned-ppd</code> D-Bus servisini yönetir. Fedora GNOME hızlı ayarlar menüsü ile anında senkronizedir.
+      </p>
+
+      <div class="mode-list">
+        <!-- Güç Tasarrufu -->
+        <div class="mode-item" data-os="power-saver" id="os-mode-power-saver">
+          <div class="mode-item-left">
+            <div class="mode-title">
+              <span>Güç Tasarrufu</span>
+            </div>
+            <span class="mode-detail">Pil ömrü odaklı, düşük CPU saat frekansı</span>
+          </div>
+          <span class="led-pill">power-saver</span>
+        </div>
+
+        <!-- Dengeli -->
+        <div class="mode-item" data-os="balanced" id="os-mode-balanced">
+          <div class="mode-item-left">
+            <div class="mode-title">
+              <span>Dengeli</span>
+            </div>
+            <span class="mode-detail">Standart kullanım, dinamik frekans ölçekleme</span>
+          </div>
+          <span class="led-pill">balanced</span>
+        </div>
+
+        <!-- Performans -->
+        <div class="mode-item" data-os="performance" id="os-mode-performance">
+          <div class="mode-item-left">
+            <div class="mode-title">
+              <span>Yüksek Performans</span>
+            </div>
+            <span class="mode-detail">Maksimum çekirdek saat frekansları</span>
+          </div>
+          <span class="led-pill">performance</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Senkronizasyon Çubuğu -->
+    <div class="sync-bar">
+      <div class="sync-info">
+        <strong>Çift Yönlü Entegrasyon:</strong> Donanım modu klavye LED'ini, Fedora güç kipi GNOME sistem panelini kontrol eder.
+      </div>
+      <button class="btn-sync" id="btn-sync-modes">Kipleri Eşitle (Donanım ⇄ Fedora)</button>
+    </div>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="performance.js"></script>
 </body>
 </html>

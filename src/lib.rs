@@ -8,6 +8,7 @@ pub mod battery;
 pub mod device_info;
 pub mod ec;
 pub mod keyboard;
+pub mod performance;
 
 /// EC RAM offset for chassis project / model family identifier.
 pub const ADDR_PROJECT_ID: u16 = 0x0740;
