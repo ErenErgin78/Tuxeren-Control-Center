@@ -3,11 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Klavye Aydınlatması - Monster Kontrol Merkezi</title>
+  <title>Aydınlatma Ayarları - Monster Kontrol Merkezi</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <!-- Header / Permission Banner -->
+<body class="page-keyboard">
+  <!-- Titlebar -->
+  <header class="titlebar">
+    <div class="header-left">
+      <a href="index.html" class="oem-back-btn" title="Geri">
+        <img src="assets/btn-back.png" alt="Geri" class="back-icon">
+        <span>Ana Menü</span>
+      </a>
+      <div class="header-separator"></div>
+      <div class="oem-page-heading">
+        <h1 class="oem-page-title">Aydınlatma Ayarları</h1>
+      </div>
+    </div>
+  </header>
+
+  <!-- Permission Banner -->
   <div id="perm-banner" class="alert-banner hidden">
     <div class="banner-content">
       <svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
@@ -20,57 +34,97 @@
     <button id="btn-grant-perm" class="btn-primary-sm">İzin Ver</button>
   </div>
 
-  <div class="view view-lighting">
-    <div class="subpage-header">
-      <a href="index.html" class="back-button" title="Geri">
-        <img src="assets/btn-back.png" alt="Geri" class="back-icon">
-        <span>Geri</span>
-      </a>
-      <div class="subpage-title-group">
-        <h2 class="subpage-title">Aydınlatma Ayarları</h2>
-        <span class="subpage-subtitle" id="chassis-label">Klavye Aydınlatması</span>
-      </div>
-    </div>
-
-    <div class="lighting-content">
-      <div class="control-card">
-        <div class="control-card-header">
-          <h3>Parlaklık</h3>
-          <div class="brightness-group">
-            <input type="range" id="kbd-brightness" min="0" max="4" value="4" step="1">
-            <span id="brightness-val">4</span>
+  <!-- Main Simplified Workspace -->
+  <main class="keyboard-simple-workspace">
+    <div class="lighting-clean-card">
+      <!-- Top Row: Ana Renkler (Sol) + Custom Renk Alanı (Sağ) -->
+      <div class="colors-dual-row">
+        <!-- Left: Ana Renkler -->
+        <div class="main-presets-section">
+          <div class="section-heading">Ana Renkler</div>
+          <div class="preset-chips-grid">
+            <button class="color-chip active" style="--chip: #00ffff" data-color="cyan" data-hex="#00FFFF" title="Cyan"></button>
+            <button class="color-chip" style="--chip: #0077ff" data-color="ice_blue" data-hex="#0077FF" title="Buz Mavisi"></button>
+            <button class="color-chip" style="--chip: #0000ff" data-color="blue" data-hex="#0000FF" title="Mavi"></button>
+            <button class="color-chip" style="--chip: #9b26b6" data-color="purple" data-hex="#9B26B6" title="Mor"></button>
+            <button class="color-chip" style="--chip: #e040fb" data-color="magenta" data-hex="#E040FB" title="Macenta"></button>
+            <button class="color-chip" style="--chip: #ff4081" data-color="pink" data-hex="#FF4081" title="Pembe"></button>
+            <button class="color-chip" style="--chip: #ff0000" data-color="red" data-hex="#FF0000" title="Kırmızı"></button>
+            <button class="color-chip" style="--chip: #ff6d00" data-color="orange" data-hex="#FF6D00" title="Turuncu"></button>
+            <button class="color-chip" style="--chip: #ffd600" data-color="yellow" data-hex="#FFD600" title="Sarı"></button>
+            <button class="color-chip" style="--chip: #00e676" data-color="green" data-hex="#00E676" title="Yeşil"></button>
+            <button class="color-chip" style="--chip: #ffffff" data-color="white" data-hex="#FFFFFF" title="Beyaz"></button>
+            <button class="color-chip chip-off" data-color="off" data-hex="#000000" title="Kapat">OFF</button>
           </div>
         </div>
 
-        <div class="card-section">
-          <div class="section-label">Renk Ön Ayarları</div>
-          <div class="preset-colors">
-            <button class="color-dot" style="--c: #00ffff" data-color="cyan" title="Cyan"></button>
-            <button class="color-dot" style="--c: #0077ff" data-color="ice_blue" title="Buz Mavisi"></button>
-            <button class="color-dot" style="--c: #0000ff" data-color="blue" title="Mavi"></button>
-            <button class="color-dot" style="--c: #9b26b6" data-color="purple" title="Mor"></button>
-            <button class="color-dot" style="--c: #e040fb" data-color="magenta" title="Macenta"></button>
-            <button class="color-dot" style="--c: #ff4081" data-color="pink" title="Pembe"></button>
-            <button class="color-dot" style="--c: #ff0000" data-color="red" title="Kırmızı"></button>
-            <button class="color-dot" style="--c: #ff6d00" data-color="orange" title="Turuncu"></button>
-            <button class="color-dot" style="--c: #ffd600" data-color="yellow" title="Sarı"></button>
-            <button class="color-dot" style="--c: #00e676" data-color="green" title="Yeşil"></button>
-            <button class="color-dot" style="--c: #ffffff" data-color="white" title="Beyaz"></button>
-            <button class="color-dot color-off" data-color="off" title="Kapat">KAPALI</button>
+        <!-- Right: Özel Renk & Palet & Son 5 Renk -->
+        <div class="custom-palette-section">
+          <div class="section-heading">Özel Renk</div>
+          <div class="palette-picker-bar">
+            <!-- Tıklayınca son rengi klavyeye gönderen preview kutusu -->
+            <button class="active-swatch-box" id="active-swatch" title="Seçili rengi klavyeye uygula" style="background-color: #00FFFF;"></button>
+            <span class="active-hex-label" id="active-hex-label">#00FFFF</span>
+            <!-- Palet Butonu -->
+            <button class="btn-palette" id="btn-open-palette">Palet</button>
           </div>
-        </div>
 
-        <div class="card-section custom-rgb-section">
-          <div class="section-label">Özel RGB Rengi</div>
-          <div class="custom-rgb-bar">
-            <input type="color" id="custom-color-picker" value="#00ff99">
-            <span id="rgb-hex-label">#00FF99</span>
-            <button id="btn-apply-custom-rgb" class="btn-sm">Rengi Uygula</button>
+          <!-- Son Kullanılan 5 Renk -->
+          <div class="recent-colors-block">
+            <span class="recent-label">Son Kullanılanlar</span>
+            <div class="recent-chips-list" id="recent-chips-list">
+              <!-- JS ile dinamik 5 renk kutusu -->
+            </div>
           </div>
         </div>
       </div>
+
+      <!-- Doğrudan açılan görünür HSV / RGB Palet Modal/Panel -->
+      <div id="inline-palette-panel" class="inline-palette-modal hidden">
+        <div class="palette-modal-content">
+          <div class="palette-modal-header">
+            <h3>Renk Paleti</h3>
+            <button class="btn-close-palette" id="btn-close-palette" title="Kapat">✕</button>
+          </div>
+          <div class="palette-modal-body">
+            <!-- 2D Renk Alanı (Sat/Val) -->
+            <div class="color-canvas-wrap">
+              <canvas id="color-spectrum-canvas" width="280" height="160"></canvas>
+              <div class="canvas-cursor" id="canvas-cursor"></div>
+            </div>
+            <!-- Hue Slider -->
+            <div class="hue-slider-wrap">
+              <input type="range" id="hue-slider" min="0" max="360" value="180" step="1">
+            </div>
+            <!-- Canlı Seçim Önizleme ve Hex -->
+            <div class="modal-palette-footer">
+              <div class="palette-preview-dot" id="modal-preview-dot"></div>
+              <span class="palette-hex-preview" id="modal-hex-text">#00FFFF</span>
+              <button class="btn-palette-select" id="btn-palette-select">Rengi Seç</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Row: Işık Şiddeti (Parlaklık) -->
+      <div class="brightness-bottom-section">
+        <div class="brightness-header">
+          <span class="section-heading">Işık Şiddeti</span>
+          <span class="brightness-badge" id="brightness-val">4</span>
+        </div>
+        <div class="brightness-slider-wrap">
+          <input type="range" id="kbd-brightness" min="0" max="4" value="4" step="1">
+          <div class="slider-marks">
+            <span>0 (Kapalı)</span>
+            <span>1</span>
+            <span>2</span>
+            <span>3</span>
+            <span>4 (Maksimum)</span>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
+  </main>
 
   <div id="toast" class="toast hidden"></div>
 
