@@ -3,29 +3,262 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pil - Monster Kontrol Merkezi</title>
+  <title>Pil & Güç Durumu - Monster Kontrol Merkezi</title>
   <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="view view-subpage">
-    <div class="subpage-header">
-      <a href="index.html" class="back-button" title="Geri">
-        <img src="assets/btn-back.png" alt="Geri" class="back-icon">
-        <span>Geri</span>
-      </a>
-      <div class="subpage-title-group">
-        <h2 class="subpage-title">Pil</h2>
-        <span class="subpage-subtitle">Pil Modu, Pil Durumu</span>
-      </div>
-    </div>
+  <style>
+    .battery-workspace {
+      flex: 1;
+      padding: 6px 36px 14px;
+      overflow-y: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
 
-    <div class="placeholder-content">
-      <div class="placeholder-card">
-        <img src="assets/btn-main-battery.png" alt="Pil" class="placeholder-icon">
-        <h3>Pil</h3>
-        <p>Bu modül henüz uygulanmadı.</p>
+    .battery-card {
+      background: rgba(3, 24, 25, 0.85);
+      border: 1px solid rgba(0, 255, 194, 0.2);
+      border-radius: 10px;
+      padding: 12px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    }
+
+    .card-header-sm {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(0, 255, 194, 0.15);
+      padding-bottom: 8px;
+    }
+
+    .card-title-sm {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--accent-cyan);
+    }
+
+    .battery-hero-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .battery-hero-left {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .battery-percent-text {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1;
+    }
+
+    .battery-percent-unit {
+      font-size: 0.95rem;
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    .battery-status-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      background: rgba(0, 255, 194, 0.12);
+      border: 1px solid rgba(0, 255, 194, 0.25);
+      color: var(--accent-cyan);
+    }
+
+    .battery-status-tag.discharging {
+      background: rgba(255, 193, 7, 0.12);
+      border-color: rgba(255, 193, 7, 0.35);
+      color: #ffc107;
+    }
+
+    .battery-meter {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .battery-meter-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #00cca3 0%, var(--accent-cyan) 100%);
+      box-shadow: 0 0 6px rgba(0, 255, 194, 0.4);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .battery-meter-fill.warn {
+      background: linear-gradient(90deg, #d39e00 0%, #ffc107 100%);
+      box-shadow: 0 0 6px rgba(255, 193, 7, 0.4);
+    }
+
+    .battery-meter-fill.crit {
+      background: linear-gradient(90deg, #c82333 0%, #dc3545 100%);
+      box-shadow: 0 0 6px rgba(220, 53, 69, 0.4);
+    }
+
+    .kv-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .kv-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+      line-height: 1.4;
+    }
+
+    .kv-label {
+      color: var(--text-muted);
+    }
+
+    .kv-value {
+      color: #ffffff;
+      font-weight: 500;
+      text-align: right;
+    }
+
+    .kv-value.highlight {
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    .font-mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body class="page-battery">
+  <!-- Titlebar -->
+  <header class="titlebar">
+    <div class="header-left">
+      <a href="index.html" class="oem-back-btn" title="Geri">
+        <img src="assets/btn-back.png" alt="Geri" class="back-icon">
+        <span>Ana Menü</span>
+      </a>
+      <div class="header-separator"></div>
+      <div class="oem-page-heading">
+        <h1 class="oem-page-title">Pil Durumu</h1>
       </div>
     </div>
-  </div>
+  </header>
+
+  <main class="battery-workspace">
+    <!-- Bölüm 1: Şarj Seviyesi & Durum -->
+    <section class="battery-card">
+      <div class="card-header-sm">
+        <span class="card-title-sm">Pil Doluluk & Güç Durumu</span>
+      </div>
+
+      <div class="battery-hero-row">
+        <div class="battery-hero-left">
+          <span class="battery-percent-text" id="bat-percent">--</span>
+          <span class="battery-percent-unit">%</span>
+        </div>
+        <div class="kv-item" style="gap: 12px;">
+          <span class="kv-label">Tahmini Kalan Süre:</span>
+          <span class="kv-value highlight" id="bat-time-remaining">-</span>
+        </div>
+      </div>
+
+      <div class="battery-meter">
+        <div id="bat-progress-bar" class="battery-meter-fill" style="width: 0%;"></div>
+      </div>
+
+      <div class="kv-list" style="margin-top: 4px;">
+        <div class="kv-item">
+          <span class="kv-label">Güç Kaynağı & Mod:</span>
+          <span class="kv-value" id="bat-power-source">-</span>
+        </div>
+        <div class="kv-item">
+          <span class="kv-label">Donanım Durumu:</span>
+          <span class="kv-value" id="bat-status-text">-</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bölüm 2: Pil Sağlığı -->
+    <section class="battery-card">
+      <div class="card-header-sm">
+        <span class="card-title-sm">Pil Sağlığı</span>
+      </div>
+
+      <div class="battery-hero-row">
+        <div class="battery-hero-left">
+          <span class="battery-percent-text" id="bat-health-val">--%</span>
+        </div>
+        <div class="kv-item" style="gap: 8px;">
+          <span class="kv-label">Tam / Tasarım Kapasitesi:</span>
+          <span class="kv-value font-mono"><span id="bat-cap-full">-</span> / <span id="bat-cap-design">-</span></span>
+        </div>
+      </div>
+
+      <div class="battery-meter">
+        <div id="health-progress-bar" class="battery-meter-fill" style="width: 0%;"></div>
+      </div>
+    </section>
+
+    <!-- Bölüm 3: Elektriksel Ölçümler & Tüketim -->
+    <section class="battery-card">
+      <div class="card-header-sm">
+        <span class="card-title-sm">Elektriksel Ölçümler</span>
+      </div>
+      <div class="kv-list">
+        <div class="kv-item">
+          <span class="kv-label">Çalışma Gerilimi:</span>
+          <span class="kv-value font-mono" id="val-voltage">-</span>
+        </div>
+        <div class="kv-item">
+          <span class="kv-label">Anlık Güç Tüketimi:</span>
+          <span class="kv-value font-mono highlight" id="val-power-rate">-</span>
+        </div>
+        <div class="kv-item">
+          <span class="kv-label">Aktif Güç Girişi:</span>
+          <span class="kv-value" id="val-source-type">-</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bölüm 4: Donanım & Döngü Detayları -->
+    <section class="battery-card">
+      <div class="card-header-sm">
+        <span class="card-title-sm">Donanım & Döngü Bilgileri</span>
+      </div>
+      <div class="kv-list">
+        <div class="kv-item">
+          <span class="kv-label">Pildeki Mevcut Enerji Miktarı:</span>
+          <span class="kv-value font-mono" id="val-now-cap">-</span>
+        </div>
+        <div class="kv-item">
+          <span class="kv-label">Donanım Şarj Döngüsü:</span>
+          <span class="kv-value font-mono" id="val-cycle-count">-</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="battery.js"></script>
 </body>
 </html>

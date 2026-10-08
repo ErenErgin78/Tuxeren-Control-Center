@@ -4,6 +4,7 @@
 //! (Monster Notebook Tulpar, Abra, Semruk) running on Linux.
 //! Interfaces with the Embedded Controller (EC) via ACPI methods `\_SB.INOU.ECRR` and `\_SB.INOU.ECRW`.
 
+pub mod battery;
 pub mod device_info;
 pub mod ec;
 pub mod keyboard;
