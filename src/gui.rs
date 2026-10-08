@@ -2,7 +2,7 @@
 //!
 //! Tauri v2 desktop application for single-zone RGB keyboard control and EC management.
 
-use monster_control_center::{ec, keyboard, get_chassis_project_id};
+use monster_control_center::{device_info, ec, keyboard, get_chassis_project_id};
 use serde::Serialize;
 use std::fs::OpenOptions;
 use std::process::Command;
@@ -73,13 +73,19 @@ fn grant_permissions() -> Result<String, String> {
     }
 }
 
+#[tauri::command]
+fn get_device_info() -> Result<device_info::DeviceInfo, String> {
+    device_info::get_device_info()
+}
+
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             get_status,
             set_keyboard_preset,
             set_keyboard_rgb,
-            grant_permissions
+            grant_permissions,
+            get_device_info
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

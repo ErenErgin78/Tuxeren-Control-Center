@@ -2,7 +2,7 @@
 //!
 //! Clean-room CLI for single-zone RGB keyboard lighting and raw EC access.
 
-use monster_control_center::{ec, keyboard, get_chassis_project_id};
+use monster_control_center::{device_info, ec, keyboard, get_chassis_project_id};
 
 /// Prints CLI usage and available subcommands.
 fn print_help() {
@@ -15,6 +15,7 @@ COMMANDS:
     color <name> [1-4]          Set keyboard color preset with brightness (1..4)
     color rgb <R> <G> <B> [1-4] Set custom RGB color (0..255) with brightness (1..4)
     chassis                     Display chassis project ID
+    info                        Display device and hardware specs
     read <hex_reg>              Read raw EC register byte (e.g. 0x0769)
     write <hex_reg> <hex_val>   Write raw EC register byte (e.g. 0x078C 0x01)
 
@@ -37,6 +38,40 @@ fn main() {
             match get_chassis_project_id() {
                 Ok(id) => {
                     println!("Chassis Project ID: 0x{:02X}", id);
+                    Ok(())
+                }
+                Err(e) => Err(e),
+            }
+        }
+        "info" => {
+            match device_info::get_device_info() {
+                Ok(info) => {
+                    println!("=== Monster Cihaz Bilgileri ===");
+                    println!("\n[Panel 1: Cihaz & Kasa]");
+                    println!("  Model Adı:        {}", info.model_name);
+                    println!("  Üretici:          {}", info.vendor);
+                    println!("  Kasa / Platform:  {}", info.chassis_code);
+                    println!("  Anakart SKU/Rev:  {}", info.board_sku_rev);
+                    println!("  Seri Numarası:    {}", info.serial_number);
+
+                    println!("\n[Panel 2: Firmware & Denetleyici]");
+                    println!("  BIOS Sürümü:      {}", info.bios_version);
+                    println!("  BIOS Tarihi:      {}", info.bios_date);
+                    println!("  EC Sürümü:        {}", info.ec_version);
+                    println!("  Platform Sürücü:  {}", info.platform_driver);
+
+                    println!("\n[Panel 3: Temel Donanım]");
+                    println!("  İşlemci (CPU):    {}", info.cpu);
+                    println!("  Dahili Grafik:    {}", info.igpu);
+                    println!("  Harici Grafik:    {}", info.dgpu);
+                    println!("  Sistem Belleği:   {}", info.ram);
+                    println!("  Depolama:         {}", info.storage);
+
+                    println!("\n[Panel 4: İşletim Sistemi & Sürücüler]");
+                    println!("  İşletim Sistemi:  {}", info.os);
+                    println!("  Masaüstü & Oturum:{}", info.desktop_protocol);
+                    println!("  Linux Çekirdeği:  {}", info.kernel);
+                    println!("  Grafik Sürücüsü:  {}", info.graphics_driver);
                     Ok(())
                 }
                 Err(e) => Err(e),

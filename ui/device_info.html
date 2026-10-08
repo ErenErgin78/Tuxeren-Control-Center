@@ -6,26 +6,150 @@
   <title>Cihaz Bilgileri - Monster Kontrol Merkezi</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <div class="view view-subpage">
-    <div class="subpage-header">
-      <a href="index.html" class="back-button" title="Geri">
+<body class="page-device-info">
+  <!-- Titlebar -->
+  <header class="titlebar">
+    <div class="header-left">
+      <a href="index.html" class="oem-back-btn" title="Geri">
         <img src="assets/btn-back.png" alt="Geri" class="back-icon">
-        <span>Geri</span>
+        <span>Ana Menü</span>
       </a>
-      <div class="subpage-title-group">
-        <h2 class="subpage-title">Cihaz Bilgileri</h2>
-        <span class="subpage-subtitle">Cihaz Bilgileri, Hakkında</span>
+      <div class="header-separator"></div>
+      <div class="oem-page-heading">
+        <h1 class="oem-page-title">Cihaz Bilgileri</h1>
       </div>
     </div>
+  </header>
 
-    <div class="placeholder-content">
-      <div class="placeholder-card">
-        <img src="assets/btn-main-system.png" alt="Cihaz Bilgileri" class="placeholder-icon">
-        <h3>Cihaz Bilgileri</h3>
-        <p>Bu modül henüz uygulanmadı.</p>
+  <!-- Permission Banner -->
+  <div id="perm-banner" class="alert-banner hidden">
+    <div class="banner-content">
+      <svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <span>Donanım erişimi için root izni gerekiyor (<code>/proc/acpi/call</code>).</span>
+    </div>
+    <button id="btn-grant-perm" class="btn-primary-sm">İzin Ver</button>
+  </div>
+
+  <!-- Main Device Info Content -->
+  <main class="device-info-workspace">
+    <!-- 2x2 Grid Information Panels -->
+    <div class="device-info-grid">
+      <!-- Panel 1: Cihaz & Kasa (Sol Üst) -->
+      <div class="info-card">
+        <div class="info-card-header">
+          <span class="info-card-title">Cihaz & Kasa</span>
+        </div>
+        <div class="info-items-list">
+          <div class="info-item">
+            <span class="info-label">Model Adı:</span>
+            <span class="info-value" id="val-model-name">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Üretici:</span>
+            <span class="info-value" id="val-vendor">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Kasa / Platform Kodu:</span>
+            <span class="info-value badge-active" id="val-chassis-code">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Anakart SKU / Revizyon:</span>
+            <span class="info-value" id="val-board-sku">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Seri Numarası:</span>
+            <span class="info-value font-mono" id="val-serial-number">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 2: Firmware & Denetleyici (Sağ Üst) -->
+      <div class="info-card">
+        <div class="info-card-header">
+          <span class="info-card-title">Firmware & Denetleyici</span>
+        </div>
+        <div class="info-items-list">
+          <div class="info-item">
+            <span class="info-label">BIOS Sürümü:</span>
+            <span class="info-value" id="val-bios-version">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">BIOS Tarihi:</span>
+            <span class="info-value" id="val-bios-date">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">EC Sürümü:</span>
+            <span class="info-value badge-active" id="val-ec-version">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Platform Sürücüsü:</span>
+            <span class="info-value" id="val-platform-driver">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 3: Temel Donanım (Sol Alt) -->
+      <div class="info-card">
+        <div class="info-card-header">
+          <span class="info-card-title">Temel Donanım</span>
+        </div>
+        <div class="info-items-list">
+          <div class="info-item">
+            <span class="info-label">İşlemci (CPU):</span>
+            <span class="info-value" id="val-cpu">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Dahili Grafik (iGPU):</span>
+            <span class="info-value" id="val-igpu">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Harici Grafik (dGPU):</span>
+            <span class="info-value badge-active" id="val-dgpu">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Sistem Belleği (RAM):</span>
+            <span class="info-value" id="val-ram">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Depolama:</span>
+            <span class="info-value" id="val-storage">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 4: İşletim Sistemi & Sürücüler (Sağ Alt) -->
+      <div class="info-card">
+        <div class="info-card-header">
+          <span class="info-card-title">İşletim Sistemi & Sürücüler</span>
+        </div>
+        <div class="info-items-list">
+          <div class="info-item">
+            <span class="info-label">İşletim Sistemi:</span>
+            <span class="info-value" id="val-os">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Masaüstü & Protokol:</span>
+            <span class="info-value" id="val-desktop-protocol">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Linux Çekirdeği:</span>
+            <span class="info-value" id="val-kernel">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Grafik Sürücüsü:</span>
+            <span class="info-value badge-active" id="val-graphics-driver">-</span>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="device_info.js"></script>
 </body>
 </html>
