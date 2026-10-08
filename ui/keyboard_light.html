@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Klavye Aydınlatması - Monster Kontrol Merkezi</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header / Permission Banner -->
+  <div id="perm-banner" class="alert-banner hidden">
+    <div class="banner-content">
+      <svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <span>Donanım erişimi için root izni gerekiyor (<code>/proc/acpi/call</code>).</span>
+    </div>
+    <button id="btn-grant-perm" class="btn-primary-sm">İzin Ver</button>
+  </div>
+
+  <div class="view view-lighting">
+    <div class="subpage-header">
+      <a href="index.html" class="back-button" title="Geri">
+        <img src="assets/btn-back.png" alt="Geri" class="back-icon">
+        <span>Geri</span>
+      </a>
+      <div class="subpage-title-group">
+        <h2 class="subpage-title">Aydınlatma Ayarları</h2>
+        <span class="subpage-subtitle" id="chassis-label">Klavye Aydınlatması</span>
+      </div>
+    </div>
+
+    <div class="lighting-content">
+      <div class="control-card">
+        <div class="control-card-header">
+          <h3>Parlaklık</h3>
+          <div class="brightness-group">
+            <input type="range" id="kbd-brightness" min="0" max="4" value="4" step="1">
+            <span id="brightness-val">4</span>
+          </div>
+        </div>
+
+        <div class="card-section">
+          <div class="section-label">Renk Ön Ayarları</div>
+          <div class="preset-colors">
+            <button class="color-dot" style="--c: #00ffff" data-color="cyan" title="Cyan"></button>
+            <button class="color-dot" style="--c: #0077ff" data-color="ice_blue" title="Buz Mavisi"></button>
+            <button class="color-dot" style="--c: #0000ff" data-color="blue" title="Mavi"></button>
+            <button class="color-dot" style="--c: #9b26b6" data-color="purple" title="Mor"></button>
+            <button class="color-dot" style="--c: #e040fb" data-color="magenta" title="Macenta"></button>
+            <button class="color-dot" style="--c: #ff4081" data-color="pink" title="Pembe"></button>
+            <button class="color-dot" style="--c: #ff0000" data-color="red" title="Kırmızı"></button>
+            <button class="color-dot" style="--c: #ff6d00" data-color="orange" title="Turuncu"></button>
+            <button class="color-dot" style="--c: #ffd600" data-color="yellow" title="Sarı"></button>
+            <button class="color-dot" style="--c: #00e676" data-color="green" title="Yeşil"></button>
+            <button class="color-dot" style="--c: #ffffff" data-color="white" title="Beyaz"></button>
+            <button class="color-dot color-off" data-color="off" title="Kapat">KAPALI</button>
+          </div>
+        </div>
+
+        <div class="card-section custom-rgb-section">
+          <div class="section-label">Özel RGB Rengi</div>
+          <div class="custom-rgb-bar">
+            <input type="color" id="custom-color-picker" value="#00ff99">
+            <span id="rgb-hex-label">#00FF99</span>
+            <button id="btn-apply-custom-rgb" class="btn-sm">Rengi Uygula</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="keyboard_light.js"></script>
+</body>
+</html>

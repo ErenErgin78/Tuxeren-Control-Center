@@ -1,79 +1,133 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Monster Control Center</title>
+  <title>Monster Kontrol Merkezi</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="app-container">
-    <header class="app-header">
-      <div class="brand">
-        <div class="logo-mark">M</div>
-        <div class="brand-text">
-          <h1>MONSTER CONTROL CENTER</h1>
-          <span class="subtitle" id="chassis-label">Chassis: Initializing...</span>
-        </div>
-      </div>
-      <div class="header-status">
-        <span class="status-indicator" id="status-indicator"></span>
-        <span id="status-text">Connected</span>
-      </div>
-    </header>
-
-    <div id="perm-banner" class="alert-banner hidden">
-      <div class="banner-content">
-        <svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-          <line x1="12" y1="9" x2="12" y2="13"/>
-          <line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
-        <span>Hardware access requires root permissions for <code>/proc/acpi/call</code>.</span>
-      </div>
-      <button id="btn-grant-perm" class="btn-primary-sm">Grant Access</button>
+  <!-- Window Titlebar / System Header -->
+  <header class="titlebar">
+    <div class="header-dots">
+      <span class="dot active"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
     </div>
+    <div class="window-controls">
+      <div class="status-badge" id="status-badge">
+        <span class="status-indicator" id="status-indicator"></span>
+        <span id="status-text">Bağlandı</span>
+      </div>
+    </div>
+  </header>
 
-    <main class="main-content">
-      <section class="card keyboard-card">
-        <div class="card-header">
-          <h2>Keyboard Backlight</h2>
-          <div class="brightness-group">
-            <label for="kbd-brightness">Brightness</label>
-            <input type="range" id="kbd-brightness" min="0" max="4" value="4" step="1">
-            <span id="brightness-val">4</span>
-          </div>
-        </div>
-
-        <div class="section-label">Color Presets</div>
-        <div class="preset-colors">
-          <button class="color-dot" style="--c: #00ffff" data-color="cyan" title="Cyan"></button>
-          <button class="color-dot" style="--c: #0077ff" data-color="ice_blue" title="Ice Blue"></button>
-          <button class="color-dot" style="--c: #0000ff" data-color="blue" title="Blue"></button>
-          <button class="color-dot" style="--c: #9b26b6" data-color="purple" title="Purple"></button>
-          <button class="color-dot" style="--c: #e040fb" data-color="magenta" title="Magenta"></button>
-          <button class="color-dot" style="--c: #ff4081" data-color="pink" title="Pink"></button>
-          <button class="color-dot" style="--c: #ff0000" data-color="red" title="Red"></button>
-          <button class="color-dot" style="--c: #ff6d00" data-color="orange" title="Orange"></button>
-          <button class="color-dot" style="--c: #ffd600" data-color="yellow" title="Yellow"></button>
-          <button class="color-dot" style="--c: #00e676" data-color="green" title="Green"></button>
-          <button class="color-dot" style="--c: #ffffff" data-color="white" title="White"></button>
-          <button class="color-dot color-off" data-color="off" title="Turn Off">OFF</button>
-        </div>
-
-        <div class="custom-rgb-section">
-          <div class="section-label">Custom RGB</div>
-          <div class="custom-rgb-bar">
-            <input type="color" id="custom-color-picker" value="#00ff99">
-            <span id="rgb-hex-label">#00FF99</span>
-            <button id="btn-apply-custom-rgb" class="btn-sm">Apply Color</button>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <div id="toast" class="toast hidden"></div>
+  <!-- Permission Banner -->
+  <div id="perm-banner" class="alert-banner hidden">
+    <div class="banner-content">
+      <svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <span>Donanım erişimi için root izni gerekiyor (<code>/proc/acpi/call</code>).</span>
+    </div>
+    <button id="btn-grant-perm" class="btn-primary-sm">İzin Ver</button>
   </div>
+
+  <!-- Main Lobby View -->
+  <main class="view view-lobby">
+    <section class="hero-section">
+      <div class="hero-logo-container">
+        <img src="assets/logo.png" alt="Monster Logo" class="hero-logo">
+      </div>
+      <h1 class="hero-title">Kontrol Merkezi</h1>
+      <div class="search-bar-container">
+        <div class="search-bar">
+          <input type="text" id="menu-search" placeholder="Ara" autocomplete="off" spellcheck="false">
+          <img src="assets/btn-search.png" alt="Ara" class="search-icon">
+        </div>
+      </div>
+    </section>
+
+    <!-- Grid Menu Tiles (2x3 exact match to OEM) -->
+    <section class="menu-grid">
+      <!-- 1. Genel Ayarlar -->
+      <a href="general.html" class="menu-tile">
+        <div class="tile-icon">
+          <img src="assets/btn-main-switch.png" alt="Genel Ayarlar">
+        </div>
+        <div class="tile-text">
+          <h2 class="tile-title">Genel Ayarlar</h2>
+          <p class="tile-desc">Kolay Ayar, Windows Aygıtları, Oyun içi Hızlı Bilgi Ekranı, Klavye Haritalandırması</p>
+        </div>
+      </a>
+
+      <!-- 2. Performans -->
+      <a href="performance.html" class="menu-tile">
+        <div class="tile-icon">
+          <img src="assets/btn-main-performance.png" alt="Performans">
+        </div>
+        <div class="tile-text">
+          <h2 class="tile-title">Performans</h2>
+          <p class="tile-desc">Mod Seçimi</p>
+        </div>
+      </a>
+
+      <!-- 3. Aydınlatma Ayarları (Keyboard RGB) -->
+      <a href="keyboard_light.html" class="menu-tile active-feature-tile">
+        <div class="tile-icon">
+          <img src="assets/btn-main-light.png" alt="Aydınlatma Ayarları">
+        </div>
+        <div class="tile-text">
+          <h2 class="tile-title">Aydınlatma Ayarları</h2>
+          <p class="tile-desc">Klavye Aydınlatması</p>
+        </div>
+      </a>
+
+      <!-- 4. Pil -->
+      <a href="battery.html" class="menu-tile">
+        <div class="tile-icon">
+          <img src="assets/btn-main-battery.png" alt="Pil">
+        </div>
+        <div class="tile-text">
+          <h2 class="tile-title">Pil</h2>
+          <p class="tile-desc">Pil Modu, Pil Durumu</p>
+        </div>
+      </a>
+
+      <!-- 5. Görüntü Ayarları -->
+      <a href="display.html" class="menu-tile">
+        <div class="tile-icon">
+          <img src="assets/btn-main-display.png" alt="Görüntü Ayarları">
+        </div>
+        <div class="tile-text">
+          <h2 class="tile-title">Görüntü Ayarları</h2>
+          <p class="tile-desc">Ekran Fonksiyonları</p>
+        </div>
+      </a>
+
+      <!-- 6. Cihaz Bilgileri -->
+      <a href="device_info.html" class="menu-tile">
+        <div class="tile-icon">
+          <img src="assets/btn-main-system.png" alt="Cihaz Bilgileri">
+        </div>
+        <div class="tile-text">
+          <h2 class="tile-title">Cihaz Bilgileri</h2>
+          <p class="tile-desc">Cihaz Bilgileri, Hakkında</p>
+        </div>
+      </a>
+    </section>
+
+    <!-- WaterWave Ambient Graphic -->
+    <div class="water-wave-bg">
+      <img src="assets/WaterWave.png" alt="" class="water-wave-img">
+    </div>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
 
   <script src="main.js"></script>
 </body>

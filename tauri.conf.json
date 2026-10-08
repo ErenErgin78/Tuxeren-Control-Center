@@ -12,10 +12,10 @@
       {
         "label": "main",
         "title": "Monster Control Center",
-        "width": 600,
-        "height": 520,
-        "minWidth": 520,
-        "minHeight": 440,
+        "width": 1020,
+        "height": 680,
+        "minWidth": 860,
+        "minHeight": 560,
         "resizable": true,
         "fullscreen": false
       }
