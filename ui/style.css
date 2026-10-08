@@ -268,7 +268,7 @@ body {
 
 .menu-tile {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
   padding: 14px 16px;
   border-radius: 12px;
