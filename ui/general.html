@@ -5,6 +5,102 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Genel Ayarlar - Monster Kontrol Merkezi</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .general-workspace {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: clamp(24px, 4vh, 48px) 24px;
+      min-height: 0;
+    }
+
+    .general-card {
+      background: rgba(3, 24, 25, 0.85);
+      border: 1px solid rgba(0, 255, 194, 0.2);
+      border-radius: 12px;
+      padding: 24px 28px;
+      width: 100%;
+      max-width: 540px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+    }
+
+    .setting-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .setting-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .setting-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .switch-label {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+
+    .switch-label input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .switch-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.15);
+      transition: 0.25s ease;
+      border-radius: 26px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .switch-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #fff;
+      transition: 0.25s ease;
+      border-radius: 50%;
+    }
+
+    input:checked + .switch-slider {
+      background-color: var(--accent-cyan);
+      border-color: var(--accent-cyan);
+    }
+
+    input:checked + .switch-slider:before {
+      transform: translateX(22px);
+      background-color: #021214;
+    }
+  </style>
 </head>
 <body>
   <!-- Titlebar -->
@@ -21,14 +117,27 @@
     </div>
   </header>
 
+  <!-- Main View -->
   <main class="view view-subpage">
-    <div class="placeholder-content">
-      <div class="placeholder-card">
-        <img src="assets/btn-main-switch.png" alt="Genel Ayarlar" class="placeholder-icon">
-        <h3>Genel Ayarlar</h3>
-        <p>Bu modül henüz uygulanmadı.</p>
+    <div class="general-workspace">
+      <div class="general-card">
+        <!-- Windows Tuşu Switch -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-title">Windows Tuşunu Devre Dışı Bırak</span>
+            <span class="setting-desc">Oyun esnasında yanlışlıkla basılmasını önler</span>
+          </div>
+          <label class="switch-label">
+            <input type="checkbox" id="switch-winkey">
+            <span class="switch-slider"></span>
+          </label>
+        </div>
       </div>
     </div>
   </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="general.js"></script>
 </body>
 </html>

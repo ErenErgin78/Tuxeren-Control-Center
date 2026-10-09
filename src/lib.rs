@@ -7,6 +7,7 @@
 pub mod battery;
 pub mod device_info;
 pub mod ec;
+pub mod general;
 pub mod keyboard;
 pub mod performance;
 
