@@ -27,10 +27,10 @@ async function loadSettings() {
   try {
     const settings = await invoke("get_general_settings");
     if (!settings) return;
-    if (switchWinKey && switchWinKey !== document.activeElement) {
+    if (switchWinKey) {
       switchWinKey.checked = !!settings.win_key_disabled;
     }
-    if (switchTouchpad && switchTouchpad !== document.activeElement) {
+    if (switchTouchpad) {
       switchTouchpad.checked = !!settings.touchpad_disabled;
     }
   } catch (err) {
@@ -65,4 +65,4 @@ if (switchTouchpad) {
 }
 
 loadSettings();
-setInterval(loadSettings, 500);
+setInterval(loadSettings, 300);

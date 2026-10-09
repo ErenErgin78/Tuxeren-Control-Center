@@ -6,7 +6,7 @@
 use evdev::{Device, EventSummary, KeyCode};
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::io::{BufRead, BufReader, Read, Write};
+use std::io::{BufRead, BufReader, Write};
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -20,6 +20,7 @@ const TOUCHPAD_STATE_FILE: &str = "/dev/shm/touchpad_locker_state";
 static TOUCHPAD_DEV: Mutex<Option<Device>> = Mutex::new(None);
 static DAEMON_STARTED: AtomicBool = AtomicBool::new(false);
 static IS_DAEMON_SERVER: AtomicBool = AtomicBool::new(false);
+static IS_TOUCHPAD_DISABLED: AtomicBool = AtomicBool::new(false);
 
 /// General settings state representation.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -49,17 +50,42 @@ pub fn socket_path() -> PathBuf {
     }
 }
 
-/// Retrieves the current status of general settings, syncing with live state file.
+/// Sends a command to the background daemon via Unix domain socket and reads one line response.
+pub fn send_daemon_command(cmd: &str) -> Result<String, String> {
+    let path = socket_path();
+    let mut stream = UnixStream::connect(&path).map_err(|e| e.to_string())?;
+    stream
+        .set_read_timeout(Some(Duration::from_millis(300)))
+        .map_err(|e| e.to_string())?;
+    stream
+        .write_all(format!("{}\n", cmd).as_bytes())
+        .map_err(|e| e.to_string())?;
+
+    let mut reader = BufReader::new(stream);
+    let mut response = String::new();
+    reader.read_line(&mut response).map_err(|e| e.to_string())?;
+    Ok(response.trim().to_string())
+}
+
+/// Checks if the background daemon is alive and responding.
+pub fn is_daemon_alive() -> bool {
+    send_daemon_command("ping").map(|r| r == "pong").unwrap_or(false)
+}
+
+/// Retrieves the current status of general settings, querying daemon if running.
 pub fn get_general_settings() -> GeneralSettings {
     let mut settings = load_settings();
-    if let Ok(state) = fs::read_to_string(TOUCHPAD_STATE_FILE) {
-        let trimmed = state.trim();
-        if trimmed == "kapali" {
-            settings.touchpad_disabled = true;
-        } else if trimmed == "aktif" {
-            settings.touchpad_disabled = false;
+
+    // In client (GUI): live lock state is tracked by the daemon
+    if !IS_DAEMON_SERVER.load(Ordering::SeqCst) {
+        if let Ok(resp) = send_daemon_command("get") {
+            settings.touchpad_disabled = resp == "1";
+            return settings;
         }
     }
+
+    // In daemon or standalone: use atomic memory state
+    settings.touchpad_disabled = IS_TOUCHPAD_DISABLED.load(Ordering::SeqCst);
     settings
 }
 
@@ -79,46 +105,30 @@ pub fn set_touchpad_disabled_local(disabled: bool) -> Result<(), String> {
     apply_touchpad_state(disabled)
 }
 
-/// Sends a command to the background daemon via Unix domain socket.
-pub fn send_daemon_command(cmd: &str) -> Result<String, String> {
-    let path = socket_path();
-    let mut stream = UnixStream::connect(&path).map_err(|e| e.to_string())?;
-    stream
-        .set_read_timeout(Some(Duration::from_millis(500)))
-        .map_err(|e| e.to_string())?;
-    stream
-        .write_all(format!("{}\n", cmd).as_bytes())
-        .map_err(|e| e.to_string())?;
-
-    let mut response = String::new();
-    stream
-        .read_to_string(&mut response)
-        .map_err(|e| e.to_string())?;
-    Ok(response.trim().to_string())
-}
-
 /// Sets whether the touchpad is disabled. Delegates to daemon if running, else applies locally.
 pub fn set_touchpad_disabled(disabled: bool) -> Result<(), String> {
-    if IS_DAEMON_SERVER.load(Ordering::SeqCst) {
-        return set_touchpad_disabled_local(disabled);
-    }
-
-    let cmd = if disabled {
-        "set_touchpad:disabled"
-    } else {
-        "set_touchpad:enabled"
-    };
-
-    if send_daemon_command(cmd).is_ok() {
-        return Ok(());
+    if !IS_DAEMON_SERVER.load(Ordering::SeqCst) {
+        let cmd = if disabled { "set:1" } else { "set:0" };
+        if let Ok(resp) = send_daemon_command(cmd) {
+            if resp == "ok" {
+                return Ok(());
+            }
+        }
     }
 
     set_touchpad_disabled_local(disabled)
 }
 
+/// Toggles touchpad disabled state.
+pub fn toggle_touchpad() -> Result<bool, String> {
+    let new_state = !IS_TOUCHPAD_DISABLED.load(Ordering::SeqCst);
+    set_touchpad_disabled_local(new_state)?;
+    Ok(new_state)
+}
+
 /// Ensures background daemon is running via systemd user service or process spawn.
 pub fn ensure_daemon_running() {
-    if send_daemon_command("ping").is_ok() {
+    if is_daemon_alive() {
         return;
     }
 
@@ -127,8 +137,8 @@ pub fn ensure_daemon_running() {
         .status();
 
     for _ in 0..5 {
-        std::thread::sleep(Duration::from_millis(100));
-        if send_daemon_command("ping").is_ok() {
+        std::thread::sleep(Duration::from_millis(80));
+        if is_daemon_alive() {
             return;
         }
     }
@@ -159,10 +169,12 @@ pub fn run_daemon_server() {
     let listener = match UnixListener::bind(&path) {
         Ok(l) => l,
         Err(e) => {
-            eprintln!("[daemon] UnixListener bind error: {}", e);
+            eprintln!("[daemon] UnixListener bind error on {}: {}", path.display(), e);
             return;
         }
     };
+
+    println!("[daemon] IPC socket dinleniyor: {}", path.display());
 
     for stream in listener.incoming().flatten() {
         let mut reader = BufReader::new(&stream);
@@ -174,13 +186,23 @@ pub fn run_daemon_server() {
                 "ping" => {
                     let _ = writer.write_all(b"pong\n");
                 }
-                "set_touchpad:disabled" => {
+                "get" => {
+                    let is_dis = IS_TOUCHPAD_DISABLED.load(Ordering::SeqCst);
+                    let resp = if is_dis { b"1\n" } else { b"0\n" };
+                    let _ = writer.write_all(resp);
+                }
+                "set:1" => {
                     let res = set_touchpad_disabled_local(true);
                     let resp = if res.is_ok() { "ok\n" } else { "err\n" };
                     let _ = writer.write_all(resp.as_bytes());
                 }
-                "set_touchpad:enabled" => {
+                "set:0" => {
                     let res = set_touchpad_disabled_local(false);
+                    let resp = if res.is_ok() { "ok\n" } else { "err\n" };
+                    let _ = writer.write_all(resp.as_bytes());
+                }
+                "toggle" => {
+                    let res = toggle_touchpad();
                     let resp = if res.is_ok() { "ok\n" } else { "err\n" };
                     let _ = writer.write_all(resp.as_bytes());
                 }
@@ -188,6 +210,7 @@ pub fn run_daemon_server() {
                     let _ = writer.write_all(b"unknown\n");
                 }
             }
+            let _ = writer.flush();
         }
     }
 }
@@ -298,11 +321,13 @@ fn apply_touchpad_state(disabled: bool) -> Result<(), String> {
                 }
             }
         }
+        IS_TOUCHPAD_DISABLED.store(true, Ordering::SeqCst);
         let _ = fs::write(TOUCHPAD_STATE_FILE, "kapali");
     } else {
-        if let Some(dev) = dev_lock.as_mut() {
+        if let Some(mut dev) = dev_lock.take() {
             let _ = dev.ungrab();
         }
+        IS_TOUCHPAD_DISABLED.store(false, Ordering::SeqCst);
         let _ = fs::write(TOUCHPAD_STATE_FILE, "aktif");
     }
     Ok(())
@@ -315,7 +340,7 @@ pub fn start_touchpad_daemon() {
     }
 
     std::thread::spawn(|| {
-        let initial_settings = get_general_settings();
+        let initial_settings = load_settings();
         if initial_settings.touchpad_disabled {
             let _ = apply_touchpad_state(true);
         }
@@ -331,8 +356,7 @@ pub fn start_touchpad_daemon() {
             while let Ok(events) = f24_device.fetch_events() {
                 for event in events {
                     if let EventSummary::Key(_, KeyCode::KEY_F24, 1) = event.destructure() {
-                        let new_disabled = !get_general_settings().touchpad_disabled;
-                        let _ = set_touchpad_disabled(new_disabled);
+                        let _ = toggle_touchpad();
                     }
                 }
             }

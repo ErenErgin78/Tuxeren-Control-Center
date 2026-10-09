@@ -128,7 +128,9 @@ fn set_touchpad_disabled(disabled: bool) -> Result<(), String> {
 fn main() {
     monster_control_center::general::ensure_daemon_running();
     monster_control_center::performance::start_polling_daemon();
-    monster_control_center::general::start_touchpad_daemon();
+    if !monster_control_center::general::is_daemon_alive() {
+        monster_control_center::general::start_touchpad_daemon();
+    }
 
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
