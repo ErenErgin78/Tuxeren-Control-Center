@@ -201,25 +201,51 @@ body {
   min-height: 0;
 }
 
-/* Lobby View */
+/* Lobby View - 50/50 vertical split layout */
 .view-lobby {
-  padding: clamp(16px, 3vh, 28px) clamp(16px, 3.5vw, 40px);
+  padding: clamp(12px, 2vh, 24px) clamp(16px, 3.5vw, 40px);
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
   min-height: 100%;
-  gap: clamp(16px, 3vh, 32px);
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .hero-section {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 0;
+  justify-content: center;
+  min-height: max-content;
   position: relative;
   z-index: 5;
-  flex-shrink: 0;
+  width: 100%;
+}
+
+.lobby-menu-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: max-content;
+  position: relative;
+  z-index: 5;
+}
+
+.menu-grid-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: max-content;
+}
+
+.lobby-menu-section::after {
+  content: "";
+  flex: 1;
+  pointer-events: none;
 }
 
 .hero-logo-container {
@@ -1152,10 +1178,5 @@ body {
 @media (max-height: 650px) {
   .keyboard-simple-workspace {
     align-items: flex-start;
-  }
-
-  .view-lobby {
-    justify-content: flex-start;
-    gap: 16px;
   }
 }
