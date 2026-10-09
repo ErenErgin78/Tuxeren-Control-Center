@@ -198,16 +198,7 @@ pub fn start_touchpad_daemon() {
                 for event in events {
                     if let EventSummary::Key(_, KeyCode::KEY_F24, 1) = event.destructure() {
                         let new_disabled = !load_settings().touchpad_disabled;
-                        if set_touchpad_disabled(new_disabled).is_ok() {
-                            crate::performance::send_notification(
-                                "Monster Kontrol Merkezi",
-                                if new_disabled {
-                                    "Touchpad Kilitlendi"
-                                } else {
-                                    "Touchpad Açıldı"
-                                },
-                            );
-                        }
+                        let _ = set_touchpad_disabled(new_disabled);
                     }
                 }
             }
