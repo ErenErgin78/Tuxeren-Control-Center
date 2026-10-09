@@ -12,7 +12,6 @@ const invoke = getInvoke();
 const hwActiveBadge = document.getElementById("hw-active-badge");
 const osActiveBadge = document.getElementById("os-active-badge");
 const toast = document.getElementById("toast");
-const btnSync = document.getElementById("btn-sync-modes");
 
 let currentHwMode = null;
 let currentOsProfile = null;
@@ -94,25 +93,6 @@ document.querySelectorAll("[data-os]").forEach((el) => {
     }
   });
 });
-
-// Sync button
-if (btnSync) {
-  btnSync.addEventListener("click", async () => {
-    if (!currentHwMode) return;
-    let targetOs = "balanced";
-    if (currentHwMode === 0 || currentHwMode === 3) targetOs = "power-saver";
-    else if (currentHwMode === 1) targetOs = "balanced";
-    else if (currentHwMode === 2 || currentHwMode === 4) targetOs = "performance";
-
-    try {
-      await invoke("set_os_power_profile", { profile: targetOs });
-      showToast(`Donanım modu ile Fedora eşitledi: ${targetOs}`);
-      await refreshPerformance();
-    } catch (e) {
-      showToast(`Eşitleme hatası: ${e}`);
-    }
-  });
-}
 
 // Initial fetch and light polling (500ms) to reflect physical button changes
 refreshPerformance();

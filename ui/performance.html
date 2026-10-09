@@ -8,7 +8,7 @@
   <style>
     .perf-workspace {
       flex: 1;
-      padding: clamp(10px, 1.5vh, 16px) clamp(14px, 3vw, 36px) 24px;
+      padding: clamp(22px, 3.2vh, 34px) clamp(14px, 3vw, 36px) 24px;
       overflow-y: auto;
       min-height: 0;
       display: grid;
@@ -132,46 +132,6 @@
       color: #fff;
     }
 
-    .sync-bar {
-      grid-column: 1 / -1;
-      background: rgba(3, 24, 25, 0.85);
-      border: 1px solid rgba(0, 255, 194, 0.2);
-      border-radius: 8px;
-      padding: 12px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .sync-info {
-      font-size: 0.82rem;
-      color: var(--text-muted);
-    }
-
-    .sync-info strong {
-      color: #fff;
-    }
-
-    .btn-sync {
-      background: rgba(0, 255, 194, 0.15);
-      border: 1px solid var(--accent-cyan);
-      color: #fff;
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-sync:hover {
-      background: var(--accent-cyan);
-      color: #011215;
-      box-shadow: 0 0 10px rgba(0, 255, 194, 0.4);
-    }
-
     @media (max-width: 800px) {
       .perf-workspace {
         grid-template-columns: 1fr;
@@ -199,47 +159,39 @@
     <section class="perf-card">
       <div class="card-header-sm">
         <span class="card-title-sm">
-          <span>Donanım & BIOS Kipi</span>
+          <span>BIOS Güç Kipi</span>
         </span>
-        <span class="badge-status" id="hw-active-badge">Yükleniyor...</span>
       </div>
-
-      <p class="card-desc">
-        Doğrudan Embedded Controller (EC) ve anakart BIOS güç limitlerini (PL1/PL2 Watt) yönetir. Klavyedeki fiziksel mod butonuna ve butonun LED ışıklarına doğrudan bağlıdır.
-      </p>
 
       <div class="mode-list">
         <!-- Ofis Modu -->
         <div class="mode-item" data-hw="0" id="hw-mode-0">
           <div class="mode-item-left">
             <div class="mode-title">
-              <span>Ofis / Sessiz</span>
+              <span>Ofis Modu</span>
             </div>
             <span class="mode-detail">45W CPU Limiti • Düşük Fan Hızı</span>
           </div>
-          <span class="led-pill">Işık Kapalı</span>
         </div>
 
         <!-- Oyun Modu -->
         <div class="mode-item" data-hw="1" id="hw-mode-1">
           <div class="mode-item-left">
             <div class="mode-title">
-              <span>Oyun / Standart</span>
+              <span>Oyun Modu</span>
             </div>
             <span class="mode-detail">75W CPU Limiti • Dengeli Fan Profili</span>
           </div>
-          <span class="led-pill">Yarı Işık</span>
         </div>
 
         <!-- Turbo Modu -->
         <div class="mode-item" data-hw="2" id="hw-mode-2">
           <div class="mode-item-left">
             <div class="mode-title">
-              <span>Turbo / Canavar</span>
+              <span>Turbo Modu</span>
             </div>
             <span class="mode-detail">90W CPU Limiti • Turbo Fan</span>
           </div>
-          <span class="led-pill">Tam Işık</span>
         </div>
       </div>
     </section>
@@ -248,14 +200,9 @@
     <section class="perf-card">
       <div class="card-header-sm">
         <span class="card-title-sm">
-          <span>Fedora / Çekirdek Güç Kipi</span>
+          <span>İşletim Sistemi Güç Kipi</span>
         </span>
-        <span class="badge-status" id="os-active-badge">Yükleniyor...</span>
       </div>
-
-      <p class="card-desc">
-        Linux çekirdeği CPU frekans ölçekleyicisini (EPP) ve <code>tuned-ppd</code> D-Bus servisini yönetir. Fedora GNOME hızlı ayarlar menüsü ile anında senkronizedir.
-      </p>
 
       <div class="mode-list">
         <!-- Güç Tasarrufu -->
@@ -266,7 +213,6 @@
             </div>
             <span class="mode-detail">Pil ömrü odaklı, düşük CPU saat frekansı</span>
           </div>
-          <span class="led-pill">power-saver</span>
         </div>
 
         <!-- Dengeli -->
@@ -277,7 +223,6 @@
             </div>
             <span class="mode-detail">Standart kullanım, dinamik frekans ölçekleme</span>
           </div>
-          <span class="led-pill">balanced</span>
         </div>
 
         <!-- Performans -->
@@ -288,18 +233,9 @@
             </div>
             <span class="mode-detail">Maksimum çekirdek saat frekansları</span>
           </div>
-          <span class="led-pill">performance</span>
         </div>
       </div>
     </section>
-
-    <!-- Senkronizasyon Çubuğu -->
-    <div class="sync-bar">
-      <div class="sync-info">
-        <strong>Çift Yönlü Entegrasyon:</strong> Donanım modu klavye LED'ini, Fedora güç kipi GNOME sistem panelini kontrol eder.
-      </div>
-      <button class="btn-sync" id="btn-sync-modes">Kipleri Eşitle (Donanım ⇄ Fedora)</button>
-    </div>
   </main>
 
   <div id="toast" class="toast hidden"></div>
