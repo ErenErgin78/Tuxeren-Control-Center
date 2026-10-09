@@ -156,10 +156,13 @@ async function refreshMetrics() {
     const fanGpuBarEl = document.getElementById("fan-gpu-bar");
     const fanIconEl = document.querySelector(".fan-telemetry-icon");
 
-    if (fanCpuRpmEl) fanCpuRpmEl.textContent = `${m.cpu_fan_rpm} RPM (${m.cpu_fan_duty}%)`;
-    if (fanCpuBarEl) fanCpuBarEl.style.width = `${Math.min(100, m.cpu_fan_duty)}%`;
-    if (fanGpuRpmEl) fanGpuRpmEl.textContent = `${m.gpu_fan_rpm} RPM (${m.gpu_fan_duty}%)`;
-    if (fanGpuBarEl) fanGpuBarEl.style.width = `${Math.min(100, m.gpu_fan_duty)}%`;
+    const cpuDuty = Math.min(100, Math.max(0, Math.round(m.cpu_fan_duty)));
+    const gpuDuty = Math.min(100, Math.max(0, Math.round(m.gpu_fan_duty)));
+
+    if (fanCpuRpmEl) fanCpuRpmEl.textContent = `${m.cpu_fan_rpm} RPM (${cpuDuty}%)`;
+    if (fanCpuBarEl) fanCpuBarEl.style.width = `${cpuDuty}%`;
+    if (fanGpuRpmEl) fanGpuRpmEl.textContent = `${m.gpu_fan_rpm} RPM (${gpuDuty}%)`;
+    if (fanGpuBarEl) fanGpuBarEl.style.width = `${gpuDuty}%`;
 
     if (fanIconEl) {
       const maxRpm = Math.max(m.cpu_fan_rpm, m.gpu_fan_rpm);

@@ -381,8 +381,13 @@ fn get_fan_metrics() -> (u16, u8, u16, u8) {
         | (ec::read_byte(0x0465).unwrap_or(0) as u16);
     let gpu_rpm = ((ec::read_byte(0x046C).unwrap_or(0) as u16) << 8)
         | (ec::read_byte(0x046D).unwrap_or(0) as u16);
-    let cpu_duty = ec::read_byte(0x075B).unwrap_or(0);
-    let gpu_duty = ec::read_byte(0x075C).unwrap_or(0);
+
+    let raw_cpu_duty = ec::read_byte(0x075B).unwrap_or(0);
+    let raw_gpu_duty = ec::read_byte(0x075C).unwrap_or(0);
+
+    let cpu_duty = ((raw_cpu_duty as f32 / 255.0) * 100.0).round().clamp(0.0, 100.0) as u8;
+    let gpu_duty = ((raw_gpu_duty as f32 / 255.0) * 100.0).round().clamp(0.0, 100.0) as u8;
+
     (cpu_rpm, cpu_duty, gpu_rpm, gpu_duty)
 }
 
