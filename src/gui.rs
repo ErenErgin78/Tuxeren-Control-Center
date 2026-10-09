@@ -120,8 +120,14 @@ fn set_win_key_disabled(disabled: bool) -> Result<(), String> {
     monster_control_center::general::set_win_key_disabled(disabled)
 }
 
+#[tauri::command]
+fn set_touchpad_disabled(disabled: bool) -> Result<(), String> {
+    monster_control_center::general::set_touchpad_disabled(disabled)
+}
+
 fn main() {
     monster_control_center::performance::start_polling_daemon();
+    monster_control_center::general::start_touchpad_daemon();
 
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -136,7 +142,8 @@ fn main() {
             set_hardware_mode,
             set_os_power_profile,
             get_general_settings,
-            set_win_key_disabled
+            set_win_key_disabled,
+            set_touchpad_disabled
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

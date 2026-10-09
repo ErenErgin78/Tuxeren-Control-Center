@@ -10,6 +10,7 @@ const getInvoke = () => {
 const invoke = getInvoke();
 
 const switchWinKey = document.getElementById("switch-winkey");
+const switchTouchpad = document.getElementById("switch-touchpad");
 const toast = document.getElementById("toast");
 
 function showToast(msg) {
@@ -26,7 +27,12 @@ async function loadSettings() {
   try {
     const settings = await invoke("get_general_settings");
     if (!settings) return;
-    if (switchWinKey) switchWinKey.checked = !!settings.win_key_disabled;
+    if (switchWinKey && switchWinKey !== document.activeElement) {
+      switchWinKey.checked = !!settings.win_key_disabled;
+    }
+    if (switchTouchpad && switchTouchpad !== document.activeElement) {
+      switchTouchpad.checked = !!settings.touchpad_disabled;
+    }
   } catch (err) {
     console.error("General settings load error:", err);
   }
@@ -45,4 +51,18 @@ if (switchWinKey) {
   });
 }
 
+if (switchTouchpad) {
+  switchTouchpad.addEventListener("change", async (e) => {
+    const disabled = e.target.checked;
+    try {
+      await invoke("set_touchpad_disabled", { disabled });
+      showToast(disabled ? "Touchpad kilitlendi" : "Touchpad etkinleştirildi");
+    } catch (err) {
+      showToast(`Hata: ${err}`);
+      switchTouchpad.checked = !disabled;
+    }
+  });
+}
+
 loadSettings();
+setInterval(loadSettings, 500);
