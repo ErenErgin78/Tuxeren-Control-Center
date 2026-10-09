@@ -19,6 +19,7 @@ COMMANDS:
     perf [office|gaming|turbo]  Get or set hardware and OS performance modes
     perf os <saver|balanced|perf> Set Fedora OS power profile
     perf watch                  Watch keyboard mode button and sync OS with OSD notifications
+    daemon                      Run low-power background service (touchpad F24 & performance)
     read <hex_reg>              Read raw EC register byte (e.g. 0x0769)
     write <hex_reg> <hex_val>   Write raw EC register byte (e.g. 0x078C 0x01)
 
@@ -181,6 +182,13 @@ fn main() {
                     _ => Err(format!("Bilinmeyen perf parametresi '{}'. Geçerli: office, gaming, turbo, os, watch", args[2])),
                 }
             }
+        }
+        "daemon" | "service" => {
+            println!("[*] Monster Control Center arkaplan servisi başlatıldı.");
+            monster_control_center::performance::start_polling_daemon();
+            monster_control_center::general::start_touchpad_daemon();
+            monster_control_center::general::run_daemon_server();
+            Ok(())
         }
         "-h" | "--help" | "help" => {
             print_help();

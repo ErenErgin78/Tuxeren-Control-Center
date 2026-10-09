@@ -126,6 +126,7 @@ fn set_touchpad_disabled(disabled: bool) -> Result<(), String> {
 }
 
 fn main() {
+    monster_control_center::general::ensure_daemon_running();
     monster_control_center::performance::start_polling_daemon();
     monster_control_center::general::start_touchpad_daemon();
 

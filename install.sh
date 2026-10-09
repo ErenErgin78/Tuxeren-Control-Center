@@ -50,7 +50,29 @@ chmod +x "$DESKTOP_DIR/com.monster.controlcenter.desktop"
 update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
 gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
 
-# 6. Ensure ACPI call module and permissions
+# 6. Setup Systemd User Service for low-power background daemon
+echo "[*] Setting up systemd user service for background daemon..."
+SERVICE_DIR="$HOME/.config/systemd/user"
+mkdir -p "$SERVICE_DIR"
+cat << 'EOF' > "$SERVICE_DIR/monster-control-center.service"
+[Unit]
+Description=Monster Control Center Background Daemon
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/monster-control-center daemon
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target
+EOF
+
+systemctl --user daemon-reload 2>/dev/null || true
+systemctl --user enable --now monster-control-center.service 2>/dev/null || true
+
+# 7. Ensure ACPI call module and permissions
 echo "[*] Checking /proc/acpi/call and acpi_call kernel module..."
 if [ -w "/proc/acpi/call" ]; then
     echo "[+] /proc/acpi/call is loaded and writable."
