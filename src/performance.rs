@@ -16,25 +16,36 @@ use std::time::Duration;
 
 pub const ADDR_PERF_MODE: u16 = 0x07AB;
 pub const ADDR_MAFAN_CONTROL: u16 = 0x0751;
+pub const ADDR_PL1_CONTROL: u16 = 0x046A;
+pub const ADDR_PL2_CONTROL: u16 = 0x046B;
 
 static DAEMON_RUNNING: AtomicBool = AtomicBool::new(false);
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum PerformanceMode {
-    Office       = 0,
-    Gaming       = 1,
-    BatterySaver = 3,
-    Turbo        = 4,
+    Office = 0,
+    Gaming = 1,
+    Turbo  = 2,
 }
 
 impl PerformanceMode {
+    /// Resolves PerformanceMode from EC fan/LED control byte (0x0751).
+    pub fn from_fan_byte(val: u8) -> Option<Self> {
+        match val {
+            0xA0 => Some(PerformanceMode::Office),
+            0x20 => Some(PerformanceMode::Gaming),
+            0x30 | 0x10 => Some(PerformanceMode::Turbo),
+            _ => None,
+        }
+    }
+
+    /// Resolves PerformanceMode from index or UI code.
     pub fn from_u8(val: u8) -> Option<Self> {
         match val {
-            0 => Some(PerformanceMode::Office),
+            0 | 3 => Some(PerformanceMode::Office),
             1 => Some(PerformanceMode::Gaming),
             2 | 4 => Some(PerformanceMode::Turbo),
-            3 => Some(PerformanceMode::BatterySaver),
             _ => None,
         }
     }
@@ -43,18 +54,16 @@ impl PerformanceMode {
         match self {
             PerformanceMode::Office => "Ofis (Sessiz)",
             PerformanceMode::Gaming => "Oyun (Standart)",
-            PerformanceMode::BatterySaver => "Pil Tasarrufu (Eco)",
             PerformanceMode::Turbo => "Turbo (Canavar)",
         }
     }
 
-    /// Returns (PL1 Watts, PL2 Watts, CPU EPP policy, Fan Byte 0x0751)
+    /// Returns (PL1 Watts, PL2 Watts, CPU EPP policy, Fan/LED Byte 0x0751)
     pub fn config(&self) -> (u8, u8, &'static str, u8) {
         match self {
-            PerformanceMode::Office => (45, 65, "power", 0x00),
-            PerformanceMode::Gaming => (75, 90, "balance_performance", 0x00),
-            PerformanceMode::BatterySaver => (35, 45, "power", 0x00),
-            PerformanceMode::Turbo => (115, 140, "performance", 0x10),
+            PerformanceMode::Office => (45, 45, "power", 0xA0),
+            PerformanceMode::Gaming => (75, 75, "balance_performance", 0x20),
+            PerformanceMode::Turbo => (90, 90, "performance", 0x30),
         }
     }
 }
@@ -66,9 +75,16 @@ pub struct PerformanceState {
     pub os_profile: String,
 }
 
-/// Reads the current hardware/BIOS performance mode from the EC.
+/// Reads the current hardware performance mode from the EC.
+/// Uses 0x0751 which directly controls physical LED state and fan profile.
 pub fn get_hardware_mode() -> Result<u8, String> {
-    ec::read_byte(ADDR_PERF_MODE)
+    let fan_byte = ec::read_byte(ADDR_MAFAN_CONTROL)?;
+    if let Some(mode) = PerformanceMode::from_fan_byte(fan_byte) {
+        Ok(mode as u8)
+    } else {
+        let mode_byte = ec::read_byte(ADDR_PERF_MODE).unwrap_or(0);
+        Ok(PerformanceMode::from_u8(mode_byte).map(|m| m as u8).unwrap_or(0))
+    }
 }
 
 /// Linux çekirdeğine doğrudan Intel RAPL güç limitlerini uygular (microwatts).
@@ -178,35 +194,38 @@ pub fn send_notification(title: &str, body: &str) {
     let _ = cmd.output();
 }
 
-/// Mod değişimini EC'ye, fan moduna ve çekirdeğe (RAPL/EPP) uygular.
-/// İşletim sistemi pil kipine (D-Bus) dokunmaz; donanım kipi ile OS güç kipi birbirinden bağımsızdır.
+/// Mod değişimini EC'ye, fan/LED moduna ve donanım PL limitlerine uygular.
 pub fn apply_mode(mode: PerformanceMode) -> Result<(), String> {
     let (pl1, pl2, epp, fan_byte) = mode.config();
 
-    // 1. EC Mod Register (0x07AB)
-    ec::write_byte(ADDR_PERF_MODE, mode as u8)?;
-
-    // 2. EC Fan Modu Register (0x0751: 0x10 Turbo, 0x00 Otomatik)
+    // 1. EC Fan & LED Kontrol Register (0x0751: 0xA0 Kapalı, 0x20 Orta, 0x30 Tam)
     ec::write_byte(ADDR_MAFAN_CONTROL, fan_byte)?;
 
-    // 3. Linux Kernel RAPL (uyarı verir, çökmeyi engeller)
+    // 2. EC Donanım PL1 / PL2 Register'ları (0x046A, 0x046B)
+    let _ = ec::write_byte(ADDR_PL1_CONTROL, pl1);
+    let _ = ec::write_byte(ADDR_PL2_CONTROL, pl2);
+
+    // 3. EC Mod Index Register (0x07AB)
+    let _ = ec::write_byte(ADDR_PERF_MODE, mode as u8);
+
+    // 4. Linux Kernel RAPL
     if let Err(e) = apply_kernel_rapl(pl1 as u32, pl2 as u32) {
         eprintln!("[warn] Kernel RAPL: {}", e);
     }
 
-    // 4. Linux CPU EPP
+    // 5. Linux CPU EPP
     set_cpu_epp(epp)?;
 
     Ok(())
 }
 
-/// Sets the hardware mode by raw u8 code (0=Office, 1=Gaming, 3=BatterySaver, 4=Turbo).
+/// Sets the hardware mode by raw u8 code (0=Office, 1=Gaming, 2=Turbo).
 pub fn set_hardware_mode(mode: u8) -> Result<(), String> {
     if let Some(perf_mode) = PerformanceMode::from_u8(mode) {
         apply_mode(perf_mode)
     } else {
         Err(format!(
-            "Geçersiz performans modu: {}. Geçerli: 0 (Ofis), 1 (Oyun), 3 (Pil), 4 (Turbo)",
+            "Geçersiz performans modu: {}. Geçerli: 0 (Ofis), 1 (Oyun), 2 (Turbo)",
             mode
         ))
     }
@@ -228,22 +247,30 @@ pub fn get_performance_state() -> Result<PerformanceState, String> {
     })
 }
 
-/// Klavyedeki fiziksel tuş basışlarını yakalayan düşük maliyetli EC polling daemon'ı (~250ms).
+/// Klavyedeki fiziksel tuş basışlarını 0x0751 üzerinden yakalayan düşük maliyetli EC polling daemon'ı (~200ms).
 pub fn start_polling_daemon() {
     if DAEMON_RUNNING.swap(true, Ordering::SeqCst) {
         return;
     }
 
     thread::spawn(|| {
-        let mut last_mode = get_hardware_mode().unwrap_or(0);
+        let mut last_fan_byte = ec::read_byte(ADDR_MAFAN_CONTROL).unwrap_or(0xA0);
         loop {
-            thread::sleep(Duration::from_millis(250));
-            if let Ok(current_mode) = get_hardware_mode() {
-                if current_mode != last_mode {
-                    last_mode = current_mode;
-                    if let Some(perf_mode) = PerformanceMode::from_u8(current_mode) {
-                        let _ = apply_mode(perf_mode);
-                        send_notification("Monster Kontrol Merkezi", &format!("Performans Kipi: {}", perf_mode.name()));
+            thread::sleep(Duration::from_millis(200));
+            if let Ok(curr_fan_byte) = ec::read_byte(ADDR_MAFAN_CONTROL) {
+                if curr_fan_byte != last_fan_byte {
+                    last_fan_byte = curr_fan_byte;
+                    if let Some(perf_mode) = PerformanceMode::from_fan_byte(curr_fan_byte) {
+                        let (pl1, pl2, epp, _) = perf_mode.config();
+                        let _ = ec::write_byte(ADDR_PL1_CONTROL, pl1);
+                        let _ = ec::write_byte(ADDR_PL2_CONTROL, pl2);
+                        let _ = ec::write_byte(ADDR_PERF_MODE, perf_mode as u8);
+                        let _ = apply_kernel_rapl(pl1 as u32, pl2 as u32);
+                        let _ = set_cpu_epp(epp);
+                        send_notification(
+                            "Monster Kontrol Merkezi",
+                            &format!("Performans Kipi: {}", perf_mode.name()),
+                        );
                     }
                 }
             }
@@ -260,8 +287,8 @@ mod tests {
         assert_eq!(PerformanceMode::from_u8(0), Some(PerformanceMode::Office));
         assert_eq!(PerformanceMode::from_u8(1), Some(PerformanceMode::Gaming));
         assert_eq!(PerformanceMode::from_u8(2), Some(PerformanceMode::Turbo));
-        assert_eq!(PerformanceMode::from_u8(3), Some(PerformanceMode::BatterySaver));
-        assert_eq!(PerformanceMode::from_u8(4), Some(PerformanceMode::Turbo));
-        assert_eq!(PerformanceMode::from_u8(5), None);
+        assert_eq!(PerformanceMode::from_fan_byte(0xA0), Some(PerformanceMode::Office));
+        assert_eq!(PerformanceMode::from_fan_byte(0x20), Some(PerformanceMode::Gaming));
+        assert_eq!(PerformanceMode::from_fan_byte(0x30), Some(PerformanceMode::Turbo));
     }
 }
