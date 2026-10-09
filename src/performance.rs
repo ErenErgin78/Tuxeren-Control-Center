@@ -13,7 +13,7 @@ use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 pub const ADDR_PERF_MODE: u16 = 0x07AB;
 pub const ADDR_MAFAN_CONTROL: u16 = 0x0751;
@@ -22,6 +22,7 @@ pub const ADDR_PL2_CONTROL: u16 = 0x046B;
 
 static DAEMON_RUNNING: AtomicBool = AtomicBool::new(false);
 static PREV_CPU: Mutex<Option<(u64, u64)>> = Mutex::new(None);
+static PREV_NET: Mutex<Option<(u64, u64, Instant)>> = Mutex::new(None);
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemMetrics {
@@ -39,6 +40,8 @@ pub struct SystemMetrics {
     pub disk_percent: f32,
     pub disk_used_gb: f32,
     pub disk_total_gb: f32,
+    pub net_down_bytes: u64,
+    pub net_up_bytes: u64,
 }
 
 #[repr(u8)]
@@ -409,6 +412,49 @@ fn get_disk_metrics() -> (f32, f32, f32) {
     (0.0, 0.0, 0.0)
 }
 
+fn get_net_speed() -> (u64, u64) {
+    let mut curr_rx = 0u64;
+    let mut curr_tx = 0u64;
+
+    if let Ok(content) = fs::read_to_string("/proc/net/dev") {
+        for line in content.lines() {
+            if let Some((iface, data)) = line.split_once(':') {
+                let name = iface.trim();
+                if name == "lo" {
+                    continue;
+                }
+                let parts: Vec<&str> = data.split_whitespace().collect();
+                if parts.len() >= 9 {
+                    let rx = parts[0].parse::<u64>().unwrap_or(0);
+                    let tx = parts[8].parse::<u64>().unwrap_or(0);
+                    curr_rx += rx;
+                    curr_tx += tx;
+                }
+            }
+        }
+    }
+
+    let now = Instant::now();
+    let mut prev = PREV_NET.lock().unwrap();
+    match *prev {
+        Some((p_rx, p_tx, p_time)) => {
+            let dt = now.duration_since(p_time).as_secs_f32();
+            *prev = Some((curr_rx, curr_tx, now));
+            if dt > 0.05 {
+                let rx_speed = ((curr_rx.saturating_sub(p_rx)) as f32 / dt) as u64;
+                let tx_speed = ((curr_tx.saturating_sub(p_tx)) as f32 / dt) as u64;
+                (rx_speed, tx_speed)
+            } else {
+                (0, 0)
+            }
+        }
+        None => {
+            *prev = Some((curr_rx, curr_tx, now));
+            (0, 0)
+        }
+    }
+}
+
 /// Gathers real-time live system and hardware telemetry metrics.
 pub fn get_system_metrics() -> Result<SystemMetrics, String> {
     let (ram_percent, ram_used_gb, ram_total_gb) = get_ram_metrics();
@@ -417,6 +463,7 @@ pub fn get_system_metrics() -> Result<SystemMetrics, String> {
     let (gpu_percent, gpu_temp) = get_gpu_metrics();
     let (cpu_fan_rpm, cpu_fan_duty, gpu_fan_rpm, gpu_fan_duty) = get_fan_metrics();
     let (disk_percent, disk_used_gb, disk_total_gb) = get_disk_metrics();
+    let (net_down_bytes, net_up_bytes) = get_net_speed();
 
     Ok(SystemMetrics {
         ram_percent,
@@ -433,6 +480,8 @@ pub fn get_system_metrics() -> Result<SystemMetrics, String> {
         disk_percent,
         disk_used_gb,
         disk_total_gb,
+        net_down_bytes,
+        net_up_bytes,
     })
 }
 

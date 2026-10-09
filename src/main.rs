@@ -140,6 +140,14 @@ fn main() {
                             println!("CPU: {:.1}% ({}°C) | GPU: {:.1}% ({}°C)", m.cpu_percent, m.cpu_temp, m.gpu_percent, m.gpu_temp);
                             println!("RAM: {:.1}% ({:.1} GB / {:.1} GB) | Disk: {:.1}% ({:.1} GB / {:.1} GB)", m.ram_percent, m.ram_used_gb, m.ram_total_gb, m.disk_percent, m.disk_used_gb, m.disk_total_gb);
                             println!("Fanlar: CPU {} RPM ({}%) | GPU {} RPM ({}%)", m.cpu_fan_rpm, m.cpu_fan_duty, m.gpu_fan_rpm, m.gpu_fan_duty);
+                            let fmt_speed = |b: u64| {
+                                if b >= 1024 * 1024 {
+                                    format!("{:.1} MB/s", b as f64 / 1024.0 / 1024.0)
+                                } else {
+                                    format!("{:.1} KB/s", b as f64 / 1024.0)
+                                }
+                            };
+                            println!("Ağ: İndirme {} | Yükleme {}", fmt_speed(m.net_down_bytes), fmt_speed(m.net_up_bytes));
                         }
                         Ok(())
                     }

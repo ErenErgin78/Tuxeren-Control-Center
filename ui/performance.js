@@ -174,8 +174,36 @@ async function refreshMetrics() {
         fanIconEl.classList.remove("spinning");
       }
     }
+
+    // Network Speeds
+    const netDownSpeedEl = document.getElementById("net-down-speed");
+    const netDownBarEl = document.getElementById("net-down-bar");
+    const netUpSpeedEl = document.getElementById("net-up-speed");
+    const netUpBarEl = document.getElementById("net-up-bar");
+
+    if (netDownSpeedEl) netDownSpeedEl.textContent = formatSpeed(m.net_down_bytes);
+    if (netUpSpeedEl) netUpSpeedEl.textContent = formatSpeed(m.net_up_bytes);
+
+    if (netDownBarEl) {
+      const downPct = Math.min(100, (m.net_down_bytes / (10 * 1024 * 1024)) * 100);
+      netDownBarEl.style.width = `${Math.max(m.net_down_bytes > 0 ? 5 : 0, downPct)}%`;
+    }
+    if (netUpBarEl) {
+      const upPct = Math.min(100, (m.net_up_bytes / (5 * 1024 * 1024)) * 100);
+      netUpBarEl.style.width = `${Math.max(m.net_up_bytes > 0 ? 5 : 0, upPct)}%`;
+    }
   } catch (err) {
     console.error("Failed to load telemetry metrics:", err);
+  }
+}
+
+function formatSpeed(bytesPerSec) {
+  if (bytesPerSec >= 1024 * 1024) {
+    return `${(bytesPerSec / (1024 * 1024)).toFixed(1)} MB/s`;
+  } else if (bytesPerSec >= 1024) {
+    return `${(bytesPerSec / 1024).toFixed(1)} KB/s`;
+  } else {
+    return `${Math.round(bytesPerSec)} B/s`;
   }
 }
 

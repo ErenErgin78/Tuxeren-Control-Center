@@ -195,7 +195,7 @@
 
     .telemetry-grid {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(6, minmax(0, 1fr));
       gap: 14px;
     }
 
@@ -379,13 +379,13 @@
       animation: spinFan 1.6s linear infinite;
     }
 
-    @media (max-width: 1120px) {
+    @media (max-width: 1320px) {
       .telemetry-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
     }
 
-    @media (max-width: 720px) {
+    @media (max-width: 760px) {
       .telemetry-grid {
         grid-template-columns: 1fr;
       }
@@ -417,7 +417,6 @@
           </svg>
           Sistem İzleme
         </span>
-        <span class="telemetry-live-dot" title="Canlı Veri Akışı">
       </div>
 
       <div class="telemetry-grid">
@@ -552,6 +551,48 @@
               </div>
               <div class="telemetry-progress-bg mini">
                 <div class="telemetry-progress-bar" id="fan-gpu-bar" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ağ Trafiği (İndirme & Yükleme Hızları) -->
+        <div class="telemetry-card">
+          <div class="telemetry-card-head">
+            <div class="telemetry-label">
+              <svg class="telemetry-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+                <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+                <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                <line x1="12" y1="20" x2="12.01" y2="20"></line>
+              </svg>
+              <span>AĞ TRAFİĞİ</span>
+            </div>
+            <span class="telemetry-badge" id="net-badge">LAN / Wi-Fi</span>
+          </div>
+          <div class="fan-dual-row">
+            <div class="fan-stat">
+              <div class="fan-meta">
+                <span class="fan-label" style="display: flex; align-items: center; gap: 4px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00ffc2" stroke-width="2.5"><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                  İNDİRME
+                </span>
+                <span class="fan-val" id="net-down-speed">0.0 KB/s</span>
+              </div>
+              <div class="telemetry-progress-bg mini">
+                <div class="telemetry-progress-bar" id="net-down-bar" style="width: 0%;"></div>
+              </div>
+            </div>
+            <div class="fan-stat">
+              <div class="fan-meta">
+                <span class="fan-label" style="display: flex; align-items: center; gap: 4px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><polyline points="17 14 12 9 7 14"></polyline><line x1="12" y1="21" x2="12" y2="9"></line></svg>
+                  YÜKLEME
+                </span>
+                <span class="fan-val" id="net-up-speed">0.0 KB/s</span>
+              </div>
+              <div class="telemetry-progress-bg mini">
+                <div class="telemetry-progress-bar" id="net-up-bar" style="width: 0%; background: linear-gradient(90deg, #0284c7, #38bdf8);"></div>
               </div>
             </div>
           </div>
