@@ -136,6 +136,11 @@ fn main() {
                     Ok(state) => {
                         println!("Donanım (BIOS/EC) Modu: {} (Kod: {})", state.hardware_mode_name, state.hardware_mode);
                         println!("Fedora (OS/D-Bus) Kipi: {}", state.os_profile);
+                        if let Ok(m) = monster_control_center::performance::get_system_metrics() {
+                            println!("CPU: {:.1}% ({}°C) | GPU: {:.1}% ({}°C)", m.cpu_percent, m.cpu_temp, m.gpu_percent, m.gpu_temp);
+                            println!("RAM: {:.1}% ({:.1} GB / {:.1} GB) | Disk: {:.1}% ({:.1} GB / {:.1} GB)", m.ram_percent, m.ram_used_gb, m.ram_total_gb, m.disk_percent, m.disk_used_gb, m.disk_total_gb);
+                            println!("Fanlar: CPU {} RPM ({}%) | GPU {} RPM ({}%)", m.cpu_fan_rpm, m.cpu_fan_duty, m.gpu_fan_rpm, m.gpu_fan_duty);
+                        }
                         Ok(())
                     }
                     Err(e) => Err(e),

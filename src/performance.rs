@@ -11,6 +11,7 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Mutex;
 use std::thread;
 use std::time::Duration;
 
@@ -20,6 +21,25 @@ pub const ADDR_PL1_CONTROL: u16 = 0x046A;
 pub const ADDR_PL2_CONTROL: u16 = 0x046B;
 
 static DAEMON_RUNNING: AtomicBool = AtomicBool::new(false);
+static PREV_CPU: Mutex<Option<(u64, u64)>> = Mutex::new(None);
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SystemMetrics {
+    pub ram_percent: f32,
+    pub ram_used_gb: f32,
+    pub ram_total_gb: f32,
+    pub cpu_percent: f32,
+    pub cpu_temp: u32,
+    pub gpu_percent: f32,
+    pub gpu_temp: u32,
+    pub cpu_fan_rpm: u16,
+    pub cpu_fan_duty: u8,
+    pub gpu_fan_rpm: u16,
+    pub gpu_fan_duty: u8,
+    pub disk_percent: f32,
+    pub disk_used_gb: f32,
+    pub disk_total_gb: f32,
+}
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -247,6 +267,170 @@ pub fn get_performance_state() -> Result<PerformanceState, String> {
     })
 }
 
+fn get_ram_metrics() -> (f32, f32, f32) {
+    if let Ok(content) = fs::read_to_string("/proc/meminfo") {
+        let mut total_kb = 0.0;
+        let mut avail_kb = 0.0;
+        for line in content.lines() {
+            if line.starts_with("MemTotal:") {
+                if let Some(val) = line.split_whitespace().nth(1) {
+                    total_kb = val.parse::<f64>().unwrap_or(0.0);
+                }
+            } else if line.starts_with("MemAvailable:") {
+                if let Some(val) = line.split_whitespace().nth(1) {
+                    avail_kb = val.parse::<f64>().unwrap_or(0.0);
+                }
+            }
+            if total_kb > 0.0 && avail_kb > 0.0 {
+                break;
+            }
+        }
+        if total_kb > 0.0 {
+            let used_kb = total_kb - avail_kb;
+            let total_gb = (total_kb / 1024.0 / 1024.0) as f32;
+            let used_gb = (used_kb / 1024.0 / 1024.0) as f32;
+            let percent = ((used_kb / total_kb) * 100.0) as f32;
+            return (percent, used_gb, total_gb);
+        }
+    }
+    (0.0, 0.0, 0.0)
+}
+
+fn get_cpu_usage() -> f32 {
+    let stat = match fs::read_to_string("/proc/stat") {
+        Ok(s) => s,
+        Err(_) => return 0.0,
+    };
+    let first_line = match stat.lines().next() {
+        Some(l) if l.starts_with("cpu ") => l,
+        _ => return 0.0,
+    };
+    let parts: Vec<u64> = first_line
+        .split_whitespace()
+        .skip(1)
+        .filter_map(|s| s.parse::<u64>().ok())
+        .collect();
+    if parts.len() < 4 {
+        return 0.0;
+    }
+    let idle = parts[3] + parts.get(4).copied().unwrap_or(0);
+    let total: u64 = parts.iter().sum();
+
+    let mut prev = PREV_CPU.lock().unwrap();
+    match *prev {
+        Some((p_idle, p_total)) => {
+            *prev = Some((idle, total));
+            let d_total = total.saturating_sub(p_total);
+            let d_idle = idle.saturating_sub(p_idle);
+            if d_total > 0 {
+                let usage = ((d_total - d_idle) as f32 / d_total as f32) * 100.0;
+                usage.clamp(0.0, 100.0)
+            } else {
+                0.0
+            }
+        }
+        None => {
+            *prev = Some((idle, total));
+            0.0
+        }
+    }
+}
+
+fn get_cpu_temp() -> u32 {
+    let base = Path::new("/sys/class/hwmon");
+    if let Ok(entries) = fs::read_dir(base) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if let Ok(name) = fs::read_to_string(path.join("name")) {
+                if name.trim() == "coretemp" {
+                    if let Ok(temp_str) = fs::read_to_string(path.join("temp1_input")) {
+                        if let Ok(millidegrees) = temp_str.trim().parse::<u32>() {
+                            return millidegrees / 1000;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if let Ok(temp_str) = fs::read_to_string("/sys/class/thermal/thermal_zone0/temp") {
+        if let Ok(millidegrees) = temp_str.trim().parse::<u32>() {
+            return millidegrees / 1000;
+        }
+    }
+    0
+}
+
+fn get_gpu_metrics() -> (f32, u32) {
+    if let Ok(out) = Command::new("nvidia-smi")
+        .args(["--query-gpu=utilization.gpu,temperature.gpu", "--format=csv,noheader,nounits"])
+        .output()
+    {
+        let text = String::from_utf8_lossy(&out.stdout);
+        let parts: Vec<&str> = text.trim().split(',').map(|s| s.trim()).collect();
+        if parts.len() >= 2 {
+            let util = parts[0].parse::<f32>().unwrap_or(0.0);
+            let temp = parts[1].parse::<u32>().unwrap_or(0);
+            return (util, temp);
+        }
+    }
+    (0.0, 0)
+}
+
+fn get_fan_metrics() -> (u16, u8, u16, u8) {
+    let cpu_rpm = ((ec::read_byte(0x0464).unwrap_or(0) as u16) << 8)
+        | (ec::read_byte(0x0465).unwrap_or(0) as u16);
+    let gpu_rpm = ((ec::read_byte(0x046C).unwrap_or(0) as u16) << 8)
+        | (ec::read_byte(0x046D).unwrap_or(0) as u16);
+    let cpu_duty = ec::read_byte(0x075B).unwrap_or(0);
+    let gpu_duty = ec::read_byte(0x075C).unwrap_or(0);
+    (cpu_rpm, cpu_duty, gpu_rpm, gpu_duty)
+}
+
+fn get_disk_metrics() -> (f32, f32, f32) {
+    if let Ok(output) = Command::new("df").args(["-k", "/"]).output() {
+        let text = String::from_utf8_lossy(&output.stdout);
+        for line in text.lines().rev() {
+            let tokens: Vec<&str> = line.split_whitespace().collect();
+            if tokens.len() >= 5 {
+                if let (Ok(total_kb), Ok(used_kb)) = (tokens[1].parse::<f64>(), tokens[2].parse::<f64>()) {
+                    let total_gb = (total_kb / 1024.0 / 1024.0) as f32;
+                    let used_gb = (used_kb / 1024.0 / 1024.0) as f32;
+                    let percent = if total_gb > 0.0 { (used_gb / total_gb) * 100.0 } else { 0.0 };
+                    return (percent, used_gb, total_gb);
+                }
+            }
+        }
+    }
+    (0.0, 0.0, 0.0)
+}
+
+/// Gathers real-time live system and hardware telemetry metrics.
+pub fn get_system_metrics() -> Result<SystemMetrics, String> {
+    let (ram_percent, ram_used_gb, ram_total_gb) = get_ram_metrics();
+    let cpu_percent = get_cpu_usage();
+    let cpu_temp = get_cpu_temp();
+    let (gpu_percent, gpu_temp) = get_gpu_metrics();
+    let (cpu_fan_rpm, cpu_fan_duty, gpu_fan_rpm, gpu_fan_duty) = get_fan_metrics();
+    let (disk_percent, disk_used_gb, disk_total_gb) = get_disk_metrics();
+
+    Ok(SystemMetrics {
+        ram_percent,
+        ram_used_gb,
+        ram_total_gb,
+        cpu_percent,
+        cpu_temp,
+        gpu_percent,
+        gpu_temp,
+        cpu_fan_rpm,
+        cpu_fan_duty,
+        gpu_fan_rpm,
+        gpu_fan_duty,
+        disk_percent,
+        disk_used_gb,
+        disk_total_gb,
+    })
+}
+
 /// Klavyedeki fiziksel tuş basışlarını 0x0751 üzerinden yakalayan düşük maliyetli EC polling daemon'ı (~200ms).
 pub fn start_polling_daemon() {
     if DAEMON_RUNNING.swap(true, Ordering::SeqCst) {
@@ -290,5 +474,13 @@ mod tests {
         assert_eq!(PerformanceMode::from_fan_byte(0xA0), Some(PerformanceMode::Office));
         assert_eq!(PerformanceMode::from_fan_byte(0x20), Some(PerformanceMode::Gaming));
         assert_eq!(PerformanceMode::from_fan_byte(0x30), Some(PerformanceMode::Turbo));
+    }
+
+    #[test]
+    fn test_system_metrics() {
+        let metrics = get_system_metrics().expect("Failed to retrieve system metrics");
+        assert!(metrics.ram_total_gb > 0.0);
+        assert!(metrics.ram_percent >= 0.0 && metrics.ram_percent <= 100.0);
+        assert!(metrics.disk_total_gb > 0.0);
     }
 }

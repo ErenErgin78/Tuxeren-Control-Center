@@ -137,6 +137,259 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* Telemetry Dashboard */
+    .telemetry-section {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+
+    .telemetry-header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 4px;
+    }
+
+    .telemetry-section-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .telemetry-live-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: var(--accent-cyan);
+      background: rgba(0, 255, 194, 0.08);
+      padding: 3px 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(0, 255, 194, 0.25);
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 8px var(--accent-cyan);
+      animation: pulseLive 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseLive {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .telemetry-card {
+      background: rgba(3, 24, 25, 0.85);
+      border: 1px solid rgba(0, 255, 194, 0.2);
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      min-width: 0;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .telemetry-card:hover {
+      border-color: rgba(0, 255, 194, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .telemetry-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(0, 255, 194, 0.6), transparent);
+      opacity: 0.6;
+    }
+
+    .telemetry-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .telemetry-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .telemetry-icon {
+      width: 14px;
+      height: 14px;
+      color: var(--accent-cyan);
+      flex-shrink: 0;
+    }
+
+    .telemetry-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 8px;
+      background: rgba(0, 255, 194, 0.12);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(0, 255, 194, 0.25);
+      white-space: nowrap;
+    }
+
+    .telemetry-badge.temp-cool {
+      color: var(--accent-cyan);
+      background: rgba(0, 255, 194, 0.12);
+      border-color: rgba(0, 255, 194, 0.25);
+    }
+
+    .telemetry-badge.temp-warm {
+      color: #f59e0b;
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.35);
+    }
+
+    .telemetry-badge.temp-hot {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.18);
+      border-color: rgba(239, 68, 68, 0.4);
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+    }
+
+    .telemetry-val-row {
+      display: flex;
+      align-items: baseline;
+      gap: 3px;
+      margin-top: 2px;
+    }
+
+    .telemetry-value {
+      font-size: 1.85rem;
+      font-weight: 800;
+      line-height: 1;
+      color: #ffffff;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.5px;
+    }
+
+    .telemetry-unit {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+    }
+
+    .telemetry-progress-bg {
+      height: 5px;
+      background: rgba(0, 255, 194, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 4px 0 2px;
+    }
+
+    .telemetry-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #00b48a 0%, #00ffc2 100%);
+      border-radius: 4px;
+      transition: width 0.35s ease-out;
+      box-shadow: 0 0 8px rgba(0, 255, 194, 0.35);
+    }
+
+    .telemetry-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .fan-dual-row {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-top: 4px;
+    }
+
+    .fan-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .fan-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.72rem;
+    }
+
+    .fan-label {
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .fan-val {
+      color: #fff;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .telemetry-progress-bg.mini {
+      height: 4px;
+      margin: 1px 0 0;
+    }
+
+    @keyframes spinFan {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .fan-telemetry-icon.spinning {
+      animation: spinFan 1.6s linear infinite;
+    }
+
+    @media (max-width: 1120px) {
+      .telemetry-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .telemetry-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body class="page-performance">
@@ -155,6 +408,157 @@
   </header>
 
   <main class="perf-workspace">
+    <!-- Canlı Sistem Telemetrisi -->
+    <section class="telemetry-section">
+      <div class="telemetry-header-bar">
+        <span class="telemetry-section-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+          Sistem İzleme
+        </span>
+        <span class="telemetry-live-dot" title="Canlı Veri Akışı">
+      </div>
+
+      <div class="telemetry-grid">
+        <!-- CPU Card -->
+        <div class="telemetry-card">
+          <div class="telemetry-card-head">
+            <div class="telemetry-label">
+              <svg class="telemetry-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                <rect x="9" y="9" width="6" height="6"></rect>
+                <line x1="9" y1="1" x2="9" y2="4"></line>
+                <line x1="15" y1="1" x2="15" y2="4"></line>
+                <line x1="9" y1="20" x2="9" y2="23"></line>
+                <line x1="15" y1="20" x2="15" y2="23"></line>
+                <line x1="20" y1="9" x2="23" y2="9"></line>
+                <line x1="20" y1="15" x2="23" y2="15"></line>
+                <line x1="1" y1="9" x2="4" y2="9"></line>
+                <line x1="1" y1="15" x2="4" y2="15"></line>
+              </svg>
+              <span>İŞLEMCİ (CPU)</span>
+            </div>
+            <span class="telemetry-badge temp-cool" id="cpu-temp">--°C</span>
+          </div>
+          <div class="telemetry-val-row">
+            <span class="telemetry-value" id="cpu-usage">0</span>
+            <span class="telemetry-unit">%</span>
+          </div>
+          <div class="telemetry-progress-bg">
+            <div class="telemetry-progress-bar" id="cpu-bar" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <!-- GPU Card -->
+        <div class="telemetry-card">
+          <div class="telemetry-card-head">
+            <div class="telemetry-label">
+              <svg class="telemetry-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+                <circle cx="8" cy="12" r="2.5"></circle>
+                <circle cx="16" cy="12" r="2.5"></circle>
+                <line x1="6" y1="2" x2="6" y2="6"></line>
+                <line x1="10" y1="2" x2="10" y2="6"></line>
+              </svg>
+              <span>EKRAN KARTI (GPU)</span>
+            </div>
+            <span class="telemetry-badge temp-cool" id="gpu-temp">--°C</span>
+          </div>
+          <div class="telemetry-val-row">
+            <span class="telemetry-value" id="gpu-usage">0</span>
+            <span class="telemetry-unit">%</span>
+          </div>
+          <div class="telemetry-progress-bg">
+            <div class="telemetry-progress-bar" id="gpu-bar" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <!-- RAM Card -->
+        <div class="telemetry-card">
+          <div class="telemetry-card-head">
+            <div class="telemetry-label">
+              <svg class="telemetry-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M2 7h20v10H2z"></path>
+                <path d="M6 7v10"></path>
+                <path d="M10 7v10"></path>
+                <path d="M14 7v10"></path>
+                <path d="M18 7v10"></path>
+              </svg>
+              <span>BELLEK (RAM)</span>
+            </div>
+          </div>
+          <div class="telemetry-val-row">
+            <span class="telemetry-value" id="ram-usage">0</span>
+            <span class="telemetry-unit">%</span>
+          </div>
+          <div class="telemetry-progress-bg">
+            <div class="telemetry-progress-bar" id="ram-bar" style="width: 0%;"></div>
+          </div>
+          <div class="telemetry-sub" id="ram-sub">0.0 GB / 0.0 GB</div>
+        </div>
+
+        <!-- Storage Card -->
+        <div class="telemetry-card">
+          <div class="telemetry-card-head">
+            <div class="telemetry-label">
+              <svg class="telemetry-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="12" x2="2" y2="12"></line>
+                <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+                <line x1="6" y1="16" x2="6.01" y2="16"></line>
+                <line x1="10" y1="16" x2="10.01" y2="16"></line>
+              </svg>
+              <span>DEPOLAMA (DISK)</span>
+            </div>
+          </div>
+          <div class="telemetry-val-row">
+            <span class="telemetry-value" id="disk-usage">0</span>
+            <span class="telemetry-unit">%</span>
+          </div>
+          <div class="telemetry-progress-bg">
+            <div class="telemetry-progress-bar" id="disk-bar" style="width: 0%;"></div>
+          </div>
+          <div class="telemetry-sub" id="disk-sub">0 GB / 0 GB</div>
+        </div>
+
+        <!-- Fan Card -->
+        <div class="telemetry-card">
+          <div class="telemetry-card-head">
+            <div class="telemetry-label">
+              <svg class="telemetry-icon fan-telemetry-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 12c0-3 2.5-5 5-5 0 2.5-2 5-5 5z"></path>
+                <path d="M12 12c3 0 5 2.5 5 5-2.5 0-5-2-5-5z"></path>
+                <path d="M12 12c0 3-2.5 5-5 5 0-2.5 2-5 5-5z"></path>
+                <path d="M12 12c-3 0-5-2.5-5-5 2.5 0 5 2 5 5z"></path>
+                <circle cx="12" cy="12" r="2"></circle>
+              </svg>
+              <span>SOĞUTMA FANLARI</span>
+            </div>
+          </div>
+          <div class="fan-dual-row">
+            <div class="fan-stat">
+              <div class="fan-meta">
+                <span class="fan-label">CPU FAN</span>
+                <span class="fan-val" id="fan-cpu-rpm">0 RPM (0%)</span>
+              </div>
+              <div class="telemetry-progress-bg mini">
+                <div class="telemetry-progress-bar" id="fan-cpu-bar" style="width: 0%;"></div>
+              </div>
+            </div>
+            <div class="fan-stat">
+              <div class="fan-meta">
+                <span class="fan-label">GPU FAN</span>
+                <span class="fan-val" id="fan-gpu-rpm">0 RPM (0%)</span>
+              </div>
+              <div class="telemetry-progress-bg mini">
+                <div class="telemetry-progress-bar" id="fan-gpu-bar" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Sol Kolon: BIOS / Donanım Bazlı Ayar -->
     <section class="perf-card">
       <div class="card-header-sm">

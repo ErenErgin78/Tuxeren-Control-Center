@@ -94,6 +94,91 @@ document.querySelectorAll("[data-os]").forEach((el) => {
   });
 });
 
-// Initial fetch and light polling (500ms) to reflect physical button changes
+function updateTempBadge(el, temp) {
+  if (!el) return;
+  el.classList.remove("temp-cool", "temp-warm", "temp-hot");
+  if (temp >= 80) {
+    el.classList.add("temp-hot");
+  } else if (temp >= 65) {
+    el.classList.add("temp-warm");
+  } else {
+    el.classList.add("temp-cool");
+  }
+}
+
+async function refreshMetrics() {
+  try {
+    const m = await invoke("get_system_metrics");
+    if (!m) return;
+
+    // CPU
+    const cpuUsageEl = document.getElementById("cpu-usage");
+    const cpuBarEl = document.getElementById("cpu-bar");
+    const cpuTempEl = document.getElementById("cpu-temp");
+    if (cpuUsageEl) cpuUsageEl.textContent = Math.round(m.cpu_percent);
+    if (cpuBarEl) cpuBarEl.style.width = `${Math.min(100, Math.max(0, m.cpu_percent))}%`;
+    if (cpuTempEl) {
+      cpuTempEl.textContent = `${m.cpu_temp}°C`;
+      updateTempBadge(cpuTempEl, m.cpu_temp);
+    }
+
+    // GPU
+    const gpuUsageEl = document.getElementById("gpu-usage");
+    const gpuBarEl = document.getElementById("gpu-bar");
+    const gpuTempEl = document.getElementById("gpu-temp");
+    if (gpuUsageEl) gpuUsageEl.textContent = Math.round(m.gpu_percent);
+    if (gpuBarEl) gpuBarEl.style.width = `${Math.min(100, Math.max(0, m.gpu_percent))}%`;
+    if (gpuTempEl) {
+      gpuTempEl.textContent = `${m.gpu_temp}°C`;
+      updateTempBadge(gpuTempEl, m.gpu_temp);
+    }
+
+    // RAM
+    const ramUsageEl = document.getElementById("ram-usage");
+    const ramBarEl = document.getElementById("ram-bar");
+    const ramSubEl = document.getElementById("ram-sub");
+    if (ramUsageEl) ramUsageEl.textContent = Math.round(m.ram_percent);
+    if (ramBarEl) ramBarEl.style.width = `${Math.min(100, Math.max(0, m.ram_percent))}%`;
+    if (ramSubEl) ramSubEl.textContent = `${m.ram_used_gb.toFixed(1)} GB / ${m.ram_total_gb.toFixed(1)} GB`;
+
+    // Disk
+    const diskUsageEl = document.getElementById("disk-usage");
+    const diskBarEl = document.getElementById("disk-bar");
+    const diskSubEl = document.getElementById("disk-sub");
+    if (diskUsageEl) diskUsageEl.textContent = Math.round(m.disk_percent);
+    if (diskBarEl) diskBarEl.style.width = `${Math.min(100, Math.max(0, m.disk_percent))}%`;
+    if (diskSubEl) diskSubEl.textContent = `${Math.round(m.disk_used_gb)} GB / ${Math.round(m.disk_total_gb)} GB`;
+
+    // Fans
+    const fanCpuRpmEl = document.getElementById("fan-cpu-rpm");
+    const fanCpuBarEl = document.getElementById("fan-cpu-bar");
+    const fanGpuRpmEl = document.getElementById("fan-gpu-rpm");
+    const fanGpuBarEl = document.getElementById("fan-gpu-bar");
+    const fanIconEl = document.querySelector(".fan-telemetry-icon");
+
+    if (fanCpuRpmEl) fanCpuRpmEl.textContent = `${m.cpu_fan_rpm} RPM (${m.cpu_fan_duty}%)`;
+    if (fanCpuBarEl) fanCpuBarEl.style.width = `${Math.min(100, m.cpu_fan_duty)}%`;
+    if (fanGpuRpmEl) fanGpuRpmEl.textContent = `${m.gpu_fan_rpm} RPM (${m.gpu_fan_duty}%)`;
+    if (fanGpuBarEl) fanGpuBarEl.style.width = `${Math.min(100, m.gpu_fan_duty)}%`;
+
+    if (fanIconEl) {
+      const maxRpm = Math.max(m.cpu_fan_rpm, m.gpu_fan_rpm);
+      if (maxRpm > 0) {
+        fanIconEl.classList.add("spinning");
+        const speed = Math.max(0.4, 2.5 - (maxRpm / 3000));
+        fanIconEl.style.animationDuration = `${speed.toFixed(2)}s`;
+      } else {
+        fanIconEl.classList.remove("spinning");
+      }
+    }
+  } catch (err) {
+    console.error("Failed to load telemetry metrics:", err);
+  }
+}
+
+// Initial fetch and polling
 refreshPerformance();
 setInterval(refreshPerformance, 500);
+
+refreshMetrics();
+setInterval(refreshMetrics, 1000);

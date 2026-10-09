@@ -96,6 +96,11 @@ fn get_performance_state() -> Result<monster_control_center::performance::Perfor
 }
 
 #[tauri::command]
+fn get_system_metrics() -> Result<monster_control_center::performance::SystemMetrics, String> {
+    monster_control_center::performance::get_system_metrics()
+}
+
+#[tauri::command]
 fn set_hardware_mode(mode: u8) -> Result<(), String> {
     monster_control_center::performance::set_hardware_mode(mode)
 }
@@ -117,6 +122,7 @@ fn main() {
             get_device_info,
             get_battery_info,
             get_performance_state,
+            get_system_metrics,
             set_hardware_mode,
             set_os_power_profile
         ])
