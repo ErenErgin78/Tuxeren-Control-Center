@@ -2,7 +2,7 @@
 //!
 //! Tauri v2 desktop application for single-zone RGB keyboard control and EC management.
 
-use monster_control_center::{battery, device_info, ec, keyboard, get_chassis_project_id};
+use monster_control_center::{battery, device_info, display, ec, keyboard, get_chassis_project_id};
 use serde::Serialize;
 use std::fs::OpenOptions;
 use std::process::Command;
@@ -115,6 +115,21 @@ fn set_touchpad_disabled(disabled: bool) -> Result<(), String> {
     monster_control_center::general::set_touchpad_disabled(disabled)
 }
 
+#[tauri::command]
+fn get_display_settings() -> Result<display::DisplaySettings, String> {
+    Ok(display::get_display_settings())
+}
+
+#[tauri::command]
+fn apply_display_settings(settings: display::DisplaySettings) -> Result<(), String> {
+    display::apply_display_settings(settings)
+}
+
+#[tauri::command]
+fn reset_display_settings() -> Result<display::DisplaySettings, String> {
+    display::reset_display_settings()
+}
+
 fn main() {
     monster_control_center::general::ensure_daemon_running();
     monster_control_center::performance::start_polling_daemon();
@@ -136,7 +151,10 @@ fn main() {
             set_os_power_profile,
             get_general_settings,
             set_win_key_disabled,
-            set_touchpad_disabled
+            set_touchpad_disabled,
+            get_display_settings,
+            apply_display_settings,
+            reset_display_settings
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

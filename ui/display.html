@@ -5,8 +5,185 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Görüntü Ayarları - Monster Kontrol Merkezi</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .display-workspace {
+      flex: 1;
+      padding: clamp(16px, 2.5vh, 28px) clamp(16px, 3vw, 36px) 24px;
+      overflow-y: auto;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      align-content: start;
+    }
+
+    .display-card {
+      background: rgba(3, 24, 25, 0.85);
+      border: 1px solid rgba(0, 255, 194, 0.2);
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      min-width: 0;
+    }
+
+    .display-card-full {
+      grid-column: 1 / -1;
+    }
+
+    .card-header-sm {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(0, 255, 194, 0.15);
+      padding-bottom: 10px;
+    }
+
+    .card-title-sm {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-status {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: rgba(0, 255, 194, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(0, 255, 194, 0.3);
+      font-weight: 600;
+    }
+
+    .control-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .control-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .control-value {
+      font-size: 0.8rem;
+      color: var(--accent-cyan);
+      font-weight: 700;
+    }
+
+    .slider-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .slider-wrap input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+      outline: none;
+      accent-color: var(--accent-cyan);
+    }
+
+    .slider-marks {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      padding: 0 2px;
+    }
+
+    /* Channel Sliders */
+    .slider-red input[type="range"] { accent-color: #ff4757; }
+    .slider-green input[type="range"] { accent-color: #2ed573; }
+    .slider-blue input[type="range"] { accent-color: #1e90ff; }
+
+    .profiles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 10px;
+    }
+
+    .profile-btn {
+      background: rgba(0, 255, 194, 0.05);
+      border: 1px solid rgba(0, 255, 194, 0.2);
+      border-radius: 8px;
+      padding: 10px 8px;
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+    }
+
+    .profile-btn:hover {
+      background: rgba(0, 255, 194, 0.15);
+      border-color: var(--accent-cyan);
+    }
+
+    .profile-btn.active {
+      background: rgba(0, 255, 194, 0.25);
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 10px rgba(0, 255, 194, 0.3);
+      color: var(--accent-cyan);
+    }
+
+    .profile-sub {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-weight: normal;
+    }
+
+    .actions-bar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .btn-reset {
+      background: rgba(248, 81, 73, 0.1);
+      border: 1px solid rgba(248, 81, 73, 0.3);
+      color: #ff7b72;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-reset:hover {
+      background: rgba(248, 81, 73, 0.25);
+      border-color: #f85149;
+    }
+
+    @media (max-width: 900px) {
+      .display-workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
-<body>
+<body class="page-display">
   <!-- Titlebar -->
   <header class="titlebar">
     <div class="header-left">
@@ -19,17 +196,179 @@
         <h1 class="oem-page-title">Görüntü Ayarları</h1>
       </div>
     </div>
+    <div class="status-badge">
+      <span class="status-indicator"></span>
+      <span>Aktif Panel: Dahili Ekran</span>
+    </div>
   </header>
 
-  <main class="view view-subpage">
-
-    <div class="placeholder-content">
-      <div class="placeholder-card">
-        <img src="assets/btn-main-display.png" alt="Görüntü Ayarları" class="placeholder-icon">
-        <h3>Görüntü Ayarları</h3>
-        <p>Bu modül henüz uygulanmadı.</p>
+  <main class="display-workspace">
+    <!-- Hazır Görüntü Profilleri -->
+    <section class="display-card display-card-full">
+      <div class="card-header-sm">
+        <span class="card-title-sm">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+          OEM Renk Modları
+        </span>
+        <button class="btn-reset" id="btn-reset">Varsayılana Sıfırla</button>
       </div>
-    </div>
+      <div class="profiles-grid">
+        <button class="profile-btn active" data-preset="default">
+          <span>Standart</span>
+          <span class="profile-sub">Doğal Renkler</span>
+        </button>
+        <button class="profile-btn" data-preset="vibrant">
+          <span>Canlı Mod</span>
+          <span class="profile-sub">Vibrant Color</span>
+        </button>
+        <button class="profile-btn" data-preset="reading">
+          <span>Okuma / Gece</span>
+          <span class="profile-sub">Düşük Mavi Işık</span>
+        </button>
+        <button class="profile-btn" data-preset="cinema">
+          <span>Sinema</span>
+          <span class="profile-sub">Yüksek Kontrast</span>
+        </button>
+        <button class="profile-btn" data-preset="photo">
+          <span>Fotoğraf</span>
+          <span class="profile-sub">Hassas Doygunluk</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Temel Ayarlar (Parlaklık, Sıcaklık, Doygunluk, Gamma) -->
+    <section class="display-card">
+      <div class="card-header-sm">
+        <span class="card-title-sm">Genel Parlaklık & Renk</span>
+      </div>
+
+      <!-- Brightness -->
+      <div class="control-row">
+        <div class="control-header">
+          <span>Parlaklık (Brightness)</span>
+          <span class="control-value" id="val-brightness">100%</span>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" id="slider-brightness" min="5" max="100" value="100" step="1">
+          <div class="slider-marks">
+            <span>5%</span>
+            <span>50%</span>
+            <span>100%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Color Temp -->
+      <div class="control-row">
+        <div class="control-header">
+          <span>Renk Sıcaklığı (Color Temp)</span>
+          <span class="control-value" id="val-temp">6500 K</span>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" id="slider-temp" min="3000" max="9000" value="6500" step="100">
+          <div class="slider-marks">
+            <span>3000K (Sıcak)</span>
+            <span>6500K</span>
+            <span>9000K (Soğuk)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Saturation -->
+      <div class="control-row">
+        <div class="control-header">
+          <span>Renk Doygunluğu (Saturation)</span>
+          <span class="control-value" id="val-saturation">1.00</span>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" id="slider-saturation" min="0" max="2" value="1" step="0.05">
+          <div class="slider-marks">
+            <span>0.0 (S/B)</span>
+            <span>1.0 (Standart)</span>
+            <span>2.0 (Canlı)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gamma -->
+      <div class="control-row">
+        <div class="control-header">
+          <span>Gamma Düzeltmesi</span>
+          <span class="control-value" id="val-gamma">1.00</span>
+        </div>
+        <div class="slider-wrap">
+          <input type="range" id="slider-gamma" min="0.5" max="2.0" value="1.0" step="0.05">
+          <div class="slider-marks">
+            <span>0.5 (Açık)</span>
+            <span>1.0</span>
+            <span>2.0 (Koyu)</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RGB Kanal Kalibrasyonu -->
+    <section class="display-card">
+      <div class="card-header-sm">
+        <span class="card-title-sm">RGB Renk Kanalları</span>
+      </div>
+
+      <!-- Red -->
+      <div class="control-row">
+        <div class="control-header">
+          <span>Kırmızı Kanal (Red)</span>
+          <span class="control-value" id="val-red">128</span>
+        </div>
+        <div class="slider-wrap slider-red">
+          <input type="range" id="slider-red" min="0" max="255" value="128" step="1">
+          <div class="slider-marks">
+            <span>0</span>
+            <span>128</span>
+            <span>255</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Green -->
+      <div class="control-row">
+        <div class="control-header">
+          <span>Yeşil Kanal (Green)</span>
+          <span class="control-value" id="val-green">128</span>
+        </div>
+        <div class="slider-wrap slider-green">
+          <input type="range" id="slider-green" min="0" max="255" value="128" step="1">
+          <div class="slider-marks">
+            <span>0</span>
+            <span>128</span>
+            <span>255</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Blue -->
+      <div class="control-row">
+        <div class="control-header">
+          <span>Mavi Kanal (Blue)</span>
+          <span class="control-value" id="val-blue">128</span>
+        </div>
+        <div class="slider-wrap slider-blue">
+          <input type="range" id="slider-blue" min="0" max="255" value="128" step="1">
+          <div class="slider-marks">
+            <span>0</span>
+            <span>128</span>
+            <span>255</span>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="display.js"></script>
 </body>
 </html>

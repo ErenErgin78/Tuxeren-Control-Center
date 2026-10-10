@@ -19,6 +19,10 @@ COMMANDS:
     perf [office|gaming|turbo]  Get or set hardware and OS performance modes
     perf os <saver|balanced|perf> Set OS power profile
     perf watch                  Watch keyboard mode button and sync OS with OSD notifications
+    display                     Get active display settings
+    display brightness <0-100>  Set display brightness
+    display temp <1000-10000>   Set color temperature (Kelvin)
+    display reset               Reset display to neutral calibration
     daemon                      Run low-power background service (touchpad F24 & performance)
     read <hex_reg>              Read raw EC register byte (e.g. 0x0769)
     write <hex_reg> <hex_val>   Write raw EC register byte (e.g. 0x078C 0x01)
@@ -180,6 +184,58 @@ fn main() {
                         }
                     }
                     _ => Err(format!("Bilinmeyen perf parametresi '{}'. Geçerli: office, gaming, turbo, os, watch", args[2])),
+                }
+            }
+        }
+        "display" => {
+            if args.len() == 2 {
+                let s = monster_control_center::display::get_display_settings();
+                println!("=== Görüntü Ayarları ===");
+                println!("  Parlaklık (Brightness):       %{}", s.brightness);
+                println!("  Renk Sıcaklığı (Color Temp):  {} K", s.color_temp);
+                println!("  Doygunluk (Saturation):       {:.2}", s.saturation);
+                println!("  Gamma Değeri:                 {:.2}", s.gamma);
+                println!("  Kanal Kırmızı (Red):          {}", s.red);
+                println!("  Kanal Yeşil (Green):          {}", s.green);
+                println!("  Kanal Mavi (Blue):            {}", s.blue);
+                Ok(())
+            } else {
+                match args[2].as_str() {
+                    "reset" => {
+                        monster_control_center::display::reset_display_settings()
+                            .map(|_| println!("[ok] Görüntü ayarları sıfırlandı."))
+                    }
+                    "brightness" => {
+                        if args.len() < 4 {
+                            Err("Parlaklık yüzdesi belirtilmelidir (0..100).".to_string())
+                        } else {
+                            match args[3].parse::<u32>() {
+                                Ok(val) => {
+                                    let mut s = monster_control_center::display::get_display_settings();
+                                    s.brightness = val;
+                                    monster_control_center::display::apply_display_settings(s)
+                                        .map(|_| println!("[ok] Ekran parlaklığı %{} olarak ayarlandı.", val))
+                                }
+                                Err(_) => Err("Geçersiz parlaklık değeri.".to_string()),
+                            }
+                        }
+                    }
+                    "temp" => {
+                        if args.len() < 4 {
+                            Err("Renk sıcaklığı belirtilmelidir (Kelvin, örn. 6500).".to_string())
+                        } else {
+                            match args[3].parse::<u32>() {
+                                Ok(val) => {
+                                    let mut s = monster_control_center::display::get_display_settings();
+                                    s.color_temp = val;
+                                    monster_control_center::display::apply_display_settings(s)
+                                        .map(|_| println!("[ok] Renk sıcaklığı {} K olarak ayarlandı.", val))
+                                }
+                                Err(_) => Err("Geçersiz renk sıcaklığı değeri.".to_string()),
+                            }
+                        }
+                    }
+                    _ => Err(format!("Bilinmeyen display alt komutu '{}'.", args[2])),
                 }
             }
         }
