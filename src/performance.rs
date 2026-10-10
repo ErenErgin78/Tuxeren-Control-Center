@@ -3,7 +3,7 @@
 //! Controls hardware Embedded Controller (EC) performance profiles,
 //! synchronizes Linux OS power profiles (tuned / D-Bus),
 //! applies Intel RAPL power limits and CPU EPP policies,
-//! and polls the hardware mode button with OSD desktop notifications.
+//! and polls the hardware mode button.
 
 use crate::ec;
 use serde::{Deserialize, Serialize};
@@ -200,28 +200,6 @@ pub fn set_os_profile(profile: &str) -> Result<(), String> {
     }
 
     Ok(())
-}
-
-/// Masaüstü OSD bildirimi gönderir (root veya kullanıcı oturumu fark etmeksizin).
-pub fn send_notification(title: &str, body: &str) {
-    let mut cmd = Command::new("notify-send");
-    cmd.args(["-a", title, "-i", "preferences-system-power", title, body]);
-
-    if std::env::var("DBUS_SESSION_BUS_ADDRESS").is_err() {
-        unsafe extern "C" {
-            fn getuid() -> u32;
-        }
-        let uid = unsafe { getuid() };
-        let bus_path = format!("/run/user/{}/bus", uid);
-        let runtime_path = format!("/run/user/{}", uid);
-        if Path::new(&bus_path).exists() {
-            cmd.env("DBUS_SESSION_BUS_ADDRESS", format!("unix:path={}", bus_path));
-        }
-        if Path::new(&runtime_path).exists() {
-            cmd.env("XDG_RUNTIME_DIR", runtime_path);
-        }
-    }
-    let _ = cmd.output();
 }
 
 /// Mod değişimini EC'ye, fan/LED moduna ve donanım PL limitlerine uygular.
@@ -512,10 +490,6 @@ pub fn start_polling_daemon() {
                         let _ = ec::write_byte(ADDR_PERF_MODE, perf_mode as u8);
                         let _ = apply_kernel_rapl(pl1 as u32, pl2 as u32);
                         let _ = set_cpu_epp(epp);
-                        send_notification(
-                            "Monster Kontrol Merkezi",
-                            &format!("Performans Kipi: {}", perf_mode.name()),
-                        );
                     }
                 }
             }
