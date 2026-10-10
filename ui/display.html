@@ -29,10 +29,6 @@
       min-width: 0;
     }
 
-    .display-card-full {
-      grid-column: 1 / -1;
-    }
-
     .card-header-sm {
       display: flex;
       align-items: center;
@@ -50,16 +46,6 @@
       display: flex;
       align-items: center;
       gap: 8px;
-    }
-
-    .badge-status {
-      font-size: 0.75rem;
-      padding: 2px 8px;
-      border-radius: 12px;
-      background: rgba(0, 255, 194, 0.15);
-      color: var(--accent-cyan);
-      border: 1px solid rgba(0, 255, 194, 0.3);
-      font-weight: 600;
     }
 
     .control-row {
@@ -112,68 +98,25 @@
     .slider-green input[type="range"] { accent-color: #2ed573; }
     .slider-blue input[type="range"] { accent-color: #1e90ff; }
 
-    .profiles-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-      gap: 10px;
-    }
-
-    .profile-btn {
-      background: rgba(0, 255, 194, 0.05);
-      border: 1px solid rgba(0, 255, 194, 0.2);
-      border-radius: 8px;
-      padding: 10px 8px;
-      color: #fff;
+    .btn-reset {
+      background: rgba(248, 81, 73, 0.12);
+      border: 1px solid rgba(248, 81, 73, 0.35);
+      color: #ff7b72;
+      padding: 6px 14px;
+      border-radius: 6px;
       font-size: 0.8rem;
       font-weight: 600;
       cursor: pointer;
-      display: flex;
-      flex-direction: column;
+      transition: all 0.2s ease;
+      display: inline-flex;
       align-items: center;
-      gap: 4px;
-      transition: all 0.2s ease;
-    }
-
-    .profile-btn:hover {
-      background: rgba(0, 255, 194, 0.15);
-      border-color: var(--accent-cyan);
-    }
-
-    .profile-btn.active {
-      background: rgba(0, 255, 194, 0.25);
-      border-color: var(--accent-cyan);
-      box-shadow: 0 0 10px rgba(0, 255, 194, 0.3);
-      color: var(--accent-cyan);
-    }
-
-    .profile-sub {
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      font-weight: normal;
-    }
-
-    .actions-bar {
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      margin-top: 4px;
-    }
-
-    .btn-reset {
-      background: rgba(248, 81, 73, 0.1);
-      border: 1px solid rgba(248, 81, 73, 0.3);
-      color: #ff7b72;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
+      gap: 6px;
     }
 
     .btn-reset:hover {
       background: rgba(248, 81, 73, 0.25);
       border-color: #f85149;
+      box-shadow: 0 0 10px rgba(248, 81, 73, 0.25);
     }
 
     @media (max-width: 900px) {
@@ -196,50 +139,16 @@
         <h1 class="oem-page-title">Görüntü Ayarları</h1>
       </div>
     </div>
-    <div class="status-badge">
-      <span class="status-indicator"></span>
-      <span>Aktif Panel: Dahili Ekran</span>
-    </div>
+    <button class="btn-reset" id="btn-reset" title="Tüm görüntü ve renk ayarlarını fabrika ayarlarına sıfırla">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+        <path d="M3 3v5h5"></path>
+      </svg>
+      <span>Varsayılana Sıfırla</span>
+    </button>
   </header>
 
   <main class="display-workspace">
-    <!-- Hazır Görüntü Profilleri -->
-    <section class="display-card display-card-full">
-      <div class="card-header-sm">
-        <span class="card-title-sm">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-            <line x1="8" y1="21" x2="16" y2="21"></line>
-            <line x1="12" y1="17" x2="12" y2="21"></line>
-          </svg>
-          OEM Renk Modları
-        </span>
-        <button class="btn-reset" id="btn-reset">Varsayılana Sıfırla</button>
-      </div>
-      <div class="profiles-grid">
-        <button class="profile-btn active" data-preset="default">
-          <span>Standart</span>
-          <span class="profile-sub">Doğal Renkler</span>
-        </button>
-        <button class="profile-btn" data-preset="vibrant">
-          <span>Canlı Mod</span>
-          <span class="profile-sub">Vibrant Color</span>
-        </button>
-        <button class="profile-btn" data-preset="reading">
-          <span>Okuma / Gece</span>
-          <span class="profile-sub">Düşük Mavi Işık</span>
-        </button>
-        <button class="profile-btn" data-preset="cinema">
-          <span>Sinema</span>
-          <span class="profile-sub">Yüksek Kontrast</span>
-        </button>
-        <button class="profile-btn" data-preset="photo">
-          <span>Fotoğraf</span>
-          <span class="profile-sub">Hassas Doygunluk</span>
-        </button>
-      </div>
-    </section>
-
     <!-- Temel Ayarlar (Parlaklık, Sıcaklık, Doygunluk, Gamma) -->
     <section class="display-card">
       <div class="card-header-sm">

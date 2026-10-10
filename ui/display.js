@@ -26,7 +26,6 @@ const valGreen = document.getElementById("val-green");
 const valBlue = document.getElementById("val-blue");
 
 const btnReset = document.getElementById("btn-reset");
-const presetButtons = document.querySelectorAll(".profile-btn");
 const toast = document.getElementById("toast");
 
 function showToast(msg) {
@@ -38,55 +37,6 @@ function showToast(msg) {
     toast.classList.add("hidden");
   }, 2000);
 }
-
-// Preset definitions reverse-engineered from DisplayTable.json
-const PRESETS = {
-  default: {
-    brightness: 100,
-    color_temp: 6500,
-    saturation: 1.0,
-    gamma: 1.0,
-    red: 128,
-    green: 128,
-    blue: 128,
-  },
-  vibrant: {
-    brightness: 90,
-    color_temp: 6500,
-    saturation: 1.5,
-    gamma: 1.0,
-    red: 128,
-    green: 128,
-    blue: 128,
-  },
-  reading: {
-    brightness: 50,
-    color_temp: 4500,
-    saturation: 0.9,
-    gamma: 1.1,
-    red: 128,
-    green: 110,
-    blue: 85,
-  },
-  cinema: {
-    brightness: 75,
-    color_temp: 6000,
-    saturation: 1.15,
-    gamma: 0.95,
-    red: 107,
-    green: 119,
-    blue: 116,
-  },
-  photo: {
-    brightness: 80,
-    color_temp: 6500,
-    saturation: 1.05,
-    gamma: 1.0,
-    red: 98,
-    green: 129,
-    blue: 114,
-  },
-};
 
 function updateUI(settings) {
   if (!settings) return;
@@ -151,7 +101,6 @@ function attachSliderListener(slider, labelElem, suffix, fmt) {
   slider.addEventListener("input", (e) => {
     const val = fmt ? fmt(e.target.value) : e.target.value;
     labelElem.textContent = `${val}${suffix || ""}`;
-    presetButtons.forEach(btn => btn.classList.remove("active"));
     scheduleApply();
   });
 }
@@ -164,33 +113,11 @@ attachSliderListener(sliderRed, valRed);
 attachSliderListener(sliderGreen, valGreen);
 attachSliderListener(sliderBlue, valBlue);
 
-presetButtons.forEach(btn => {
-  btn.addEventListener("click", async () => {
-    const key = btn.dataset.preset;
-    const target = PRESETS[key];
-    if (!target) return;
-
-    presetButtons.forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-
-    updateUI(target);
-    try {
-      await invoke("apply_display_settings", { settings: target });
-      showToast(`Profil uygulandı: ${btn.querySelector("span").textContent}`);
-    } catch (err) {
-      showToast(`Hata: ${err}`);
-    }
-  });
-});
-
 if (btnReset) {
   btnReset.addEventListener("click", async () => {
     try {
       const def = await invoke("reset_display_settings");
       updateUI(def);
-      presetButtons.forEach(b => {
-        b.classList.toggle("active", b.dataset.preset === "default");
-      });
       showToast("Görüntü ayarları sıfırlandı");
     } catch (err) {
       showToast(`Hata: ${err}`);
