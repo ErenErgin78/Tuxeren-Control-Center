@@ -17,7 +17,7 @@ use std::time::Duration;
 const SETTINGS_FILE: &str = "/etc/monster-control-center/general_settings.json";
 const TOUCHPAD_STATE_FILE: &str = "/dev/shm/touchpad_locker_state";
 
-static TOUCHPAD_DEV: Mutex<Option<Device>> = Mutex::new(None);
+static TOUCHPAD_DEVS: Mutex<Vec<Device>> = Mutex::new(Vec::new());
 static DAEMON_STARTED: AtomicBool = AtomicBool::new(false);
 static IS_DAEMON_SERVER: AtomicBool = AtomicBool::new(false);
 static IS_TOUCHPAD_DISABLED: AtomicBool = AtomicBool::new(false);
@@ -289,8 +289,48 @@ fn find_device_by_keys(required_keys: &[KeyCode]) -> Option<Device> {
     None
 }
 
-fn find_touchpad_device() -> Option<Device> {
-    find_device_by_keys(&[KeyCode::BTN_TOUCH, KeyCode::BTN_RIGHT])
+fn run_desktop_touchpad_toggle(disabled: bool) {
+    let mode = if disabled { "disabled" } else { "enabled" };
+    let mut cmd = Command::new("gsettings");
+    cmd.args(["set", "org.gnome.desktop.peripherals.touchpad", "send-events", mode]);
+
+    if std::env::var("DBUS_SESSION_BUS_ADDRESS").is_err() {
+        unsafe extern "C" {
+            fn getuid() -> u32;
+        }
+        let uid = unsafe { getuid() };
+        let bus_path = format!("/run/user/{}/bus", uid);
+        let runtime_path = format!("/run/user/{}", uid);
+        if Path::new(&bus_path).exists() {
+            cmd.env("DBUS_SESSION_BUS_ADDRESS", format!("unix:path={}", bus_path));
+        }
+        if Path::new(&runtime_path).exists() {
+            cmd.env("XDG_RUNTIME_DIR", runtime_path);
+        }
+    }
+    let _ = cmd.output();
+}
+
+fn find_touchpad_devices() -> Vec<Device> {
+    let mut devices = Vec::new();
+    if let Ok(entries) = fs::read_dir("/dev/input") {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.to_string_lossy().contains("event") {
+                if let Ok(device) = Device::open(&path) {
+                    let name = device.name().unwrap_or("").to_lowercase();
+                    let is_touchpad = name.contains("touchpad")
+                        || (name.contains("uniw") && name.contains("mouse"))
+                        || device.supported_keys().is_some_and(|keys| keys.contains(KeyCode::BTN_TOUCH));
+
+                    if is_touchpad {
+                        devices.push(device);
+                    }
+                }
+            }
+        }
+    }
+    devices
 }
 
 fn find_f24_device() -> Option<Device> {
@@ -298,33 +338,22 @@ fn find_f24_device() -> Option<Device> {
 }
 
 fn apply_touchpad_state(disabled: bool) -> Result<(), String> {
-    let mut dev_lock = TOUCHPAD_DEV.lock().map_err(|e| e.to_string())?;
-    if disabled {
-        if dev_lock.is_none() {
-            *dev_lock = find_touchpad_device();
-        }
-        let dev = dev_lock
-            .as_mut()
-            .ok_or_else(|| "Touchpad cihazı bulunamadı (/dev/input)".to_string())?;
+    // 1. Wayland / GNOME desktop-level touchpad disable/enable
+    run_desktop_touchpad_toggle(disabled);
 
-        match dev.grab() {
-            Ok(_) => {}
-            Err(e) if e.raw_os_error() == Some(16) => {}
-            Err(e) => {
-                if let Some(mut new_dev) = find_touchpad_device() {
-                    new_dev
-                        .grab()
-                        .map_err(|err| format!("Touchpad kilitlenemedi: {}", err))?;
-                    *dev_lock = Some(new_dev);
-                } else {
-                    return Err(format!("Touchpad kilitlenemedi: {}", e));
-                }
-            }
+    // 2. evdev hardware grab on all touchpad / UNIW mouse devices
+    let mut devs_lock = TOUCHPAD_DEVS.lock().map_err(|e| e.to_string())?;
+    if disabled {
+        if devs_lock.is_empty() {
+            *devs_lock = find_touchpad_devices();
+        }
+        for dev in devs_lock.iter_mut() {
+            let _ = dev.grab();
         }
         IS_TOUCHPAD_DISABLED.store(true, Ordering::SeqCst);
         let _ = fs::write(TOUCHPAD_STATE_FILE, "kapali");
     } else {
-        if let Some(mut dev) = dev_lock.take() {
+        for mut dev in devs_lock.drain(..) {
             let _ = dev.ungrab();
         }
         IS_TOUCHPAD_DISABLED.store(false, Ordering::SeqCst);
