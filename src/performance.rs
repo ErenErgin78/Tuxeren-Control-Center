@@ -83,6 +83,7 @@ impl PerformanceMode {
 
     /// Returns (PL1 Watts, PL2 Watts, CPU EPP policy, Fan/LED Byte 0x0751)
     pub fn config(&self) -> (u8, u8, &'static str, u8) {
+        // ponytail: PL defaults (45/75/90W) match chassis targets; make user-configurable if multi-TDP models needed
         match self {
             PerformanceMode::Office => (45, 45, "power", 0xA0),
             PerformanceMode::Gaming => (75, 75, "balance_performance", 0x20),
@@ -207,11 +208,17 @@ pub fn send_notification(title: &str, body: &str) {
     cmd.args(["-a", title, "-i", "preferences-system-power", title, body]);
 
     if std::env::var("DBUS_SESSION_BUS_ADDRESS").is_err() {
-        if Path::new("/run/user/1000/bus").exists() {
-            cmd.env("DBUS_SESSION_BUS_ADDRESS", "unix:path=/run/user/1000/bus");
+        unsafe extern "C" {
+            fn getuid() -> u32;
         }
-        if Path::new("/run/user/1000").exists() {
-            cmd.env("XDG_RUNTIME_DIR", "/run/user/1000");
+        let uid = unsafe { getuid() };
+        let bus_path = format!("/run/user/{}/bus", uid);
+        let runtime_path = format!("/run/user/{}", uid);
+        if Path::new(&bus_path).exists() {
+            cmd.env("DBUS_SESSION_BUS_ADDRESS", format!("unix:path={}", bus_path));
+        }
+        if Path::new(&runtime_path).exists() {
+            cmd.env("XDG_RUNTIME_DIR", runtime_path);
         }
     }
     let _ = cmd.output();

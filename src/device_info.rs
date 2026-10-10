@@ -156,20 +156,27 @@ fn get_ram_info() -> String {
     if let Ok(out) = Command::new("dmidecode").args(["-t", "memory"]).output() {
         let text = String::from_utf8_lossy(&out.stdout);
         let mut mem_type = "";
+        let mut module_count = 0;
         for line in text.lines() {
             let trimmed = line.trim();
-            if trimmed.starts_with("Type:") && !trimmed.contains("Error") && !trimmed.contains("Unknown") {
+            if mem_type.is_empty() && trimmed.starts_with("Type:") && !trimmed.contains("Error") && !trimmed.contains("Unknown") {
                 if let Some((_, val)) = trimmed.split_once(':') {
                     let t = val.trim();
                     if t.starts_with("DDR") || t.starts_with("LPDDR") {
                         mem_type = t;
-                        break;
                     }
                 }
+            } else if trimmed.starts_with("Size:") && !trimmed.contains("No Module Installed") && !trimmed.contains("None") {
+                module_count += 1;
             }
         }
         if !mem_type.is_empty() {
-            return format!("{} ({} / Çift Kanal)", total_str, mem_type);
+            let channel_str = match module_count {
+                1 => " / Tek Kanal",
+                2 => " / Çift Kanal",
+                _ => "",
+            };
+            return format!("{} ({}{})", total_str, mem_type, channel_str);
         }
     }
 
@@ -192,11 +199,19 @@ fn get_storage_info() -> String {
         }
     }
 
-    let candidate_disks = if !root_disk.is_empty() {
-        vec![root_disk.clone(), "nvme0n1".into(), "sda".into()]
+    let mut candidate_disks = if !root_disk.is_empty() {
+        vec![root_disk]
     } else {
-        vec!["nvme0n1".into(), "sda".into(), "vda".into()]
+        Vec::new()
     };
+    if let Ok(entries) = fs::read_dir("/sys/block") {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if !name.starts_with("loop") && !name.starts_with("ram") && !name.starts_with("zram") && !candidate_disks.contains(&name) {
+                candidate_disks.push(name);
+            }
+        }
+    }
 
     for disk in candidate_disks {
         let model_path = format!("/sys/block/{}/device/model", disk);

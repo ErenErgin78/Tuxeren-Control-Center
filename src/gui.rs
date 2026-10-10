@@ -44,17 +44,7 @@ fn set_keyboard_rgb(r: u8, g: u8, b: u8, brightness: u8) -> Result<(), String> {
 #[tauri::command]
 fn grant_permissions() -> Result<String, String> {
     let script = r#"
-        KDIR="/lib/modules/$(uname -r)/build"
-        SRCDIR="/home/eren/Depo/ReverseEngineering/py_deneme/acpi_call"
-        if [ -d "$SRCDIR" ] && [ -d "$KDIR" ]; then
-            make -C "$KDIR" M="$SRCDIR" modules 2>/dev/null || true
-        fi
-        insmod "$SRCDIR/acpi_call.ko" 2>/dev/null || modprobe acpi_call 2>/dev/null || true
-        mkdir -p /lib/modules/$(uname -r)/extra 2>/dev/null || true
-        if [ -f "$SRCDIR/acpi_call.ko" ]; then
-            cp -f "$SRCDIR/acpi_call.ko" /lib/modules/$(uname -r)/extra/ 2>/dev/null || true
-            depmod -a 2>/dev/null || true
-        fi
+        modprobe acpi_call 2>/dev/null || true
         echo acpi_call > /etc/modules-load.d/acpi_call.conf 2>/dev/null || true
         mkdir -p /etc/tmpfiles.d 2>/dev/null || true
         echo 'z /proc/acpi/call 0666 root root -' > /etc/tmpfiles.d/acpi_call.conf 2>/dev/null || true
