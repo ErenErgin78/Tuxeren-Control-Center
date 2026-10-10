@@ -201,11 +201,16 @@ pub fn set_color_temperature(temp: u32) -> Result<(), String> {
 
 /// Applies color correction factors (RGB, saturation, gamma) via display color shaders.
 pub fn apply_color_factors(r: u8, g: u8, b: u8, saturation: f32, gamma: f32) {
-    // Normalization: 128 is neutral 1.0; gamma applies inverse curve
+    // Normalization: 128 is neutral 1.0; gamma applies inverse curve.
+    // Clamp each channel to at least 15 to prevent the display from going completely black.
+    let safe_r = r.max(15);
+    let safe_g = g.max(15);
+    let safe_b = b.max(15);
+
     let inv_gamma = if gamma > 0.01 { 1.0 / gamma as f64 } else { 1.0 };
-    let r_factor = (r as f64 / 128.0) * inv_gamma;
-    let g_factor = (g as f64 / 128.0) * inv_gamma;
-    let b_factor = (b as f64 / 128.0) * inv_gamma;
+    let r_factor = (safe_r as f64 / 128.0) * inv_gamma;
+    let g_factor = (safe_g as f64 / 128.0) * inv_gamma;
+    let b_factor = (safe_b as f64 / 128.0) * inv_gamma;
 
     let sat = saturation.clamp(0.0, 2.0) as f64;
 
@@ -261,7 +266,11 @@ pub fn get_display_settings() -> DisplaySettings {
 }
 
 /// Sets and applies full display configuration.
-pub fn apply_display_settings(settings: DisplaySettings) -> Result<(), String> {
+pub fn apply_display_settings(mut settings: DisplaySettings) -> Result<(), String> {
+    settings.red = settings.red.max(15);
+    settings.green = settings.green.max(15);
+    settings.blue = settings.blue.max(15);
+
     set_brightness(settings.brightness)?;
     set_color_temperature(settings.color_temp)?;
     apply_color_factors(

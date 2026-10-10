@@ -127,9 +127,9 @@ function getCurrentState() {
     color_temp: parseInt(sliderTemp.value, 10),
     saturation: parseFloat(sliderSaturation.value),
     gamma: parseFloat(sliderGamma.value),
-    red: parseInt(sliderRed.value, 10),
-    green: parseInt(sliderGreen.value, 10),
-    blue: parseInt(sliderBlue.value, 10),
+    red: Math.max(15, parseInt(sliderRed.value, 10)),
+    green: Math.max(15, parseInt(sliderGreen.value, 10)),
+    blue: Math.max(15, parseInt(sliderBlue.value, 10)),
   };
 }
 
