@@ -2,7 +2,7 @@
 # Monster Control Center - Linux Makefile
 # ==============================================================================
 
-.PHONY: help setup setup-deps dev build build-rpm build-deb build-appimage install install-rpm install-deb install-appimage clean test lint bump bump-patch bump-minor bump-major set-version release release-patch
+.PHONY: help setup setup-deps dev build build-rpm build-deb build-appimage build-exe install install-rpm install-deb install-appimage clean test lint bump bump-patch bump-minor bump-major set-version release release-patch
 
 .DEFAULT_GOAL := help
 
@@ -21,7 +21,7 @@ setup-deps: ## Check and prompt to install system-level build dependencies
 dev: ## Start Monster Control Center in development mode
 	@bash scripts/run.sh
 
-build: ## Build release packages for all configured targets (rpm, deb, appimage)
+build: ## Build release packages (rpm, deb, appimage, exe)
 	@bash scripts/build_packages.sh
 
 install: ## Build release binary and install locally via install.sh
@@ -74,6 +74,9 @@ install-deb: build-deb ## Build DEB and reinstall on local system (sudo apt)
 build-appimage: ## Build AppImage package only
 	@bash scripts/build_packages.sh appimage
 
+build-exe: ## Build Windows executable / installer (.exe)
+	@bash scripts/build_packages.sh exe
+
 install-appimage: build-appimage ## Build AppImage and integrate to user system (~/.local/bin)
 	@echo "[+] Installing Monster Control Center AppImage to ~/.local/bin..."
 	@mkdir -p ~/.local/bin ~/.local/share/applications ~/.local/share/icons/hicolor/128x128/apps
@@ -125,5 +128,5 @@ lint: ## Run formatting and clippy checks
 
 clean: ## Clean build and dist output directories
 	@echo "[+] Cleaning build artifacts..."
-	@rm -rf dist target/release/bundle
+	@rm -rf dist target/release/bundle target/x86_64-pc-windows-gnu/release/bundle
 	@echo "Clean completed."

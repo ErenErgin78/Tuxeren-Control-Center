@@ -3,20 +3,24 @@
 //! Provides control for chassis-level general settings including
 //! Windows Key toggle and Touchpad lock (direct switch & physical corner F24 button listener).
 
+#[cfg(target_os = "linux")]
 use evdev::{Device, EventSummary, KeyCode};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::{BufRead, BufReader, Write};
+#[cfg(unix)]
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
+#[cfg(target_os = "linux")]
 use std::sync::Mutex;
 use std::time::Duration;
 
 const SETTINGS_FILE: &str = "/etc/monster-control-center/general_settings.json";
 const TOUCHPAD_STATE_FILE: &str = "/dev/shm/touchpad_locker_state";
 
+#[cfg(target_os = "linux")]
 static TOUCHPAD_DEVS: Mutex<Vec<Device>> = Mutex::new(Vec::new());
 static DAEMON_STARTED: AtomicBool = AtomicBool::new(false);
 static IS_DAEMON_SERVER: AtomicBool = AtomicBool::new(false);
@@ -51,6 +55,7 @@ pub fn socket_path() -> PathBuf {
 }
 
 /// Sends a command to the background daemon via Unix domain socket and reads one line response.
+#[cfg(unix)]
 pub fn send_daemon_command(cmd: &str) -> Result<String, String> {
     let path = socket_path();
     let mut stream = UnixStream::connect(&path).map_err(|e| e.to_string())?;
@@ -65,6 +70,11 @@ pub fn send_daemon_command(cmd: &str) -> Result<String, String> {
     let mut response = String::new();
     reader.read_line(&mut response).map_err(|e| e.to_string())?;
     Ok(response.trim().to_string())
+}
+
+#[cfg(not(unix))]
+pub fn send_daemon_command(_cmd: &str) -> Result<String, String> {
+    Err("Daemon IPC is only supported on Unix systems".to_string())
 }
 
 /// Checks if the background daemon is alive and responding.
@@ -128,39 +138,43 @@ pub fn toggle_touchpad() -> Result<bool, String> {
 
 /// Ensures background daemon is running via systemd user service or process spawn.
 pub fn ensure_daemon_running() {
-    if is_daemon_alive() {
-        return;
-    }
-
-    let _ = Command::new("systemctl")
-        .args(["--user", "start", "monster-control-center.service"])
-        .status();
-
-    for _ in 0..5 {
-        std::thread::sleep(Duration::from_millis(80));
+    #[cfg(unix)]
+    {
         if is_daemon_alive() {
             return;
         }
-    }
 
-    let exe = std::env::current_exe()
-        .ok()
-        .and_then(|p| p.parent().map(|dir| dir.join("monster-control-center")));
+        let _ = Command::new("systemctl")
+            .args(["--user", "start", "monster-control-center.service"])
+            .status();
 
-    let bin = exe.filter(|p| p.exists()).unwrap_or_else(|| {
-        if let Ok(home) = std::env::var("HOME") {
-            let p = PathBuf::from(home).join(".local/bin/monster-control-center");
-            if p.exists() {
-                return p;
+        for _ in 0..5 {
+            std::thread::sleep(Duration::from_millis(80));
+            if is_daemon_alive() {
+                return;
             }
         }
-        PathBuf::from("monster-control-center")
-    });
 
-    let _ = Command::new(bin).arg("daemon").spawn();
+        let exe = std::env::current_exe()
+            .ok()
+            .and_then(|p| p.parent().map(|dir| dir.join("monster-control-center")));
+
+        let bin = exe.filter(|p| p.exists()).unwrap_or_else(|| {
+            if let Ok(home) = std::env::var("HOME") {
+                let p = PathBuf::from(home).join(".local/bin/monster-control-center");
+                if p.exists() {
+                    return p;
+                }
+            }
+            PathBuf::from("monster-control-center")
+        });
+
+        let _ = Command::new(bin).arg("daemon").spawn();
+    }
 }
 
 /// Runs the IPC server for the standalone background daemon.
+#[cfg(unix)]
 pub fn run_daemon_server() {
     IS_DAEMON_SERVER.store(true, Ordering::SeqCst);
     let path = socket_path();
@@ -215,7 +229,16 @@ pub fn run_daemon_server() {
     }
 }
 
+#[cfg(not(unix))]
+pub fn run_daemon_server() {}
+
 fn user_settings_file() -> Option<PathBuf> {
+    #[cfg(windows)]
+    {
+        if let Ok(appdata) = std::env::var("APPDATA") {
+            return Some(PathBuf::from(appdata).join("MonsterControlCenter").join("general_settings.json"));
+        }
+    }
     std::env::var("HOME")
         .ok()
         .map(|h| PathBuf::from(h).join(".config/monster-control-center/general_settings.json"))
@@ -254,41 +277,27 @@ fn save_settings(settings: &GeneralSettings) {
 }
 
 fn apply_win_key_state(disabled: bool) -> Result<(), String> {
-    let overlay_val = if disabled { "''" } else { "'Super'" };
-    let _ = Command::new("gsettings")
-        .args(["set", "org.gnome.mutter", "overlay-key", overlay_val])
-        .output();
+    #[cfg(target_os = "linux")]
+    {
+        let overlay_val = if disabled { "''" } else { "'Super'" };
+        let _ = Command::new("gsettings")
+            .args(["set", "org.gnome.mutter", "overlay-key", overlay_val])
+            .output();
 
-    let xmodmap_cmd = if disabled {
-        "keycode 133 = NoSymbol"
-    } else {
-        "keycode 133 = Super_L"
-    };
-    let _ = Command::new("xmodmap")
-        .args(["-e", xmodmap_cmd])
-        .output();
-
+        let xmodmap_cmd = if disabled {
+            "keycode 133 = NoSymbol"
+        } else {
+            "keycode 133 = Super_L"
+        };
+        let _ = Command::new("xmodmap")
+            .args(["-e", xmodmap_cmd])
+            .output();
+    }
+    let _ = disabled;
     Ok(())
 }
 
-fn find_device_by_keys(required_keys: &[KeyCode]) -> Option<Device> {
-    if let Ok(entries) = fs::read_dir("/dev/input") {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.to_string_lossy().contains("event") {
-                if let Ok(device) = Device::open(&path) {
-                    if device.supported_keys().is_some_and(|keys| {
-                        required_keys.iter().all(|&k| keys.contains(k))
-                    }) {
-                        return Some(device);
-                    }
-                }
-            }
-        }
-    }
-    None
-}
-
+#[cfg(target_os = "linux")]
 fn run_desktop_touchpad_toggle(disabled: bool) {
     let mode = if disabled { "disabled" } else { "enabled" };
     let mut cmd = Command::new("gsettings");
@@ -311,6 +320,7 @@ fn run_desktop_touchpad_toggle(disabled: bool) {
     let _ = cmd.output();
 }
 
+#[cfg(target_os = "linux")]
 fn find_touchpad_devices() -> Vec<Device> {
     let mut devices = Vec::new();
     if let Ok(entries) = fs::read_dir("/dev/input") {
@@ -319,6 +329,9 @@ fn find_touchpad_devices() -> Vec<Device> {
             if path.to_string_lossy().contains("event") {
                 if let Ok(device) = Device::open(&path) {
                     let name = device.name().unwrap_or("").to_lowercase();
+                    if name.contains("virtual") || name.contains("uinput") {
+                        continue;
+                    }
                     let is_touchpad = name.contains("touchpad")
                         || (name.contains("uniw") && name.contains("mouse"))
                         || device.supported_keys().is_some_and(|keys| keys.contains(KeyCode::BTN_TOUCH));
@@ -333,10 +346,36 @@ fn find_touchpad_devices() -> Vec<Device> {
     devices
 }
 
+#[cfg(target_os = "linux")]
 fn find_f24_device() -> Option<Device> {
-    find_device_by_keys(&[KeyCode::KEY_F24])
+    if let Ok(entries) = fs::read_dir("/dev/input") {
+        let mut candidates = Vec::new();
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.to_string_lossy().contains("event") {
+                if let Ok(device) = Device::open(&path) {
+                    let name = device.name().unwrap_or("").to_lowercase();
+                    if name.contains("virtual") || name.contains("uinput") {
+                        continue;
+                    }
+                    if device.supported_keys().is_some_and(|keys| keys.contains(KeyCode::KEY_F24)) {
+                        candidates.push((name, device));
+                    }
+                }
+            }
+        }
+        // Prefer internal AT keyboard / serio keyboard
+        if let Some(pos) = candidates.iter().position(|(name, _)| name.contains("at translated") || name.contains("keyboard")) {
+            return Some(candidates.swap_remove(pos).1);
+        }
+        if let Some((_, dev)) = candidates.pop() {
+            return Some(dev);
+        }
+    }
+    None
 }
 
+#[cfg(target_os = "linux")]
 fn apply_touchpad_state(disabled: bool) -> Result<(), String> {
     // 1. Wayland / GNOME desktop-level touchpad disable/enable
     run_desktop_touchpad_toggle(disabled);
@@ -362,36 +401,49 @@ fn apply_touchpad_state(disabled: bool) -> Result<(), String> {
     Ok(())
 }
 
+#[cfg(not(target_os = "linux"))]
+fn apply_touchpad_state(disabled: bool) -> Result<(), String> {
+    IS_TOUCHPAD_DISABLED.store(disabled, Ordering::SeqCst);
+    Ok(())
+}
+
 /// Starts the passive background listener for physical double-tap corner button (F24).
 pub fn start_touchpad_daemon() {
-    if DAEMON_STARTED.swap(true, Ordering::SeqCst) {
-        return;
-    }
-
-    std::thread::spawn(|| {
-        let initial_settings = load_settings();
-        if initial_settings.touchpad_disabled {
-            let _ = apply_touchpad_state(true);
+    #[cfg(target_os = "linux")]
+    {
+        if DAEMON_STARTED.swap(true, Ordering::SeqCst) {
+            return;
         }
 
-        loop {
-            let mut f24_device = loop {
-                if let Some(dev) = find_f24_device() {
-                    break dev;
-                }
-                std::thread::sleep(Duration::from_secs(2));
-            };
+        std::thread::spawn(|| {
+            let initial_settings = load_settings();
+            if initial_settings.touchpad_disabled {
+                let _ = apply_touchpad_state(true);
+            }
 
-            while let Ok(events) = f24_device.fetch_events() {
-                for event in events {
-                    if let EventSummary::Key(_, KeyCode::KEY_F24, 1) = event.destructure() {
-                        let _ = toggle_touchpad();
+            loop {
+                let mut f24_device = loop {
+                    if let Some(dev) = find_f24_device() {
+                        if let Some(name) = dev.name() {
+                            eprintln!("[touchpad_daemon] F24 buton dinleyici bağlandı: {}", name);
+                        }
+                        break dev;
+                    }
+                    std::thread::sleep(Duration::from_secs(2));
+                };
+
+                while let Ok(events) = f24_device.fetch_events() {
+                    for event in events {
+                        if let EventSummary::Key(_, KeyCode::KEY_F24, 1) = event.destructure() {
+                            eprintln!("[touchpad_daemon] F24 tuşu algılandı, touchpad durumu değiştiriliyor...");
+                            let _ = toggle_touchpad();
+                        }
                     }
                 }
+                std::thread::sleep(Duration::from_secs(1));
             }
-            std::thread::sleep(Duration::from_secs(1));
-        }
-    });
+        });
+    }
 }
 
 #[cfg(test)]

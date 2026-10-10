@@ -14,7 +14,14 @@ pub struct AppStatus {
 }
 
 fn check_permission() -> bool {
-    OpenOptions::new().write(true).open(ec::ACPI_CALL_PATH).is_ok()
+    #[cfg(target_os = "linux")]
+    {
+        OpenOptions::new().write(true).open(ec::ACPI_CALL_PATH).is_ok()
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        true
+    }
 }
 
 #[tauri::command]
@@ -43,30 +50,37 @@ fn set_keyboard_rgb(r: u8, g: u8, b: u8, brightness: u8) -> Result<(), String> {
 
 #[tauri::command]
 fn grant_permissions() -> Result<String, String> {
-    let script = r#"
-        modprobe acpi_call 2>/dev/null || true
-        echo acpi_call > /etc/modules-load.d/acpi_call.conf 2>/dev/null || true
-        mkdir -p /etc/tmpfiles.d 2>/dev/null || true
-        echo 'z /proc/acpi/call 0666 root root -' > /etc/tmpfiles.d/acpi_call.conf 2>/dev/null || true
-        chmod 666 /proc/acpi/call 2>/dev/null || true
-        echo 'z /sys/class/powercap/intel-rapl/intel-rapl:0/constraint_*_power_limit_uw 0666 root root -' > /etc/tmpfiles.d/monster_rapl.conf 2>/dev/null || true
-        chmod 666 /sys/class/powercap/intel-rapl/intel-rapl:0/constraint_*_power_limit_uw 2>/dev/null || true
-        test -w /proc/acpi/call
-    "#;
-    let output = Command::new("pkexec")
-        .arg("bash")
-        .arg("-c")
-        .arg(script)
-        .output()
-        .map_err(|e| format!("pkexec çalıştırılamadı: {}", e))?;
+    #[cfg(target_os = "linux")]
+    {
+        let script = r#"
+            modprobe acpi_call 2>/dev/null || true
+            echo acpi_call > /etc/modules-load.d/acpi_call.conf 2>/dev/null || true
+            mkdir -p /etc/tmpfiles.d 2>/dev/null || true
+            echo 'z /proc/acpi/call 0666 root root -' > /etc/tmpfiles.d/acpi_call.conf 2>/dev/null || true
+            chmod 666 /proc/acpi/call 2>/dev/null || true
+            echo 'z /sys/class/powercap/intel-rapl/intel-rapl:0/constraint_*_power_limit_uw 0666 root root -' > /etc/tmpfiles.d/monster_rapl.conf 2>/dev/null || true
+            chmod 666 /sys/class/powercap/intel-rapl/intel-rapl:0/constraint_*_power_limit_uw 2>/dev/null || true
+            test -w /proc/acpi/call
+        "#;
+        let output = Command::new("pkexec")
+            .arg("bash")
+            .arg("-c")
+            .arg(script)
+            .output()
+            .map_err(|e| format!("pkexec çalıştırılamadı: {}", e))?;
 
-    if output.status.success() {
-        Ok("Permissions granted and acpi_call module loaded successfully".into())
-    } else {
-        Err(format!(
-            "pkexec failed: {}",
-            String::from_utf8_lossy(&output.stderr).trim()
-        ))
+        if output.status.success() {
+            Ok("Permissions granted and acpi_call module loaded successfully".into())
+        } else {
+            Err(format!(
+                "pkexec failed: {}",
+                String::from_utf8_lossy(&output.stderr).trim()
+            ))
+        }
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        Ok("Hardware permissions are managed by system kernel drivers on Windows".into())
     }
 }
 

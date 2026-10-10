@@ -57,3 +57,23 @@ monster-control-center color rgb 255 60 0 4
 monster-control-center read 0x0769
 monster-control-center write 0x078C 0x01
 ```
+
+## Packaging & Distribution
+
+Release packages can be generated using `Makefile` or `scripts/build_packages.sh`:
+
+```bash
+# Build Linux packages (deb, rpm, appimage)
+make build
+
+# Build specific Linux targets
+make build-rpm
+make build-deb
+make build-appimage
+
+# Build Windows executable (.exe) and NSIS installer
+make build-exe
+```
+
+All built artifacts (`.rpm`, `.deb`, `.AppImage`, `.exe`) are collected into the `dist/` directory.
+

@@ -76,6 +76,11 @@ if ! command -v cargo &>/dev/null || ! command -v rustc &>/dev/null; then
 fi
 echo "    Rust: $(rustc --version)"
 echo "    Cargo: $(cargo --version)"
+if rustup target list 2>/dev/null | grep -q 'x86_64-pc-windows-gnu (installed)'; then
+    echo "    Windows Target: x86_64-pc-windows-gnu installed"
+else
+    echo "    Windows Target: x86_64-pc-windows-gnu not installed (optional: rustup target add x86_64-pc-windows-gnu for .exe builds)"
+fi
 
 echo "[+] Checking Node.js & npm..."
 if command -v node &>/dev/null && command -v npm &>/dev/null; then
