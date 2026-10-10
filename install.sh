@@ -78,14 +78,8 @@ if [ -w "/proc/acpi/call" ]; then
     echo "[+] /proc/acpi/call is loaded and writable."
 else
     echo "[!] /proc/acpi/call is missing or not writable. Setting up kernel module and permissions..."
-    MODULE_SRC="/home/eren/Depo/ReverseEngineering/py_deneme/acpi_call/acpi_call.ko"
     SETUP_CMD="
-        modprobe acpi_call 2>/dev/null || insmod '$MODULE_SRC' 2>/dev/null || true
-        mkdir -p /lib/modules/\$(uname -r)/extra 2>/dev/null || true
-        if [ -f '$MODULE_SRC' ]; then
-            cp -f '$MODULE_SRC' /lib/modules/\$(uname -r)/extra/ 2>/dev/null || true
-            depmod -a 2>/dev/null || true
-        fi
+        modprobe acpi_call 2>/dev/null || true
         echo acpi_call > /etc/modules-load.d/acpi_call.conf 2>/dev/null || true
         mkdir -p /etc/tmpfiles.d 2>/dev/null || true
         echo 'z /proc/acpi/call 0666 root root -' > /etc/tmpfiles.d/acpi_call.conf 2>/dev/null || true
