@@ -2,7 +2,7 @@
 # Monster Control Center - Linux Makefile
 # ==============================================================================
 
-.PHONY: help setup setup-deps dev build build-rpm build-deb build-appimage install-rpm install-deb install-appimage clean test lint bump bump-patch bump-minor bump-major set-version release release-patch
+.PHONY: help setup setup-deps dev build build-rpm build-deb build-appimage install install-rpm install-deb install-appimage clean test lint bump bump-patch bump-minor bump-major set-version release release-patch
 
 .DEFAULT_GOAL := help
 
@@ -23,6 +23,10 @@ dev: ## Start Monster Control Center in development mode
 
 build: ## Build release packages for all configured targets (rpm, deb, appimage)
 	@bash scripts/build_packages.sh
+
+install: ## Build release binary and install locally via install.sh
+	@cargo build --release
+	@bash install.sh
 
 APP_VERSION ?= $(shell grep -m1 '"version"' tauri.conf.json 2>/dev/null | cut -d '"' -f 4)
 
