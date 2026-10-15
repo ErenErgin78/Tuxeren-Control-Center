@@ -26,7 +26,7 @@ ensure_system_deps() {
     if command -v dnf &>/dev/null; then
         local deps=(webkit2gtk4.1-devel openssl-devel alsa-lib-devel pulseaudio-utils ImageMagick rpm-build)
         if [ "$is_exe_target" = true ]; then
-            deps+=(mingw64-gcc mingw64-binutils nsis)
+            deps+=(mingw64-gcc mingw64-binutils)
         fi
         for pkg in "${deps[@]}"; do
             if ! rpm -q "$pkg" &>/dev/null; then

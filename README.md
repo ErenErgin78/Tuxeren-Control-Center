@@ -1,79 +1,62 @@
-# Monster Control Center (Linux)
+# Monster Control Center (Windows)
 
-A clean-room, zero-dependency Rust CLI and Tauri desktop application for hardware control on Uniwill / Tongfang chassis laptops (such as Monster Notebook Tulpar, Abra, and Semruk series) running Linux.
+A clean-room Rust and Tauri v2 desktop application for hardware control on Uniwill / Tongfang chassis laptops (such as Monster Notebook Tulpar, Abra, and Semruk series) running Windows.
 
 ## Reverse Engineering Background
 
-This implementation is grounded in the reverse engineering findings documented in [`../Report.md`](../Report.md), extracted from the official Windows OEM software (`ControlCenter_5.8.49.19_Monster.exe`).
+This implementation is grounded in the reverse engineering findings extracted from the official OEM software (`ControlCenter_5.8.49.19_Monster.exe`).
 
 Key hardware facts established:
-- Hardware communication bypasses vendor Windows drivers by directly invoking the ACPI subsystem (`\_SB.INOU.ECRR` and `\_SB.INOU.ECRW`) via the Linux `acpi_call` kernel module.
-- Single-zone RGB keyboards on Tongfang GM7 chassis (e.g. Tulpar T7 V20.7) are controlled through Embedded Controller (EC) RAM offsets (`0x0769`–`0x076B`), trigger latch (`0x0767`), and a hardware re-arm toggle (`0x078C`).
+- Single-zone RGB keyboards on Tongfang chassis (e.g. Tulpar T7 V20.7) are controlled through Embedded Controller (EC) RAM offsets (`0x0769`–`0x076B`), trigger latch (`0x0767`), and a hardware re-arm toggle (`0x078C`).
+- Hardware modes, battery charge thresholds, fan telemetry, and display calibration profiles are directly exposed via EC memory registers.
 
-## What Is Implemented
+## Features
 
-The codebase is organized into modular Rust components with both a standalone CLI and a Tauri v2 desktop application:
+- **RGB Keyboard Lighting**:
+  - Calibrated color presets (`red`, `green`, `blue`, `cyan`, `magenta`, `purple`, `orange`, `yellow`, `pink`, `white`, `off`).
+  - Custom RGB hex / color picker (0..255 scaled to 0..50 hardware PWM).
+  - 4-level hardware brightness adjustment.
+- **Hardware & Power Profiles**: Office (Silent), Gaming (Standard), Turbo.
+- **Battery Management**: Charge threshold modes (%80 Long Life, %100 Standard).
+- **System Telemetry**: Real-time CPU, GPU, fan speed, memory, disk, and network stats.
+- **Display & General Settings**: Color temperature, brightness calibration, and Windows key toggle.
 
-- **Desktop Application (`gui.rs` + `ui/`)**: A native Tauri GUI for single-zone RGB keyboard control, brightness adjustment, preset switching, and custom hex color picking.
-- **EC Communication Layer (`ec.rs`)**: Direct byte-level read and write primitives communicating with `acpi_call`.
-- **Keyboard RGB Backlight (`keyboard.rs`)**:
-  - Optically balanced color presets (`red`, `green`, `blue`, `cyan`, `magenta`, `purple`, `orange`, `yellow`, `pink`, `white`, `off`).
-  - Raw RGB mapping (0..255) scaled to the hardware 0..50 PWM range.
-  - Hardware brightness levels (1..4).
-  - 40ms power re-arm pulse for instant color updates without requiring Fn key triggers.
-- **Raw EC Access (`read` / `write`)**:
-  - Direct byte inspection and manual EC register override for debugging.
+## Building the Windows Executable (.exe)
 
-## Installation & Desktop Integration
+### Option 1: Cross-Compilation on Linux
 
-Run the installer script to build and install both the GUI desktop app and CLI to `~/.local/bin`, register the desktop launcher icon, and ensure `acpi_call` kernel module persistence:
-
-```bash
-./install.sh
-```
-
-Once installed, **Monster Control Center** can be launched from your application launcher or by running:
+Requires the MinGW toolchain:
 
 ```bash
-monster-control-center-gui
-```
+# Fedora
+sudo dnf install -y mingw64-gcc mingw64-binutils
 
-## CLI Usage
+# Ubuntu / Debian
+sudo apt-get install -y gcc-mingw-w64-x86-64
 
-The standalone CLI is available in PATH:
-
-```bash
-# View chassis project ID
-monster-control-center chassis
-
-# Keyboard lighting presets
-monster-control-center color cyan 4
-monster-control-center color off
-
-# Custom RGB
-monster-control-center color rgb 255 60 0 4
-
-# Direct EC register debugging
-monster-control-center read 0x0769
-monster-control-center write 0x078C 0x01
-```
-
-## Packaging & Distribution
-
-Release packages can be generated using `Makefile` or `scripts/build_packages.sh`:
-
-```bash
-# Build Linux packages (deb, rpm, appimage)
-make build
-
-# Build specific Linux targets
-make build-rpm
-make build-deb
-make build-appimage
-
-# Build Windows executable (.exe) and NSIS installer
+# Build standalone .exe
 make build-exe
 ```
 
-All built artifacts (`.rpm`, `.deb`, `.AppImage`, `.exe`) are collected into the `dist/` directory.
+The resulting standalone executable will be generated at:
+```
+dist/monster-control-center-gui.exe
+```
 
+### Option 2: Native Build on Windows
+
+Ensure Rust toolchain and Node.js are installed on Windows:
+
+```bash
+# Build standalone release executable
+cargo build --release --bin monster-control-center-gui
+```
+
+Executable output:
+```
+target/release/monster-control-center-gui.exe
+```
+
+## Running the Application
+
+Double-click `monster-control-center-gui.exe` on Windows. Microsoft Edge WebView2 runtime (pre-installed on Windows 10 and 11) hosts the desktop user interface.
