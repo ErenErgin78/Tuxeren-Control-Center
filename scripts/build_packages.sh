@@ -141,7 +141,7 @@ if [ "$WANTS_EXE" = true ] && [ "$IS_WINDOWS" = false ]; then
     fi
 
     echo "[+] Building release binary for $WINDOWS_TARGET..."
-    (cd "$PROJECT_ROOT" && cargo build --release --target "$WINDOWS_TARGET")
+    (cd "$PROJECT_ROOT" && cargo build --release --target "$WINDOWS_TARGET" --bin monster-control-center-gui)
 
     WIN_STANDALONE="$PROJECT_ROOT/target/$WINDOWS_TARGET/release/monster-control-center-gui.exe"
     if [ -f "$WIN_STANDALONE" ]; then

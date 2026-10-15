@@ -94,7 +94,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          cargo build --release
+          cargo build --release --bin monster-control-center-gui
           cp target/release/monster-control-center-gui.exe dist/
           npx --yes @tauri-apps/cli build --bundles nsis || true
           if [ -d "target/release/bundle/nsis" ]; then

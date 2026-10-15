@@ -2,6 +2,8 @@
 //!
 //! Tauri v2 desktop application for single-zone RGB keyboard control and EC management.
 
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 use monster_control_center::{battery, device_info, display, ec, keyboard, get_chassis_project_id};
 use serde::Serialize;
 use std::fs::OpenOptions;
@@ -145,10 +147,13 @@ fn reset_display_settings() -> Result<display::DisplaySettings, String> {
 }
 
 fn main() {
-    monster_control_center::general::ensure_daemon_running();
-    monster_control_center::performance::start_polling_daemon();
-    if !monster_control_center::general::is_daemon_alive() {
-        monster_control_center::general::start_touchpad_daemon();
+    #[cfg(target_os = "linux")]
+    {
+        monster_control_center::general::ensure_daemon_running();
+        monster_control_center::performance::start_polling_daemon();
+        if !monster_control_center::general::is_daemon_alive() {
+            monster_control_center::general::start_touchpad_daemon();
+        }
     }
 
     tauri::Builder::default()
