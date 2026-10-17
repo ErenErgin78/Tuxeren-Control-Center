@@ -1,0 +1,11 @@
+[Desktop Entry]
+Categories={{categories}}
+{{#if comment}}
+Comment={{comment}}
+{{/if}}
+Exec=monster-control-center-gui
+StartupWMClass=Monster Control Center
+Icon={{icon}}
+Name={{name}}
+Terminal=false
+Type=Application

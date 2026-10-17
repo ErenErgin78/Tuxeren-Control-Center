@@ -13,9 +13,9 @@ evdev = "0.13"
 tauri-build = { version = "2", features = [] }
 
 [[bin]]
-name = "monster-control-center"
-path = "src/main.rs"
-
-[[bin]]
 name = "monster-control-center-gui"
 path = "src/gui.rs"
+
+[[bin]]
+name = "monster-control-center"
+path = "src/main.rs"

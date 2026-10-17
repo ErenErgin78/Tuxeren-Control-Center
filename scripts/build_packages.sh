@@ -110,7 +110,7 @@ fi
 if command -v cargo-tauri &>/dev/null; then
     (cd "$PROJECT_ROOT" && cargo tauri build "${BUILD_ARGS[@]}")
 else
-    (cd "$PROJECT_ROOT" && npx --yes @tauri-apps/cli build "${BUILD_ARGS[@]}")
+    (cd "$PROJECT_ROOT" && npx --prefer-offline --yes @tauri-apps/cli build "${BUILD_ARGS[@]}")
 fi
 
 echo ""

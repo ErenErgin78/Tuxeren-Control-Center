@@ -2,6 +2,9 @@
 //!
 //! Clean-room CLI for single-zone RGB keyboard lighting and raw EC access.
 
+use std::os::unix::process::CommandExt;
+use std::process::Command;
+
 use monster_control_center::{device_info, ec, keyboard, get_chassis_project_id};
 
 /// Prints CLI usage and available subcommands.
@@ -12,6 +15,7 @@ USAGE:
     monster-control-center <COMMAND> [OPTIONS]
 
 COMMANDS:
+    gui                         Launch graphical user interface (default)
     color <name> [1-4]          Set keyboard color preset with brightness (1..4)
     color rgb <R> <G> <B> [1-4] Set custom RGB color (0..255) with brightness (1..4)
     chassis                     Display chassis project ID
@@ -32,15 +36,48 @@ PRESETS:
 "#);
 }
 
-/// Parses CLI arguments and executes hardware requests.
-fn main() {
-    let args: Vec<String> = std::env::args().collect();
-    if args.len() < 2 {
+/// Launches the GUI application binary.
+fn launch_gui() {
+    let has_display = std::env::var_os("DISPLAY").is_some() || std::env::var_os("WAYLAND_DISPLAY").is_some();
+    if !has_display {
         print_help();
         return;
     }
 
+    if let Ok(current_exe) = std::env::current_exe() {
+        if let Some(parent) = current_exe.parent() {
+            let gui_path = parent.join("monster-control-center-gui");
+            if gui_path.is_file() {
+                let err = Command::new(gui_path).exec();
+                eprintln!("[-] Failed to launch GUI binary: {}", err);
+                return;
+            }
+        }
+    }
+
+    let err = Command::new("monster-control-center-gui").exec();
+    eprintln!("[-] Failed to launch monster-control-center-gui: {}", err);
+    print_help();
+}
+
+/// Parses CLI arguments and executes hardware requests.
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() < 2 {
+        launch_gui();
+        return;
+    }
+
     let cmd = args[1].as_str();
+    if cmd == "-h" || cmd == "--help" || cmd == "help" {
+        print_help();
+        return;
+    }
+    if cmd == "gui" {
+        launch_gui();
+        return;
+    }
+
     let res = match cmd {
         "chassis" => {
             match get_chassis_project_id() {

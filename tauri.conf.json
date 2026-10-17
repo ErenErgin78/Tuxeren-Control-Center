@@ -39,6 +39,14 @@
     ],
     "category": "Utility",
     "shortDescription": "Monster Control Center for Linux",
-    "longDescription": "Keyboard RGB and EC Control for Monster / Tongfang Laptops"
+    "longDescription": "Keyboard RGB and EC Control for Monster / Tongfang Laptops",
+    "linux": {
+      "rpm": {
+        "desktopTemplate": "packaging/desktop.template"
+      },
+      "deb": {
+        "desktopTemplate": "packaging/desktop.template"
+      }
+    }
   }
 }
