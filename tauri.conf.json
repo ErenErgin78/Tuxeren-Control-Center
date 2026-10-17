@@ -40,9 +40,20 @@
     "category": "Utility",
     "shortDescription": "Monster Control Center for Linux",
     "longDescription": "Keyboard RGB and EC Control for Monster / Tongfang Laptops",
+    "resources": {
+      "driver/tuxedo-drivers-monster-4.25.0": "/usr/src/tuxedo-drivers-monster-4.25.0"
+    },
     "linux": {
       "rpm": {
-        "desktopTemplate": "packaging/desktop.template"
+        "desktopTemplate": "packaging/desktop.template",
+        "depends": [
+          "dkms",
+          "kernel-devel",
+          "gcc",
+          "make"
+        ],
+        "postInstallScript": "packaging/rpm-postinstall.sh",
+        "preRemoveScript": "packaging/rpm-preremove.sh"
       },
       "deb": {
         "desktopTemplate": "packaging/desktop.template"

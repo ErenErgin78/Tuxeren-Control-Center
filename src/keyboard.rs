@@ -21,8 +21,23 @@ pub const PRESETS: &[(&str, (u8, u8, u8))] = &[
     ("off", (0, 0, 0)),
 ];
 
-/// Locates the keyboard backlight device path under `/sys/class/leds/`.
+/// Locates the keyboard backlight device path under platform device or `/sys/class/leds/`.
 pub fn find_kbd_led_device() -> Option<PathBuf> {
+    let direct_path = Path::new("/sys/devices/platform/tuxedo_keyboard/leds/rgb:kbd_backlight");
+    if direct_path.exists() {
+        return Some(direct_path.to_path_buf());
+    }
+
+    let platform_leds = Path::new("/sys/devices/platform/tuxedo_keyboard/leds");
+    if let Ok(entries) = fs::read_dir(platform_leds) {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if name.contains("kbd_backlight") {
+                return Some(entry.path());
+            }
+        }
+    }
+
     let leds_dir = Path::new("/sys/class/leds");
     if let Ok(entries) = fs::read_dir(leds_dir) {
         for entry in entries.flatten() {
@@ -58,10 +73,6 @@ pub fn set_rgb(r: u8, g: u8, b: u8, brightness: u8) -> Result<(), String> {
         brightness.clamp(0, max_brightness)
     };
 
-    let brightness_path = dev.join("brightness");
-    fs::write(&brightness_path, target_brightness.to_string())
-        .map_err(|e| format!("Parlaklık yazılamadı: {}", e))?;
-
     if target_brightness > 0 {
         let multi_path = dev.join("multi_intensity");
         if multi_path.exists() {
@@ -74,6 +85,10 @@ pub fn set_rgb(r: u8, g: u8, b: u8, brightness: u8) -> Result<(), String> {
             }
         }
     }
+
+    let brightness_path = dev.join("brightness");
+    fs::write(&brightness_path, target_brightness.to_string())
+        .map_err(|e| format!("Parlaklık yazılamadı: {}", e))?;
 
     Ok(())
 }

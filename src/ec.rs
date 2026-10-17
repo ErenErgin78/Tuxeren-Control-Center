@@ -24,8 +24,21 @@ pub fn is_driver_available() -> bool {
         || find_kbd_leds_path().is_some()
 }
 
-/// Locates the keyboard backlight device path under `/sys/class/leds/`.
+/// Locates the keyboard backlight device path under platform device or `/sys/class/leds/`.
 pub fn find_kbd_leds_path() -> Option<PathBuf> {
+    let direct = Path::new("/sys/devices/platform/tuxedo_keyboard/leds/rgb:kbd_backlight");
+    if direct.exists() {
+        return Some(direct.to_path_buf());
+    }
+    let platform_leds = Path::new("/sys/devices/platform/tuxedo_keyboard/leds");
+    if let Ok(entries) = fs::read_dir(platform_leds) {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if name.contains("kbd_backlight") {
+                return Some(entry.path());
+            }
+        }
+    }
     let leds_dir = Path::new("/sys/class/leds");
     if let Ok(entries) = fs::read_dir(leds_dir) {
         for entry in entries.flatten() {

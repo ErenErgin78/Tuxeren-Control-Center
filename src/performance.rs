@@ -90,7 +90,8 @@ pub struct PerformanceState {
     pub os_profile: String,
 }
 
-/// Reads the current hardware performance mode from ACPI platform_profile.
+/// Reads the current hardware performance mode from ACPI platform_profile,
+/// or queries /dev/tuxedo_io as fallback.
 pub fn get_hardware_mode() -> Result<u8, String> {
     let profile_path = "/sys/firmware/acpi/platform_profile";
     if let Ok(content) = fs::read_to_string(profile_path) {
@@ -102,6 +103,13 @@ pub fn get_hardware_mode() -> Result<u8, String> {
         };
         return Ok(mode as u8);
     }
+
+    // Fallback: Read via EC debugfs if available
+    let fan_byte = crate::ec::read_byte(0x0751).unwrap_or(0x00);
+    if let Some(mode) = PerformanceMode::from_fan_byte(fan_byte) {
+        return Ok(mode as u8);
+    }
+
     Ok(PerformanceMode::Office as u8)
 }
 
@@ -196,8 +204,11 @@ pub fn set_os_profile(profile: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// Mod değişimini doğrudan Linux resmi ACPI platform_profile arayüzüne uygular.
+/// Mod değişimini Linux platform_profile, EC donanım kayıtları ve Kernel RAPL/EPP limitlerine uygular.
 pub fn apply_mode(mode: PerformanceMode) -> Result<(), String> {
+    let (pl1, pl2, epp, fan_byte) = mode.config();
+
+    // 1. Linux ACPI Platform Profile (varsa)
     let profile_path = "/sys/firmware/acpi/platform_profile";
     let prof = match mode {
         PerformanceMode::Office => "low-power",
@@ -206,9 +217,20 @@ pub fn apply_mode(mode: PerformanceMode) -> Result<(), String> {
     };
 
     if Path::new(profile_path).exists() {
-        fs::write(profile_path, prof)
-            .map_err(|e| format!("platform_profile yazılamadı: {}", e))?;
+        let _ = fs::write(profile_path, prof);
     }
+
+    // 2. EC Donanım Düzeyi Kayıtları (0x0751 ve 0x07AB)
+    let _ = crate::ec::write_byte(0x0751, fan_byte);
+    let _ = crate::ec::write_byte(0x07AB, mode as u8);
+
+    // 3. Linux Kernel Intel RAPL Güç Sınırları
+    if let Err(e) = apply_kernel_rapl(pl1 as u32, pl2 as u32) {
+        eprintln!("[warn] Kernel RAPL: {}", e);
+    }
+
+    // 4. Linux CPU EPP Politikası
+    let _ = set_cpu_epp(epp);
 
     Ok(())
 }
@@ -374,15 +396,23 @@ fn find_hwmon_fans() -> (Option<PathBuf>, Option<PathBuf>) {
 fn get_fan_metrics() -> (u16, u8, u16, u8) {
     let (fan1_path, fan2_path) = find_hwmon_fans();
 
-    let cpu_rpm = fan1_path
+    let mut cpu_rpm = fan1_path
         .and_then(|p| fs::read_to_string(p).ok())
         .and_then(|s| s.trim().parse::<u16>().ok())
         .unwrap_or(0);
 
-    let gpu_rpm = fan2_path
+    let mut gpu_rpm = fan2_path
         .and_then(|p| fs::read_to_string(p).ok())
         .and_then(|s| s.trim().parse::<u16>().ok())
         .unwrap_or(0);
+
+    // Fallback: Read directly from EC registers (0x0464, 0x046C) if hwmon is not present
+    if cpu_rpm == 0 {
+        cpu_rpm = crate::ec::read_u16_le(0x0464, 0x0465).unwrap_or(0);
+    }
+    if gpu_rpm == 0 {
+        gpu_rpm = crate::ec::read_u16_le(0x046C, 0x046D).unwrap_or(0);
+    }
 
     let cpu_duty = ((cpu_rpm as f32 / 5500.0) * 100.0).round().clamp(0.0, 100.0) as u8;
     let gpu_duty = ((gpu_rpm as f32 / 5500.0) * 100.0).round().clamp(0.0, 100.0) as u8;
