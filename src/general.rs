@@ -254,20 +254,12 @@ fn save_settings(settings: &GeneralSettings) {
 }
 
 fn apply_win_key_state(disabled: bool) -> Result<(), String> {
-    let overlay_val = if disabled { "''" } else { "'Super'" };
-    let _ = Command::new("gsettings")
-        .args(["set", "org.gnome.mutter", "overlay-key", overlay_val])
-        .output();
-
-    let xmodmap_cmd = if disabled {
-        "keycode 133 = NoSymbol"
-    } else {
-        "keycode 133 = Super_L"
-    };
-    let _ = Command::new("xmodmap")
-        .args(["-e", xmodmap_cmd])
-        .output();
-
+    let fn_lock_path = "/sys/devices/platform/tuxedo_keyboard/fn_lock";
+    if Path::new(fn_lock_path).exists() {
+        let val = if disabled { "1" } else { "0" };
+        fs::write(fn_lock_path, val)
+            .map_err(|e| format!("Donanımsal Fn/Win kilidi uygulanamadı: {}", e))?;
+    }
     Ok(())
 }
 

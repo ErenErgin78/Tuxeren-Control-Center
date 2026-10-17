@@ -46,6 +46,8 @@ fn grant_permissions() -> Result<String, String> {
         udevadm control --reload-rules 2>/dev/null || true
         udevadm trigger --subsystem-match=leds 2>/dev/null || true
         chmod -R 0666 /sys/class/leds/*kbd_backlight* 2>/dev/null || true
+        chmod 0666 /sys/devices/platform/tuxedo_keyboard/fn_lock 2>/dev/null || true
+        chmod 0666 /sys/firmware/acpi/platform_profile 2>/dev/null || true
         chmod 0666 /dev/tuxedo_io 2>/dev/null || true
     "#;
     let output = Command::new("pkexec")

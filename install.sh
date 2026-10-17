@@ -73,9 +73,11 @@ systemctl --user daemon-reload 2>/dev/null || true
 systemctl --user enable --now monster-control-center.service 2>/dev/null || true
 
 # 7. Configure udev rules for tuxedo keyboard LEDs and hardware control
-echo "[*] Configuring udev rules for tuxedo_keyboard LEDs..."
+echo "[*] Configuring udev rules for LEDs and platform_profile..."
 UDEV_RULE_FILE="/etc/udev/rules.d/99-monster-control-center.rules"
-UDEV_CONTENT='SUBSYSTEM=="leds", ACTION=="add", RUN+="/bin/chmod -R 0666 /sys%p"
+UDEV_CONTENT='SUBSYSTEM=="leds", ACTION=="add", RUN+="/bin/chmod 666 /sys/class/leds/%k/brightness /sys/class/leds/%k/multi_intensity"
+SUBSYSTEM=="platform", KERNEL=="platform-profile", ACTION=="add", RUN+="/bin/chmod 666 /sys/firmware/acpi/platform_profile"
+SUBSYSTEM=="platform", DRIVER=="tuxedo_keyboard", ACTION=="add", RUN+="/bin/chmod 666 /sys/devices/platform/tuxedo_keyboard/fn_lock"
 KERNEL=="tuxedo_io", MODE="0666"'
 
 if [ ! -f "$UDEV_RULE_FILE" ]; then

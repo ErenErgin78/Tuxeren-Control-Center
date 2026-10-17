@@ -9,12 +9,9 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
-use std::thread;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
-static DAEMON_RUNNING: AtomicBool = AtomicBool::new(false);
 static PREV_CPU: Mutex<Option<(u64, u64)>> = Mutex::new(None);
 static PREV_NET: Mutex<Option<(u64, u64, Instant)>> = Mutex::new(None);
 
@@ -199,28 +196,19 @@ pub fn set_os_profile(profile: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// Mod değişimini ACPI platform_profile, Linux Kernel RAPL ve CPU EPP limitlerine uygular.
+/// Mod değişimini doğrudan Linux resmi ACPI platform_profile arayüzüne uygular.
 pub fn apply_mode(mode: PerformanceMode) -> Result<(), String> {
-    let (pl1, pl2, epp, _) = mode.config();
-
-    // 1. Linux ACPI Platform Profile
     let profile_path = "/sys/firmware/acpi/platform_profile";
+    let prof = match mode {
+        PerformanceMode::Office => "low-power",
+        PerformanceMode::Gaming => "balanced",
+        PerformanceMode::Turbo => "performance",
+    };
+
     if Path::new(profile_path).exists() {
-        let prof = match mode {
-            PerformanceMode::Office => "low-power",
-            PerformanceMode::Gaming => "balanced",
-            PerformanceMode::Turbo => "performance",
-        };
-        let _ = fs::write(profile_path, prof);
+        fs::write(profile_path, prof)
+            .map_err(|e| format!("platform_profile yazılamadı: {}", e))?;
     }
-
-    // 2. Linux Kernel RAPL
-    if let Err(e) = apply_kernel_rapl(pl1 as u32, pl2 as u32) {
-        eprintln!("[warn] Kernel RAPL: {}", e);
-    }
-
-    // 3. Linux CPU EPP
-    set_cpu_epp(epp)?;
 
     Ok(())
 }
@@ -493,28 +481,9 @@ pub fn get_system_metrics() -> Result<SystemMetrics, String> {
     })
 }
 
-/// Monitors hardware performance profile changes via /sys/firmware/acpi/platform_profile (~500ms).
+/// No-op in modern driver mode: power profile switching is handled natively by Linux platform_profile and power-profiles-daemon.
 pub fn start_polling_daemon() {
-    if DAEMON_RUNNING.swap(true, Ordering::SeqCst) {
-        return;
-    }
-
-    thread::spawn(|| {
-        let mut last_mode = get_hardware_mode().unwrap_or(0);
-        loop {
-            thread::sleep(Duration::from_millis(500));
-            if let Ok(curr_mode) = get_hardware_mode() {
-                if curr_mode != last_mode {
-                    last_mode = curr_mode;
-                    if let Some(perf_mode) = PerformanceMode::from_u8(curr_mode) {
-                        let (pl1, pl2, epp, _) = perf_mode.config();
-                        let _ = apply_kernel_rapl(pl1 as u32, pl2 as u32);
-                        let _ = set_cpu_epp(epp);
-                    }
-                }
-            }
-        }
-    });
+    // Deprecated: Linux kernel platform_profile handles profiles natively without polling.
 }
 
 #[cfg(test)]
