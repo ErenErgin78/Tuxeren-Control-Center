@@ -3,7 +3,6 @@
   "productName": "Monster Control Center",
   "version": "0.6.0",
   "identifier": "com.monster.controlcenter",
-  "mainBinaryName": "monster-control-center-gui",
   "build": {
     "frontendDist": "./ui"
   },
