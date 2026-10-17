@@ -72,22 +72,21 @@ EOF
 systemctl --user daemon-reload 2>/dev/null || true
 systemctl --user enable --now monster-control-center.service 2>/dev/null || true
 
-# 7. Ensure ACPI call module and permissions
-echo "[*] Checking /proc/acpi/call and acpi_call kernel module..."
-if [ -w "/proc/acpi/call" ]; then
-    echo "[+] /proc/acpi/call is loaded and writable."
-else
-    echo "[!] /proc/acpi/call is missing or not writable. Setting up kernel module and permissions..."
+# 7. Configure udev rules for tuxedo keyboard LEDs and hardware control
+echo "[*] Configuring udev rules for tuxedo_keyboard LEDs..."
+UDEV_RULE_FILE="/etc/udev/rules.d/99-monster-control-center.rules"
+UDEV_CONTENT='SUBSYSTEM=="leds", ACTION=="add", RUN+="/bin/chmod -R 0666 /sys%p"
+KERNEL=="tuxedo_io", MODE="0666"'
+
+if [ ! -f "$UDEV_RULE_FILE" ]; then
     SETUP_CMD="
-        modprobe acpi_call 2>/dev/null || true
-        echo acpi_call > /etc/modules-load.d/acpi_call.conf 2>/dev/null || true
-        mkdir -p /etc/tmpfiles.d 2>/dev/null || true
-        echo 'z /proc/acpi/call 0666 root root -' > /etc/tmpfiles.d/acpi_call.conf 2>/dev/null || true
-        chmod 666 /proc/acpi/call 2>/dev/null || true
+        echo '$UDEV_CONTENT' > $UDEV_RULE_FILE
+        udevadm control --reload-rules 2>/dev/null || true
+        udevadm trigger --subsystem-match=leds 2>/dev/null || true
     "
     if command -v pkexec &>/dev/null; then
-        echo "[*] Requesting permission via pkexec..."
-        pkexec bash -c "$SETUP_CMD" || echo "[-] Permission grant skipped. You can grant access inside the app."
+        echo "[*] Installing udev rule via pkexec..."
+        pkexec bash -c "$SETUP_CMD" || echo "[-] Udev setup skipped. You can configure rules manually."
     fi
 fi
 

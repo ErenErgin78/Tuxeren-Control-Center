@@ -326,11 +326,11 @@ pub fn get_device_info() -> Result<DeviceInfo, String> {
     let bios_version = read_sys_file("/sys/class/dmi/id/bios_version").unwrap_or_else(|| "-".to_string());
     let bios_date = read_sys_file("/sys/class/dmi/id/bios_date").unwrap_or_else(|| "-".to_string());
     let ec_version = read_sys_file("/sys/class/dmi/id/ec_firmware_release").unwrap_or_else(|| "-".to_string());
-    let acpi_call_available = Path::new(crate::ec::ACPI_CALL_PATH).exists();
-    let platform_driver = if acpi_call_available {
-        "acpi_call (\\_SB.INOU)".to_string()
+    let driver_available = crate::ec::is_driver_available();
+    let platform_driver = if driver_available {
+        "tuxedo-drivers (uniwill_wmi)".to_string()
     } else {
-        "acpi_call (Yüklü Değil)".to_string()
+        "tuxedo-drivers (Yüklü Değil)".to_string()
     };
 
     // Panel 3: Temel Donanım
@@ -364,6 +364,6 @@ pub fn get_device_info() -> Result<DeviceInfo, String> {
         desktop_protocol,
         kernel,
         graphics_driver,
-        acpi_call_available,
+        acpi_call_available: driver_available,
     })
 }

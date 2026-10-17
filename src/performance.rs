@@ -5,20 +5,14 @@
 //! applies Intel RAPL power limits and CPU EPP policies,
 //! and polls the hardware mode button.
 
-use crate::ec;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use std::thread;
 use std::time::{Duration, Instant};
-
-pub const ADDR_PERF_MODE: u16 = 0x07AB;
-pub const ADDR_MAFAN_CONTROL: u16 = 0x0751;
-pub const ADDR_PL1_CONTROL: u16 = 0x046A;
-pub const ADDR_PL2_CONTROL: u16 = 0x046B;
 
 static DAEMON_RUNNING: AtomicBool = AtomicBool::new(false);
 static PREV_CPU: Mutex<Option<(u64, u64)>> = Mutex::new(None);
@@ -99,16 +93,19 @@ pub struct PerformanceState {
     pub os_profile: String,
 }
 
-/// Reads the current hardware performance mode from the EC.
-/// Uses 0x0751 which directly controls physical LED state and fan profile.
+/// Reads the current hardware performance mode from ACPI platform_profile.
 pub fn get_hardware_mode() -> Result<u8, String> {
-    let fan_byte = ec::read_byte(ADDR_MAFAN_CONTROL)?;
-    if let Some(mode) = PerformanceMode::from_fan_byte(fan_byte) {
-        Ok(mode as u8)
-    } else {
-        let mode_byte = ec::read_byte(ADDR_PERF_MODE).unwrap_or(0);
-        Ok(PerformanceMode::from_u8(mode_byte).map(|m| m as u8).unwrap_or(0))
+    let profile_path = "/sys/firmware/acpi/platform_profile";
+    if let Ok(content) = fs::read_to_string(profile_path) {
+        let mode = match content.trim() {
+            "performance" => PerformanceMode::Turbo,
+            "balanced" => PerformanceMode::Gaming,
+            "low-power" => PerformanceMode::Office,
+            _ => PerformanceMode::Office,
+        };
+        return Ok(mode as u8);
     }
+    Ok(PerformanceMode::Office as u8)
 }
 
 /// Linux çekirdeğine doğrudan Intel RAPL güç limitlerini uygular (microwatts).
@@ -202,26 +199,27 @@ pub fn set_os_profile(profile: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// Mod değişimini EC'ye, fan/LED moduna ve donanım PL limitlerine uygular.
+/// Mod değişimini ACPI platform_profile, Linux Kernel RAPL ve CPU EPP limitlerine uygular.
 pub fn apply_mode(mode: PerformanceMode) -> Result<(), String> {
-    let (pl1, pl2, epp, fan_byte) = mode.config();
+    let (pl1, pl2, epp, _) = mode.config();
 
-    // 1. EC Fan & LED Kontrol Register (0x0751: 0xA0 Kapalı, 0x20 Orta, 0x30 Tam)
-    ec::write_byte(ADDR_MAFAN_CONTROL, fan_byte)?;
+    // 1. Linux ACPI Platform Profile
+    let profile_path = "/sys/firmware/acpi/platform_profile";
+    if Path::new(profile_path).exists() {
+        let prof = match mode {
+            PerformanceMode::Office => "low-power",
+            PerformanceMode::Gaming => "balanced",
+            PerformanceMode::Turbo => "performance",
+        };
+        let _ = fs::write(profile_path, prof);
+    }
 
-    // 2. EC Donanım PL1 / PL2 Register'ları (0x046A, 0x046B)
-    let _ = ec::write_byte(ADDR_PL1_CONTROL, pl1);
-    let _ = ec::write_byte(ADDR_PL2_CONTROL, pl2);
-
-    // 3. EC Mod Index Register (0x07AB)
-    let _ = ec::write_byte(ADDR_PERF_MODE, mode as u8);
-
-    // 4. Linux Kernel RAPL
+    // 2. Linux Kernel RAPL
     if let Err(e) = apply_kernel_rapl(pl1 as u32, pl2 as u32) {
         eprintln!("[warn] Kernel RAPL: {}", e);
     }
 
-    // 5. Linux CPU EPP
+    // 3. Linux CPU EPP
     set_cpu_epp(epp)?;
 
     Ok(())
@@ -364,17 +362,42 @@ fn get_gpu_metrics() -> (f32, u32) {
     (0.0, 0)
 }
 
+fn find_hwmon_fans() -> (Option<PathBuf>, Option<PathBuf>) {
+    let hwmon_dir = Path::new("/sys/class/hwmon");
+    let mut fan1 = None;
+    let mut fan2 = None;
+
+    if let Ok(entries) = hwmon_dir.read_dir() {
+        for entry in entries.flatten() {
+            let p = entry.path();
+            let f1 = p.join("fan1_input");
+            let f2 = p.join("fan2_input");
+            if f1.exists() && fan1.is_none() {
+                fan1 = Some(f1);
+            }
+            if f2.exists() && fan2.is_none() {
+                fan2 = Some(f2);
+            }
+        }
+    }
+    (fan1, fan2)
+}
+
 fn get_fan_metrics() -> (u16, u8, u16, u8) {
-    let cpu_rpm = ((ec::read_byte(0x0464).unwrap_or(0) as u16) << 8)
-        | (ec::read_byte(0x0465).unwrap_or(0) as u16);
-    let gpu_rpm = ((ec::read_byte(0x046C).unwrap_or(0) as u16) << 8)
-        | (ec::read_byte(0x046D).unwrap_or(0) as u16);
+    let (fan1_path, fan2_path) = find_hwmon_fans();
 
-    let raw_cpu_duty = ec::read_byte(0x075B).unwrap_or(0);
-    let raw_gpu_duty = ec::read_byte(0x075C).unwrap_or(0);
+    let cpu_rpm = fan1_path
+        .and_then(|p| fs::read_to_string(p).ok())
+        .and_then(|s| s.trim().parse::<u16>().ok())
+        .unwrap_or(0);
 
-    let cpu_duty = ((raw_cpu_duty as f32 / 255.0) * 100.0).round().clamp(0.0, 100.0) as u8;
-    let gpu_duty = ((raw_gpu_duty as f32 / 255.0) * 100.0).round().clamp(0.0, 100.0) as u8;
+    let gpu_rpm = fan2_path
+        .and_then(|p| fs::read_to_string(p).ok())
+        .and_then(|s| s.trim().parse::<u16>().ok())
+        .unwrap_or(0);
+
+    let cpu_duty = ((cpu_rpm as f32 / 5500.0) * 100.0).round().clamp(0.0, 100.0) as u8;
+    let gpu_duty = ((gpu_rpm as f32 / 5500.0) * 100.0).round().clamp(0.0, 100.0) as u8;
 
     (cpu_rpm, cpu_duty, gpu_rpm, gpu_duty)
 }
@@ -470,24 +493,21 @@ pub fn get_system_metrics() -> Result<SystemMetrics, String> {
     })
 }
 
-/// Klavyedeki fiziksel tuş basışlarını 0x0751 üzerinden yakalayan düşük maliyetli EC polling daemon'ı (~200ms).
+/// Monitors hardware performance profile changes via /sys/firmware/acpi/platform_profile (~500ms).
 pub fn start_polling_daemon() {
     if DAEMON_RUNNING.swap(true, Ordering::SeqCst) {
         return;
     }
 
     thread::spawn(|| {
-        let mut last_fan_byte = ec::read_byte(ADDR_MAFAN_CONTROL).unwrap_or(0xA0);
+        let mut last_mode = get_hardware_mode().unwrap_or(0);
         loop {
-            thread::sleep(Duration::from_millis(200));
-            if let Ok(curr_fan_byte) = ec::read_byte(ADDR_MAFAN_CONTROL) {
-                if curr_fan_byte != last_fan_byte {
-                    last_fan_byte = curr_fan_byte;
-                    if let Some(perf_mode) = PerformanceMode::from_fan_byte(curr_fan_byte) {
+            thread::sleep(Duration::from_millis(500));
+            if let Ok(curr_mode) = get_hardware_mode() {
+                if curr_mode != last_mode {
+                    last_mode = curr_mode;
+                    if let Some(perf_mode) = PerformanceMode::from_u8(curr_mode) {
                         let (pl1, pl2, epp, _) = perf_mode.config();
-                        let _ = ec::write_byte(ADDR_PL1_CONTROL, pl1);
-                        let _ = ec::write_byte(ADDR_PL2_CONTROL, pl2);
-                        let _ = ec::write_byte(ADDR_PERF_MODE, perf_mode as u8);
                         let _ = apply_kernel_rapl(pl1 as u32, pl2 as u32);
                         let _ = set_cpu_epp(epp);
                     }

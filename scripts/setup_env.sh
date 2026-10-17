@@ -90,11 +90,11 @@ if [ -f "ui/package.json" ]; then
     (cd ui && npm install)
 fi
 
-echo "[+] Checking acpi_call permissions..."
-if [ -w "/proc/acpi/call" ]; then
-    echo "[✓] /proc/acpi/call is writable."
+echo "[+] Checking tuxedo-drivers kernel interface..."
+if [ -d "/sys/devices/platform/tuxedo_keyboard" ] || [ -c "/dev/tuxedo_io" ]; then
+    echo "[✓] tuxedo-drivers kernel interface is active."
 else
-    echo "[!] /proc/acpi/call is not writable or module not loaded (run ./install.sh to configure)."
+    echo "[!] tuxedo-drivers is not currently active (load via: sudo modprobe tuxedo_keyboard uniwill_wmi)."
 fi
 
 echo "[+] Checking Rust backend build..."

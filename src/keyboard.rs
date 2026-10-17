@@ -1,25 +1,11 @@
 //! # Keyboard Backlight & RGB Subsystem Module
 //!
-//! Controls the single-zone RGB keyboard backlight integrated into the Embedded Controller.
-//! Supports calibrated color presets, manual RGB mapping (0..255 to 0..50 PWM scale),
-//! hardware brightness levels (1..4), and instant refresh re-arming.
+//! Controls the single-zone RGB keyboard backlight via the official Linux LED subsystem (`/sys/class/leds/*kbd_backlight*`).
 
-use crate::ec;
-use std::thread::sleep;
-use std::time::Duration;
+use std::fs;
+use std::path::{Path, PathBuf};
 
-/// EC RAM offset for Red channel duty cycle (0..50).
-pub const ADDR_RGB_R: u16      = 0x0769;
-/// EC RAM offset for Green channel duty cycle (0..50).
-pub const ADDR_RGB_G: u16      = 0x076A;
-/// EC RAM offset for Blue channel duty cycle (0..50).
-pub const ADDR_RGB_B: u16      = 0x076B;
-/// EC RAM offset for Keyboard backlight power switch (0x01 = On, 0x00 = Off).
-pub const ADDR_KBL_ENABLE: u16 = 0x078C;
-/// EC RAM offset for Latch trigger register (Bit 0x20 notifies EC to apply changes).
-pub const ADDR_TRIGGER: u16    = 0x0767;
-
-/// Optically balanced color presets adjusted for LED lumen efficiency curves.
+/// Optically balanced color presets.
 pub const PRESETS: &[(&str, (u8, u8, u8))] = &[
     ("red", (255, 0, 0)),
     ("green", (0, 255, 0)),
@@ -35,10 +21,21 @@ pub const PRESETS: &[(&str, (u8, u8, u8))] = &[
     ("off", (0, 0, 0)),
 ];
 
-/// Sets the keyboard RGB backlight color and brightness.
-///
-/// Converts 0..255 RGB inputs to 0..50 EC hardware PWM steps, scales by brightness (1..4),
-/// triggers the latch register, and issues a 40ms power re-arm pulse to bypass FN+F6 requirement.
+/// Locates the keyboard backlight device path under `/sys/class/leds/`.
+pub fn find_kbd_led_device() -> Option<PathBuf> {
+    let leds_dir = Path::new("/sys/class/leds");
+    if let Ok(entries) = fs::read_dir(leds_dir) {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if name.contains("kbd_backlight") {
+                return Some(entry.path());
+            }
+        }
+    }
+    None
+}
+
+/// Sets the keyboard RGB backlight color and brightness via the Linux LED class.
 ///
 /// # Arguments
 /// * `r` - Red channel (0..255).
@@ -46,27 +43,38 @@ pub const PRESETS: &[(&str, (u8, u8, u8))] = &[
 /// * `b` - Blue channel (0..255).
 /// * `brightness` - Brightness level (0..4).
 pub fn set_rgb(r: u8, g: u8, b: u8, brightness: u8) -> Result<(), String> {
-    if brightness == 0 || (r == 0 && g == 0 && b == 0) {
-        ec::write_byte(ADDR_KBL_ENABLE, 0x00)?;
-        ec::write_byte(ADDR_TRIGGER, 0x20)?;
-        return Ok(());
+    let dev = find_kbd_led_device().ok_or_else(|| {
+        "Klavye LED aygıtı bulunamadı (/sys/class/leds/*kbd_backlight*). tuxedo_keyboard sürücüsünü yükleyin.".to_string()
+    })?;
+
+    let max_brightness = fs::read_to_string(dev.join("max_brightness"))
+        .ok()
+        .and_then(|s| s.trim().parse::<u8>().ok())
+        .unwrap_or(4);
+
+    let target_brightness = if r == 0 && g == 0 && b == 0 {
+        0
+    } else {
+        brightness.clamp(0, max_brightness)
+    };
+
+    let brightness_path = dev.join("brightness");
+    fs::write(&brightness_path, target_brightness.to_string())
+        .map_err(|e| format!("Parlaklık yazılamadı: {}", e))?;
+
+    if target_brightness > 0 {
+        let multi_path = dev.join("multi_intensity");
+        if multi_path.exists() {
+            fs::write(&multi_path, format!("{} {} {}", r, g, b))
+                .map_err(|e| format!("RGB rengi yazılamadı: {}", e))?;
+        } else {
+            let color_path = dev.join("color");
+            if color_path.exists() {
+                let _ = fs::write(color_path, format!("{:02X}{:02X}{:02X}", r, g, b));
+            }
+        }
     }
 
-    let b_clamped = brightness.clamp(1, 4);
-    let scale = b_clamped as f32 / 4.0;
-    let ec_r = (((r as f32 / 255.0) * 50.0 * scale).round() as u8).min(50);
-    let ec_g = (((g as f32 / 255.0) * 50.0 * scale).round() as u8).min(50);
-    let ec_b = (((b as f32 / 255.0) * 50.0 * scale).round() as u8).min(50);
-
-    ec::write_byte(ADDR_RGB_R, ec_r)?;
-    ec::write_byte(ADDR_RGB_G, ec_g)?;
-    ec::write_byte(ADDR_RGB_B, ec_b)?;
-    ec::write_byte(ADDR_TRIGGER, 0x20)?;
-
-    // Hardware re-arm pulse (0x00 -> 40ms -> 0x01)
-    ec::write_byte(ADDR_KBL_ENABLE, 0x00)?;
-    sleep(Duration::from_millis(40));
-    ec::write_byte(ADDR_KBL_ENABLE, 0x01)?;
     Ok(())
 }
 
@@ -80,7 +88,7 @@ pub fn set_preset(name: &str, brightness: u8) -> Result<(), String> {
         set_rgb(r, g, b, brightness)
     } else {
         Err(format!(
-            "Unknown color preset '{}'. Available: {}",
+            "Bilinmeyen renk önayarı '{}'. Kullanılabilir: {}",
             name,
             PRESETS.iter().map(|(k, _)| *k).collect::<Vec<_>>().join(", ")
         ))

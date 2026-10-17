@@ -4,7 +4,6 @@
 
 use monster_control_center::{battery, device_info, display, ec, keyboard, get_chassis_project_id};
 use serde::Serialize;
-use std::fs::OpenOptions;
 use std::process::Command;
 
 #[derive(Serialize)]
@@ -14,7 +13,7 @@ pub struct AppStatus {
 }
 
 fn check_permission() -> bool {
-    OpenOptions::new().write(true).open(ec::ACPI_CALL_PATH).is_ok()
+    ec::is_driver_available()
 }
 
 #[tauri::command]
@@ -44,14 +43,10 @@ fn set_keyboard_rgb(r: u8, g: u8, b: u8, brightness: u8) -> Result<(), String> {
 #[tauri::command]
 fn grant_permissions() -> Result<String, String> {
     let script = r#"
-        modprobe acpi_call 2>/dev/null || true
-        echo acpi_call > /etc/modules-load.d/acpi_call.conf 2>/dev/null || true
-        mkdir -p /etc/tmpfiles.d 2>/dev/null || true
-        echo 'z /proc/acpi/call 0666 root root -' > /etc/tmpfiles.d/acpi_call.conf 2>/dev/null || true
-        chmod 666 /proc/acpi/call 2>/dev/null || true
-        echo 'z /sys/class/powercap/intel-rapl/intel-rapl:0/constraint_*_power_limit_uw 0666 root root -' > /etc/tmpfiles.d/monster_rapl.conf 2>/dev/null || true
-        chmod 666 /sys/class/powercap/intel-rapl/intel-rapl:0/constraint_*_power_limit_uw 2>/dev/null || true
-        test -w /proc/acpi/call
+        udevadm control --reload-rules 2>/dev/null || true
+        udevadm trigger --subsystem-match=leds 2>/dev/null || true
+        chmod -R 0666 /sys/class/leds/*kbd_backlight* 2>/dev/null || true
+        chmod 0666 /dev/tuxedo_io 2>/dev/null || true
     "#;
     let output = Command::new("pkexec")
         .arg("bash")
@@ -61,10 +56,10 @@ fn grant_permissions() -> Result<String, String> {
         .map_err(|e| format!("pkexec çalıştırılamadı: {}", e))?;
 
     if output.status.success() {
-        Ok("Permissions granted and acpi_call module loaded successfully".into())
+        Ok("Sürücü izinleri başarıyla güncellendi.".into())
     } else {
         Err(format!(
-            "pkexec failed: {}",
+            "İzin güncelleme başarısız: {}",
             String::from_utf8_lossy(&output.stderr).trim()
         ))
     }
