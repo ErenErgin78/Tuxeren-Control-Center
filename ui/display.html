@@ -126,25 +126,25 @@
     }
   </style>
 </head>
-<body class="page-display">
+<body class="page-display" data-i18n-page="display_title">
   <!-- Titlebar -->
   <header class="titlebar">
     <div class="header-left">
-      <a href="index.html" class="oem-back-btn" title="Geri">
+      <a href="index.html" class="oem-back-btn" title="Geri" data-i18n-title="nav_back">
         <img src="assets/btn-back.png" alt="Geri" class="back-icon">
-        <span>Ana Menü</span>
+        <span data-i18n="nav_main_menu">Ana Menü</span>
       </a>
       <div class="header-separator"></div>
       <div class="oem-page-heading">
-        <h1 class="oem-page-title">Görüntü Ayarları</h1>
+        <h1 class="oem-page-title" data-i18n="page_display_heading">Görüntü Ayarları</h1>
       </div>
     </div>
-    <button class="btn-reset" id="btn-reset" title="Tüm görüntü ve renk ayarlarını fabrika ayarlarına sıfırla">
+    <button class="btn-reset" id="btn-reset" title="Tüm görüntü ve renk ayarlarını fabrika ayarlarına sıfırla" data-i18n-title="btn_reset_title">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
         <path d="M3 3v5h5"></path>
       </svg>
-      <span>Varsayılana Sıfırla</span>
+      <span data-i18n="btn_reset_defaults">Varsayılana Sıfırla</span>
     </button>
   </header>
 
@@ -152,13 +152,13 @@
     <!-- Temel Ayarlar (Parlaklık, Sıcaklık, Doygunluk, Gamma) -->
     <section class="display-card">
       <div class="card-header-sm">
-        <span class="card-title-sm">Genel Parlaklık & Renk</span>
+        <span class="card-title-sm" data-i18n="card_general_color">Genel Parlaklık & Renk</span>
       </div>
 
       <!-- Brightness -->
       <div class="control-row">
         <div class="control-header">
-          <span>Parlaklık (Brightness)</span>
+          <span data-i18n="disp_brightness">Parlaklık (Brightness)</span>
           <span class="control-value" id="val-brightness">100%</span>
         </div>
         <div class="slider-wrap">
@@ -174,15 +174,15 @@
       <!-- Color Temp -->
       <div class="control-row">
         <div class="control-header">
-          <span>Renk Sıcaklığı (Color Temp)</span>
+          <span data-i18n="disp_color_temp">Renk Sıcaklığı (Color Temp)</span>
           <span class="control-value" id="val-temp">6500 K</span>
         </div>
         <div class="slider-wrap">
           <input type="range" id="slider-temp" min="3000" max="9000" value="6500" step="100">
           <div class="slider-marks">
-            <span>3000K (Sıcak)</span>
+            <span data-i18n="disp_temp_warm">3000K (Sıcak)</span>
             <span>6500K</span>
-            <span>9000K (Soğuk)</span>
+            <span data-i18n="disp_temp_cool">9000K (Soğuk)</span>
           </div>
         </div>
       </div>
@@ -190,15 +190,15 @@
       <!-- Saturation -->
       <div class="control-row">
         <div class="control-header">
-          <span>Renk Doygunluğu (Saturation)</span>
+          <span data-i18n="disp_saturation">Renk Doygunluğu (Saturation)</span>
           <span class="control-value" id="val-saturation">1.00</span>
         </div>
         <div class="slider-wrap">
           <input type="range" id="slider-saturation" min="0" max="2" value="1" step="0.05">
           <div class="slider-marks">
-            <span>0.0 (S/B)</span>
-            <span>1.0 (Standart)</span>
-            <span>2.0 (Canlı)</span>
+            <span data-i18n="disp_sat_bw">0.0 (S/B)</span>
+            <span data-i18n="disp_sat_std">1.0 (Standart)</span>
+            <span data-i18n="disp_sat_vivid">2.0 (Canlı)</span>
           </div>
         </div>
       </div>
@@ -206,15 +206,15 @@
       <!-- Gamma -->
       <div class="control-row">
         <div class="control-header">
-          <span>Gamma Düzeltmesi</span>
+          <span data-i18n="disp_gamma">Gamma Düzeltmesi</span>
           <span class="control-value" id="val-gamma">1.00</span>
         </div>
         <div class="slider-wrap">
           <input type="range" id="slider-gamma" min="0.5" max="2.0" value="1.0" step="0.05">
           <div class="slider-marks">
-            <span>0.5 (Açık)</span>
+            <span data-i18n="disp_gamma_light">0.5 (Açık)</span>
             <span>1.0</span>
-            <span>2.0 (Koyu)</span>
+            <span data-i18n="disp_gamma_dark">2.0 (Koyu)</span>
           </div>
         </div>
       </div>
@@ -223,13 +223,13 @@
     <!-- RGB Kanal Kalibrasyonu -->
     <section class="display-card">
       <div class="card-header-sm">
-        <span class="card-title-sm">RGB Renk Kanalları</span>
+        <span class="card-title-sm" data-i18n="card_rgb_channels">RGB Renk Kanalları</span>
       </div>
 
       <!-- Red -->
       <div class="control-row">
         <div class="control-header">
-          <span>Kırmızı Kanal (Red)</span>
+          <span data-i18n="disp_channel_red">Kırmızı Kanal (Red)</span>
           <span class="control-value" id="val-red">128</span>
         </div>
         <div class="slider-wrap slider-red">
@@ -245,7 +245,7 @@
       <!-- Green -->
       <div class="control-row">
         <div class="control-header">
-          <span>Yeşil Kanal (Green)</span>
+          <span data-i18n="disp_channel_green">Yeşil Kanal (Green)</span>
           <span class="control-value" id="val-green">128</span>
         </div>
         <div class="slider-wrap slider-green">
@@ -261,7 +261,7 @@
       <!-- Blue -->
       <div class="control-row">
         <div class="control-header">
-          <span>Mavi Kanal (Blue)</span>
+          <span data-i18n="disp_channel_blue">Mavi Kanal (Blue)</span>
           <span class="control-value" id="val-blue">128</span>
         </div>
         <div class="slider-wrap slider-blue">
@@ -278,6 +278,7 @@
 
   <div id="toast" class="toast hidden"></div>
 
+  <script src="i18n.js"></script>
   <script src="display.js"></script>
 </body>
 </html>

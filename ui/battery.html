@@ -168,17 +168,17 @@
     }
   </style>
 </head>
-<body class="page-battery">
+<body class="page-battery" data-i18n-page="battery_title">
   <!-- Titlebar -->
   <header class="titlebar">
     <div class="header-left">
-      <a href="index.html" class="oem-back-btn" title="Geri">
+      <a href="index.html" class="oem-back-btn" title="Geri" data-i18n-title="nav_back">
         <img src="assets/btn-back.png" alt="Geri" class="back-icon">
-        <span>Ana Menü</span>
+        <span data-i18n="nav_main_menu">Ana Menü</span>
       </a>
       <div class="header-separator"></div>
       <div class="oem-page-heading">
-        <h1 class="oem-page-title">Pil Durumu</h1>
+        <h1 class="oem-page-title" data-i18n="page_battery_heading">Pil Durumu</h1>
       </div>
     </div>
   </header>
@@ -187,7 +187,7 @@
     <!-- Bölüm 1: Şarj Seviyesi & Durum -->
     <section class="battery-card">
       <div class="card-header-sm">
-        <span class="card-title-sm">Pil Doluluk & Güç Durumu</span>
+        <span class="card-title-sm" data-i18n="bat_card_level">Pil Doluluk & Güç Durumu</span>
       </div>
 
       <div class="battery-hero-row">
@@ -196,7 +196,7 @@
           <span class="battery-percent-unit">%</span>
         </div>
         <div class="kv-item" style="gap: 12px;">
-          <span class="kv-label">Tahmini Kalan Süre:</span>
+          <span class="kv-label" data-i18n="bat_est_time">Tahmini Kalan Süre:</span>
           <span class="kv-value highlight" id="bat-time-remaining">-</span>
         </div>
       </div>
@@ -207,11 +207,11 @@
 
       <div class="kv-list" style="margin-top: 4px;">
         <div class="kv-item">
-          <span class="kv-label">Güç Kaynağı & Mod:</span>
+          <span class="kv-label" data-i18n="bat_source_mode">Güç Kaynağı & Mod:</span>
           <span class="kv-value" id="bat-power-source">-</span>
         </div>
         <div class="kv-item">
-          <span class="kv-label">Donanım Durumu:</span>
+          <span class="kv-label" data-i18n="bat_hw_status">Donanım Durumu:</span>
           <span class="kv-value" id="bat-status-text">-</span>
         </div>
       </div>
@@ -220,7 +220,7 @@
     <!-- Bölüm 2: Pil Sağlığı -->
     <section class="battery-card">
       <div class="card-header-sm">
-        <span class="card-title-sm">Pil Sağlığı</span>
+        <span class="card-title-sm" data-i18n="bat_card_health">Pil Sağlığı</span>
       </div>
 
       <div class="battery-hero-row">
@@ -228,7 +228,7 @@
           <span class="battery-percent-text" id="bat-health-val">--%</span>
         </div>
         <div class="kv-item" style="gap: 8px;">
-          <span class="kv-label">Tam / Tasarım Kapasitesi:</span>
+          <span class="kv-label" data-i18n="bat_full_design_cap">Tam / Tasarım Kapasitesi:</span>
           <span class="kv-value font-mono"><span id="bat-cap-full">-</span> / <span id="bat-cap-design">-</span></span>
         </div>
       </div>
@@ -241,19 +241,19 @@
     <!-- Bölüm 3: Elektriksel Ölçümler & Tüketim -->
     <section class="battery-card">
       <div class="card-header-sm">
-        <span class="card-title-sm">Elektriksel Ölçümler</span>
+        <span class="card-title-sm" data-i18n="bat_card_electrical">Elektriksel Ölçümler</span>
       </div>
       <div class="kv-list">
         <div class="kv-item">
-          <span class="kv-label">Çalışma Gerilimi:</span>
+          <span class="kv-label" data-i18n="bat_voltage">Çalışma Gerilimi:</span>
           <span class="kv-value font-mono" id="val-voltage">-</span>
         </div>
         <div class="kv-item">
-          <span class="kv-label">Anlık Güç Tüketimi:</span>
+          <span class="kv-label" data-i18n="bat_power_rate">Anlık Güç Tüketimi:</span>
           <span class="kv-value font-mono highlight" id="val-power-rate">-</span>
         </div>
         <div class="kv-item">
-          <span class="kv-label">Aktif Güç Girişi:</span>
+          <span class="kv-label" data-i18n="bat_power_input">Aktif Güç Girişi:</span>
           <span class="kv-value" id="val-source-type">-</span>
         </div>
       </div>
@@ -262,21 +262,22 @@
     <!-- Bölüm 4: Donanım & Döngü Detayları -->
     <section class="battery-card">
       <div class="card-header-sm">
-        <span class="card-title-sm">Donanım & Döngü Bilgileri</span>
+        <span class="card-title-sm" data-i18n="bat_card_details">Donanım & Döngü Bilgileri</span>
       </div>
       <div class="kv-list">
         <div class="kv-item">
-          <span class="kv-label">Pildeki Mevcut Enerji Miktarı:</span>
+          <span class="kv-label" data-i18n="bat_energy_now">Pildeki Mevcut Enerji Miktarı:</span>
           <span class="kv-value font-mono" id="val-now-cap">-</span>
         </div>
         <div class="kv-item">
-          <span class="kv-label">Donanım Şarj Döngüsü:</span>
+          <span class="kv-label" data-i18n="bat_cycle_count">Donanım Şarj Döngüsü:</span>
           <span class="kv-value font-mono" id="val-cycle-count">-</span>
         </div>
       </div>
     </section>
   </main>
 
+  <script src="i18n.js"></script>
   <script src="battery.js"></script>
 </body>
 </html>

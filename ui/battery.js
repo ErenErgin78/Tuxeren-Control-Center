@@ -43,15 +43,15 @@ async function updateBatteryUI() {
     const powerSourceText = document.getElementById("bat-power-source");
     const statusText = document.getElementById("bat-status-text");
 
-    let sourceLabel = "Bilinmiyor";
+    let sourceLabel = typeof t === "function" ? t("bat_unknown") : "Bilinmiyor";
     if (data.is_charging) {
-      sourceLabel = "Şarj Ediliyor (Şebeke)";
+      sourceLabel = typeof t === "function" ? t("bat_charging_ac") : "Şarj Ediliyor (Şebeke)";
       if (statusBadge) statusBadge.classList.remove("discharging");
     } else if (data.on_battery) {
-      sourceLabel = "Pilde Çalışıyor (Deşarj)";
+      sourceLabel = typeof t === "function" ? t("bat_on_battery") : "Pilde Çalışıyor (Deşarj)";
       if (statusBadge) statusBadge.classList.add("discharging");
     } else {
-      sourceLabel = "Şebeke Gücü (Dolu/Beklemede)";
+      sourceLabel = typeof t === "function" ? t("bat_full_idle") : "Şebeke Gücü (Dolu/Beklemede)";
       if (statusBadge) statusBadge.classList.remove("discharging");
     }
 
@@ -81,7 +81,7 @@ async function updateBatteryUI() {
         }
       }
     } else {
-      if (healthVal) healthVal.textContent = "Okunamadı";
+      if (healthVal) healthVal.textContent = typeof t === "function" ? t("bat_not_readable") : "Okunamadı";
     }
 
     // 5. Details
@@ -95,13 +95,13 @@ async function updateBatteryUI() {
     setElem("val-voltage", data.voltage_volts !== null ? `${data.voltage_volts.toFixed(3)} V` : "-");
     setElem(
       "val-power-rate",
-      data.power_rate_watts !== null ? `${data.power_rate_watts.toFixed(2)} W` : "0 W / Ölçülemedi"
+      data.power_rate_watts !== null ? `${data.power_rate_watts.toFixed(2)} W` : (typeof t === "function" ? t("bat_not_measured") : "0 W / Ölçülemedi")
     );
-    setElem("val-source-type", data.is_charging ? "AC Adaptör (Şebeke)" : (data.on_battery ? "Dahili Batarya" : "AC Şebeke Gücü"));
+    setElem("val-source-type", data.is_charging ? (typeof t === "function" ? t("bat_source_ac") : "AC Adaptör (Şebeke)") : (data.on_battery ? (typeof t === "function" ? t("bat_source_internal") : "Dahili Batarya") : (typeof t === "function" ? t("bat_source_ac_power") : "AC Şebeke Gücü")));
     setElem("val-design-cap", formatCapacity(data.capacity_design));
     setElem("val-full-cap", formatCapacity(data.capacity_full));
     setElem("val-now-cap", formatCapacity(data.capacity_now));
-    setElem("val-cycle-count", data.cycle_count !== null && data.cycle_count !== undefined ? `${data.cycle_count}` : "Desteklenmiyor / 0");
+    setElem("val-cycle-count", data.cycle_count !== null && data.cycle_count !== undefined ? `${data.cycle_count}` : (typeof t === "function" ? t("bat_not_supported") : "Desteklenmiyor / 0"));
 
   } catch (err) {
     console.error("Failed to update battery UI:", err);

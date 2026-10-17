@@ -65,19 +65,19 @@ async function loadDeviceInfo() {
     setVal("val-graphics-driver", info.graphics_driver);
   } catch (err) {
     console.error("Device info load error:", err);
-    showToast(`Hata: ${err}`);
+    showToast(`${typeof t === "function" ? t("error_prefix") : "Hata:"} ${err}`);
   }
 }
 
 if (btnGrantPerm) {
   btnGrantPerm.addEventListener("click", async () => {
     try {
-      showToast("pkexec ile izin isteniyor...");
+      showToast(typeof t === "function" ? t("perm_requesting") : "pkexec ile izin isteniyor...");
       const msg = await invoke("grant_permissions");
-      showToast(msg || "İzin verildi");
+      showToast(msg || (typeof t === "function" ? t("perm_granted") : "İzin verildi"));
       setTimeout(loadDeviceInfo, 600);
     } catch (e) {
-      showToast(`İzin hatası: ${e}`);
+      showToast(`${typeof t === "function" ? t("perm_error") : "İzin hatası:"} ${e}`);
     }
   });
 }

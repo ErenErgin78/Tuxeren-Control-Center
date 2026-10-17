@@ -392,17 +392,17 @@
     }
   </style>
 </head>
-<body class="page-performance">
+<body class="page-performance" data-i18n-page="perf_title">
   <!-- Titlebar -->
   <header class="titlebar">
     <div class="header-left">
-      <a href="index.html" class="oem-back-btn" title="Geri">
+      <a href="index.html" class="oem-back-btn" title="Geri" data-i18n-title="nav_back">
         <img src="assets/btn-back.png" alt="Geri" class="back-icon">
-        <span>Ana Menü</span>
+        <span data-i18n="nav_main_menu">Ana Menü</span>
       </a>
       <div class="header-separator"></div>
       <div class="oem-page-heading">
-        <h1 class="oem-page-title">Performans Yönetimi</h1>
+        <h1 class="oem-page-title" data-i18n="page_perf_heading">Performans Yönetimi</h1>
       </div>
     </div>
   </header>
@@ -415,7 +415,7 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
           </svg>
-          Sistem İzleme
+          <span data-i18n="telemetry_title">Sistem İzleme</span>
         </span>
       </div>
 
@@ -436,7 +436,7 @@
                 <line x1="1" y1="9" x2="4" y2="9"></line>
                 <line x1="1" y1="15" x2="4" y2="15"></line>
               </svg>
-              <span>İŞLEMCİ (CPU)</span>
+              <span data-i18n="telemetry_cpu">İŞLEMCİ (CPU)</span>
             </div>
             <span class="telemetry-badge temp-cool" id="cpu-temp">--°C</span>
           </div>
@@ -460,7 +460,7 @@
                 <line x1="6" y1="2" x2="6" y2="6"></line>
                 <line x1="10" y1="2" x2="10" y2="6"></line>
               </svg>
-              <span>EKRAN KARTI (GPU)</span>
+              <span data-i18n="telemetry_gpu">EKRAN KARTI (GPU)</span>
             </div>
             <span class="telemetry-badge temp-cool" id="gpu-temp">--°C</span>
           </div>
@@ -484,7 +484,7 @@
                 <path d="M14 7v10"></path>
                 <path d="M18 7v10"></path>
               </svg>
-              <span>BELLEK (RAM)</span>
+              <span data-i18n="telemetry_ram">BELLEK (RAM)</span>
             </div>
           </div>
           <div class="telemetry-val-row">
@@ -507,7 +507,7 @@
                 <line x1="6" y1="16" x2="6.01" y2="16"></line>
                 <line x1="10" y1="16" x2="10.01" y2="16"></line>
               </svg>
-              <span>DEPOLAMA (DISK)</span>
+              <span data-i18n="telemetry_disk">DEPOLAMA (DISK)</span>
             </div>
           </div>
           <div class="telemetry-val-row">
@@ -531,13 +531,13 @@
                 <path d="M12 12c-3 0-5-2.5-5-5 2.5 0 5 2 5 5z"></path>
                 <circle cx="12" cy="12" r="2"></circle>
               </svg>
-              <span>SOĞUTMA FANLARI</span>
+              <span data-i18n="telemetry_fans">SOĞUTMA FANLARI</span>
             </div>
           </div>
           <div class="fan-dual-row">
             <div class="fan-stat">
               <div class="fan-meta">
-                <span class="fan-label">CPU FAN</span>
+                <span class="fan-label" data-i18n="telemetry_fan_cpu">CPU FAN</span>
                 <span class="fan-val" id="fan-cpu-rpm">0 RPM (0%)</span>
               </div>
               <div class="telemetry-progress-bg mini">
@@ -546,7 +546,7 @@
             </div>
             <div class="fan-stat">
               <div class="fan-meta">
-                <span class="fan-label">GPU FAN</span>
+                <span class="fan-label" data-i18n="telemetry_fan_gpu">GPU FAN</span>
                 <span class="fan-val" id="fan-gpu-rpm">0 RPM (0%)</span>
               </div>
               <div class="telemetry-progress-bg mini">
@@ -566,7 +566,7 @@
                 <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
                 <line x1="12" y1="20" x2="12.01" y2="20"></line>
               </svg>
-              <span>AĞ TRAFİĞİ</span>
+              <span data-i18n="telemetry_net">AĞ TRAFİĞİ</span>
             </div>
             <span class="telemetry-badge" id="net-badge">LAN / Wi-Fi</span>
           </div>
@@ -575,7 +575,7 @@
               <div class="fan-meta">
                 <span class="fan-label" style="display: flex; align-items: center; gap: 4px;">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00ffc2" stroke-width="2.5"><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                  İNDİRME
+                  <span data-i18n="telemetry_net_down">İNDİRME</span>
                 </span>
                 <span class="fan-val" id="net-down-speed">0.0 KB/s</span>
               </div>
@@ -587,7 +587,7 @@
               <div class="fan-meta">
                 <span class="fan-label" style="display: flex; align-items: center; gap: 4px;">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><polyline points="17 14 12 9 7 14"></polyline><line x1="12" y1="21" x2="12" y2="9"></line></svg>
-                  YÜKLEME
+                  <span data-i18n="telemetry_net_up">YÜKLEME</span>
                 </span>
                 <span class="fan-val" id="net-up-speed">0.0 KB/s</span>
               </div>
@@ -604,7 +604,7 @@
     <section class="perf-card">
       <div class="card-header-sm">
         <span class="card-title-sm">
-          <span>BIOS Güç Kipi</span>
+          <span data-i18n="card_bios_title">BIOS Güç Kipi</span>
         </span>
       </div>
 
@@ -613,9 +613,9 @@
         <div class="mode-item" data-hw="0" id="hw-mode-0">
           <div class="mode-item-left">
             <div class="mode-title">
-              <span>Ofis Modu</span>
+              <span data-i18n="mode_office_title">Ofis Modu</span>
             </div>
-            <span class="mode-detail">45W CPU Limiti • Düşük Fan Hızı</span>
+            <span class="mode-detail" data-i18n="mode_office_desc">45W CPU Limiti • Düşük Fan Hızı</span>
           </div>
         </div>
 
@@ -623,9 +623,9 @@
         <div class="mode-item" data-hw="1" id="hw-mode-1">
           <div class="mode-item-left">
             <div class="mode-title">
-              <span>Oyun Modu</span>
+              <span data-i18n="mode_game_title">Oyun Modu</span>
             </div>
-            <span class="mode-detail">75W CPU Limiti • Dengeli Fan Profili</span>
+            <span class="mode-detail" data-i18n="mode_game_desc">75W CPU Limiti • Dengeli Fan Profili</span>
           </div>
         </div>
 
@@ -633,9 +633,9 @@
         <div class="mode-item" data-hw="2" id="hw-mode-2">
           <div class="mode-item-left">
             <div class="mode-title">
-              <span>Turbo Modu</span>
+              <span data-i18n="mode_turbo_title">Turbo Modu</span>
             </div>
-            <span class="mode-detail">90W CPU Limiti • Turbo Fan</span>
+            <span class="mode-detail" data-i18n="mode_turbo_desc">90W CPU Limiti • Turbo Fan</span>
           </div>
         </div>
       </div>
@@ -645,7 +645,7 @@
     <section class="perf-card">
       <div class="card-header-sm">
         <span class="card-title-sm">
-          <span>İşletim Sistemi Güç Kipi</span>
+          <span data-i18n="card_os_title">İşletim Sistemi Güç Kipi</span>
         </span>
       </div>
 
@@ -654,9 +654,9 @@
         <div class="mode-item" data-os="power-saver" id="os-mode-power-saver">
           <div class="mode-item-left">
             <div class="mode-title">
-              <span>Güç Tasarrufu</span>
+              <span data-i18n="os_powersaver_title">Güç Tasarrufu</span>
             </div>
-            <span class="mode-detail">Pil ömrü odaklı, düşük CPU saat frekansı</span>
+            <span class="mode-detail" data-i18n="os_powersaver_desc">Pil ömrü odaklı, düşük CPU saat frekansı</span>
           </div>
         </div>
 
@@ -664,9 +664,9 @@
         <div class="mode-item" data-os="balanced" id="os-mode-balanced">
           <div class="mode-item-left">
             <div class="mode-title">
-              <span>Dengeli</span>
+              <span data-i18n="os_balanced_title">Dengeli</span>
             </div>
-            <span class="mode-detail">Standart kullanım, dinamik frekans ölçekleme</span>
+            <span class="mode-detail" data-i18n="os_balanced_desc">Standart kullanım, dinamik frekans ölçekleme</span>
           </div>
         </div>
 
@@ -674,9 +674,9 @@
         <div class="mode-item" data-os="performance" id="os-mode-performance">
           <div class="mode-item-left">
             <div class="mode-title">
-              <span>Yüksek Performans</span>
+              <span data-i18n="os_perf_title">Yüksek Performans</span>
             </div>
-            <span class="mode-detail">Maksimum çekirdek saat frekansları</span>
+            <span class="mode-detail" data-i18n="os_perf_desc">Maksimum çekirdek saat frekansları</span>
           </div>
         </div>
       </div>
@@ -685,6 +685,7 @@
 
   <div id="toast" class="toast hidden"></div>
 
+  <script src="i18n.js"></script>
   <script src="performance.js"></script>
 </body>
 </html>

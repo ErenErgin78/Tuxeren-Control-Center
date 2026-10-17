@@ -6,17 +6,17 @@
   <title>Aydınlatma Ayarları - Monster Kontrol Merkezi</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="page-keyboard">
+<body class="page-keyboard" data-i18n-page="kbd_title">
   <!-- Titlebar -->
   <header class="titlebar">
     <div class="header-left">
-      <a href="index.html" class="oem-back-btn" title="Geri">
+      <a href="index.html" class="oem-back-btn" title="Geri" data-i18n-title="nav_back">
         <img src="assets/btn-back.png" alt="Geri" class="back-icon">
-        <span>Ana Menü</span>
+        <span data-i18n="nav_main_menu">Ana Menü</span>
       </a>
       <div class="header-separator"></div>
       <div class="oem-page-heading">
-        <h1 class="oem-page-title">Aydınlatma Ayarları</h1>
+        <h1 class="oem-page-title" data-i18n="page_kbd_heading">Aydınlatma Ayarları</h1>
       </div>
     </div>
   </header>
@@ -29,9 +29,9 @@
         <line x1="12" y1="9" x2="12" y2="13"/>
         <line x1="12" y1="17" x2="12.01" y2="17"/>
       </svg>
-      <span>Donanım erişimi için root izni gerekiyor (<code>/proc/acpi/call</code>).</span>
+      <span data-i18n="perm_banner_text">Donanım erişimi için root izni gerekiyor (<code>/proc/acpi/call</code>).</span>
     </div>
-    <button id="btn-grant-perm" class="btn-primary-sm">İzin Ver</button>
+    <button id="btn-grant-perm" class="btn-primary-sm" data-i18n="perm_btn_grant">İzin Ver</button>
   </div>
 
   <!-- Main Simplified Workspace -->
@@ -41,37 +41,37 @@
       <div class="colors-dual-row">
         <!-- Left: Ana Renkler -->
         <div class="main-presets-section">
-          <div class="section-heading">Ana Renkler</div>
+          <div class="section-heading" data-i18n="section_main_colors">Ana Renkler</div>
           <div class="preset-chips-grid">
-            <button class="color-chip active" style="--chip: #00ffff" data-color="cyan" data-hex="#00FFFF" title="Cyan"></button>
-            <button class="color-chip" style="--chip: #0077ff" data-color="ice_blue" data-hex="#0077FF" title="Buz Mavisi"></button>
-            <button class="color-chip" style="--chip: #0000ff" data-color="blue" data-hex="#0000FF" title="Mavi"></button>
-            <button class="color-chip" style="--chip: #9b26b6" data-color="purple" data-hex="#9B26B6" title="Mor"></button>
-            <button class="color-chip" style="--chip: #e040fb" data-color="magenta" data-hex="#E040FB" title="Macenta"></button>
-            <button class="color-chip" style="--chip: #ff4081" data-color="pink" data-hex="#FF4081" title="Pembe"></button>
-            <button class="color-chip" style="--chip: #ff0000" data-color="red" data-hex="#FF0000" title="Kırmızı"></button>
-            <button class="color-chip" style="--chip: #ff6d00" data-color="orange" data-hex="#FF6D00" title="Turuncu"></button>
-            <button class="color-chip" style="--chip: #ffd600" data-color="yellow" data-hex="#FFD600" title="Sarı"></button>
-            <button class="color-chip" style="--chip: #00e676" data-color="green" data-hex="#00E676" title="Yeşil"></button>
-            <button class="color-chip" style="--chip: #ffffff" data-color="white" data-hex="#FFFFFF" title="Beyaz"></button>
-            <button class="color-chip chip-off" data-color="off" data-hex="#000000" title="Kapat">OFF</button>
+            <button class="color-chip active" style="--chip: #00ffff" data-color="cyan" data-hex="#00FFFF" title="Cyan" data-i18n-title="color_cyan"></button>
+            <button class="color-chip" style="--chip: #0077ff" data-color="ice_blue" data-hex="#0077FF" title="Buz Mavisi" data-i18n-title="color_ice_blue"></button>
+            <button class="color-chip" style="--chip: #0000ff" data-color="blue" data-hex="#0000FF" title="Mavi" data-i18n-title="color_blue"></button>
+            <button class="color-chip" style="--chip: #9b26b6" data-color="purple" data-hex="#9B26B6" title="Mor" data-i18n-title="color_purple"></button>
+            <button class="color-chip" style="--chip: #e040fb" data-color="magenta" data-hex="#E040FB" title="Macenta" data-i18n-title="color_magenta"></button>
+            <button class="color-chip" style="--chip: #ff4081" data-color="pink" data-hex="#FF4081" title="Pembe" data-i18n-title="color_pink"></button>
+            <button class="color-chip" style="--chip: #ff0000" data-color="red" data-hex="#FF0000" title="Kırmızı" data-i18n-title="color_red"></button>
+            <button class="color-chip" style="--chip: #ff6d00" data-color="orange" data-hex="#FF6D00" title="Turuncu" data-i18n-title="color_orange"></button>
+            <button class="color-chip" style="--chip: #ffd600" data-color="yellow" data-hex="#FFD600" title="Sarı" data-i18n-title="color_yellow"></button>
+            <button class="color-chip" style="--chip: #00e676" data-color="green" data-hex="#00E676" title="Yeşil" data-i18n-title="color_green"></button>
+            <button class="color-chip" style="--chip: #ffffff" data-color="white" data-hex="#FFFFFF" title="Beyaz" data-i18n-title="color_white"></button>
+            <button class="color-chip chip-off" data-color="off" data-hex="#000000" title="Kapat" data-i18n-title="color_off" data-i18n="color_off">Kapat</button>
           </div>
         </div>
 
         <!-- Right: Özel Renk & Palet & Son 5 Renk -->
         <div class="custom-palette-section">
-          <div class="section-heading">Özel Renk</div>
+          <div class="section-heading" data-i18n="section_custom_color">Özel Renk</div>
           <div class="palette-picker-bar">
             <!-- Tıklayınca son rengi klavyeye gönderen preview kutusu -->
-            <button class="active-swatch-box" id="active-swatch" title="Seçili rengi klavyeye uygula" style="background-color: #00FFFF;"></button>
+            <button class="active-swatch-box" id="active-swatch" title="Seçili rengi klavyeye uygula" data-i18n-title="apply_custom_color" style="background-color: #00FFFF;"></button>
             <span class="active-hex-label" id="active-hex-label">#00FFFF</span>
             <!-- Palet Butonu -->
-            <button class="btn-palette" id="btn-open-palette">Palet</button>
+            <button class="btn-palette" id="btn-open-palette" data-i18n="btn_open_palette">Palet</button>
           </div>
 
           <!-- Son Kullanılan 5 Renk -->
           <div class="recent-colors-block">
-            <span class="recent-label">Son Kullanılanlar</span>
+            <span class="recent-label" data-i18n="recent_colors_label">Son Kullanılanlar</span>
             <div class="recent-chips-list" id="recent-chips-list">
               <!-- JS ile dinamik 5 renk kutusu -->
             </div>
@@ -83,8 +83,8 @@
       <div id="inline-palette-panel" class="inline-palette-modal hidden">
         <div class="palette-modal-content">
           <div class="palette-modal-header">
-            <h3>Renk Paleti</h3>
-            <button class="btn-close-palette" id="btn-close-palette" title="Kapat">✕</button>
+            <h3 data-i18n="palette_modal_title">Renk Paleti</h3>
+            <button class="btn-close-palette" id="btn-close-palette" title="Kapat" data-i18n-title="modal_close">✕</button>
           </div>
           <div class="palette-modal-body">
             <!-- 2D Renk Alanı (Sat/Val) -->
@@ -100,7 +100,7 @@
             <div class="modal-palette-footer">
               <div class="palette-preview-dot" id="modal-preview-dot"></div>
               <span class="palette-hex-preview" id="modal-hex-text">#00FFFF</span>
-              <button class="btn-palette-select" id="btn-palette-select">Rengi Seç</button>
+              <button class="btn-palette-select" id="btn-palette-select" data-i18n="btn_palette_select">Rengi Seç</button>
             </div>
           </div>
         </div>
@@ -109,17 +109,17 @@
       <!-- Bottom Row: Işık Şiddeti (Parlaklık) -->
       <div class="brightness-bottom-section">
         <div class="brightness-header">
-          <span class="section-heading">Işık Şiddeti</span>
+          <span class="section-heading" data-i18n="section_brightness">Işık Şiddeti</span>
           <span class="brightness-badge" id="brightness-val">4</span>
         </div>
         <div class="brightness-slider-wrap">
           <input type="range" id="kbd-brightness" min="0" max="4" value="4" step="1">
           <div class="slider-marks">
-            <span>0 (Kapalı)</span>
+            <span data-i18n="brightness_off">0 (Kapalı)</span>
             <span>1</span>
             <span>2</span>
             <span>3</span>
-            <span>4 (Maksimum)</span>
+            <span data-i18n="brightness_max">4 (Maksimum)</span>
           </div>
         </div>
       </div>
@@ -128,6 +128,7 @@
 
   <div id="toast" class="toast hidden"></div>
 
+  <script src="i18n.js"></script>
   <script src="keyboard_light.js"></script>
 </body>
 </html>

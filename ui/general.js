@@ -9,6 +9,9 @@ const getInvoke = () => {
 
 const invoke = getInvoke();
 
+const switchLanguage = document.getElementById("switch-language");
+const langLabelTr = document.getElementById("lang-label-tr");
+const langLabelEn = document.getElementById("lang-label-en");
 const switchWinKey = document.getElementById("switch-winkey");
 const switchTouchpad = document.getElementById("switch-touchpad");
 const toast = document.getElementById("toast");
@@ -21,6 +24,28 @@ function showToast(msg) {
   toast._timeout = setTimeout(() => {
     toast.classList.add("hidden");
   }, 2000);
+}
+
+function updateLangBadges(isEn) {
+  if (langLabelTr) langLabelTr.classList.toggle("active", !isEn);
+  if (langLabelEn) langLabelEn.classList.toggle("active", isEn);
+}
+
+if (switchLanguage) {
+  const currentLang = typeof getLanguage === "function" ? getLanguage() : "tr";
+  const isEn = currentLang === "en";
+  switchLanguage.checked = isEn;
+  updateLangBadges(isEn);
+
+  switchLanguage.addEventListener("change", async (e) => {
+    const isChecked = e.target.checked;
+    const targetLang = isChecked ? "en" : "tr";
+    updateLangBadges(isChecked);
+    if (typeof setLanguage === "function") {
+      await setLanguage(targetLang);
+      showToast(t("toast_lang_changed"));
+    }
+  });
 }
 
 async function loadSettings() {
@@ -43,9 +68,9 @@ if (switchWinKey) {
     const disabled = e.target.checked;
     try {
       await invoke("set_win_key_disabled", { disabled });
-      showToast(disabled ? "Windows tuşu devre dışı bırakıldı" : "Windows tuşu etkinleştirildi");
+      showToast(disabled ? t("toast_winkey_disabled") : t("toast_winkey_enabled"));
     } catch (err) {
-      showToast(`Hata: ${err}`);
+      showToast(`${t("error_prefix")} ${err}`);
       switchWinKey.checked = !disabled;
     }
   });
@@ -56,13 +81,13 @@ if (switchTouchpad) {
     const disabled = e.target.checked;
     try {
       await invoke("set_touchpad_disabled", { disabled });
-      showToast(disabled ? "Touchpad kilitlendi" : "Touchpad etkinleştirildi");
+      showToast(disabled ? t("toast_touchpad_disabled") : t("toast_touchpad_enabled"));
     } catch (err) {
-      showToast(`Hata: ${err}`);
+      showToast(`${t("error_prefix")} ${err}`);
       switchTouchpad.checked = !disabled;
     }
   });
 }
 
 loadSettings();
-setInterval(loadSettings, 300);
+setInterval(loadSettings, 500);

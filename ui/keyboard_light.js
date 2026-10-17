@@ -179,10 +179,10 @@ async function applyHexColor(hex) {
   const { r, g, b } = hexToRgb(hex);
   try {
     await invoke("set_keyboard_rgb", { r, g, b, brightness });
-    showToast(`RGB: (${r}, ${g}, ${b})`);
+    showToast(typeof t === "function" ? t("toast_custom_rgb_set", "", { hex }) : `RGB: (${r}, ${g}, ${b})`);
     addRecentColor(hex);
   } catch (e) {
-    showToast(`Hata: ${e}`);
+    showToast(`${typeof t === "function" ? t("error_prefix") : "Hata:"} ${e}`);
   }
 }
 
@@ -200,9 +200,9 @@ colorChips.forEach((chip) => {
       brightnessVal.textContent = "0";
       try {
         await invoke("set_keyboard_preset", { preset: "off", brightness: 0 });
-        showToast("Kapatıldı");
+        showToast(typeof t === "function" ? t("color_off") : "Kapatıldı");
       } catch (e) {
-        showToast(`Hata: ${e}`);
+        showToast(`${typeof t === "function" ? t("error_prefix") : "Hata:"} ${e}`);
       }
       return;
     }
@@ -217,10 +217,10 @@ colorChips.forEach((chip) => {
 
     try {
       await invoke("set_keyboard_preset", { preset, brightness });
-      showToast(`Renk: ${preset.toUpperCase()}`);
+      showToast(typeof t === "function" ? t("toast_preset_set", "", { preset: preset.toUpperCase() }) : `Renk: ${preset.toUpperCase()}`);
       addRecentColor(hex);
     } catch (e) {
-      showToast(`Hata: ${e}`);
+      showToast(`${typeof t === "function" ? t("error_prefix") : "Hata:"} ${e}`);
     }
   });
 });
@@ -303,7 +303,7 @@ kbdBrightness.addEventListener("change", async (e) => {
   if (val === 0) {
     try {
       await invoke("set_keyboard_preset", { preset: "off", brightness: 0 });
-      showToast("Kapatıldı");
+      showToast(typeof t === "function" ? t("color_off") : "Kapatıldı");
     } catch (err) {}
   } else {
     applyHexColor(currentColorHex);
@@ -329,12 +329,12 @@ async function refreshStatus() {
 if (btnGrantPerm) {
   btnGrantPerm.addEventListener("click", async () => {
     try {
-      showToast("pkexec ile izin isteniyor...");
+      showToast(typeof t === "function" ? t("perm_requesting") : "pkexec ile izin isteniyor...");
       const msg = await invoke("grant_permissions");
-      showToast(msg || "İzin verildi");
+      showToast(msg || (typeof t === "function" ? t("perm_granted") : "İzin verildi"));
       setTimeout(refreshStatus, 600);
     } catch (e) {
-      showToast(`İzin hatası: ${e}`);
+      showToast(`${typeof t === "function" ? t("perm_error") : "İzin hatası:"} ${e}`);
     }
   });
 }

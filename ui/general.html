@@ -100,19 +100,39 @@
       transform: translateX(22px);
       background-color: #021214;
     }
+
+    .lang-switch-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lang-badge {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      transition: color 0.2s ease;
+      user-select: none;
+    }
+
+    .lang-badge.active {
+      color: var(--accent-cyan);
+      text-shadow: 0 0 8px rgba(0, 255, 194, 0.4);
+    }
   </style>
 </head>
-<body>
+<body data-i18n-page="general_title">
   <!-- Titlebar -->
   <header class="titlebar">
     <div class="header-left">
-      <a href="index.html" class="oem-back-btn" title="Geri">
+      <a href="index.html" class="oem-back-btn" title="Geri" data-i18n-title="nav_back">
         <img src="assets/btn-back.png" alt="Geri" class="back-icon">
-        <span>Ana Menü</span>
+        <span data-i18n="nav_main_menu">Ana Menü</span>
       </a>
       <div class="header-separator"></div>
       <div class="oem-page-heading">
-        <h1 class="oem-page-title">Genel Ayarlar</h1>
+        <h1 class="oem-page-title" data-i18n="page_general_heading">Genel Ayarlar</h1>
       </div>
     </div>
   </header>
@@ -121,11 +141,27 @@
   <main class="view view-subpage">
     <div class="general-workspace">
       <div class="general-card">
+        <!-- Dil Seçimi Switch -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-title" data-i18n="setting_language_title">Uygulama Dili</span>
+            <span class="setting-desc" data-i18n="setting_language_desc">Arayüzün görüntüleneceği dili seçin</span>
+          </div>
+          <div class="lang-switch-container">
+            <span class="lang-badge" id="lang-label-tr">TR</span>
+            <label class="switch-label">
+              <input type="checkbox" id="switch-language">
+              <span class="switch-slider"></span>
+            </label>
+            <span class="lang-badge" id="lang-label-en">EN</span>
+          </div>
+        </div>
+
         <!-- Windows Tuşu Switch -->
         <div class="setting-row">
           <div class="setting-info">
-            <span class="setting-title">Windows Tuşunu Devre Dışı Bırak</span>
-            <span class="setting-desc">Oyun esnasında yanlışlıkla basılmasını önler</span>
+            <span class="setting-title" data-i18n="setting_winkey_title">Windows Tuşunu Devre Dışı Bırak</span>
+            <span class="setting-desc" data-i18n="setting_winkey_desc">Oyun esnasında yanlışlıkla basılmasını önler</span>
           </div>
           <label class="switch-label">
             <input type="checkbox" id="switch-winkey">
@@ -136,8 +172,8 @@
         <!-- Touchpad Devre Dışı Bırak Switch -->
         <div class="setting-row">
           <div class="setting-info">
-            <span class="setting-title">Touchpad'i Devre Dışı Bırak</span>
-            <span class="setting-desc">Dokunmatik yüzeyi ve tıklama algılamasını kilitler</span>
+            <span class="setting-title" data-i18n="setting_touchpad_title">Touchpad'i Devre Dışı Bırak</span>
+            <span class="setting-desc" data-i18n="setting_touchpad_desc">Dokunmatik yüzeyi ve tıklama algılamasını kilitler</span>
           </div>
           <label class="switch-label">
             <input type="checkbox" id="switch-touchpad">
@@ -150,6 +186,7 @@
 
   <div id="toast" class="toast hidden"></div>
 
+  <script src="i18n.js"></script>
   <script src="general.js"></script>
 </body>
 </html>

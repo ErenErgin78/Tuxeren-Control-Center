@@ -72,10 +72,10 @@ document.querySelectorAll("[data-hw]").forEach((el) => {
     const mode = parseInt(el.getAttribute("data-hw"), 10);
     try {
       await invoke("set_hardware_mode", { mode });
-      showToast(`Donanım modu değiştirildi (Kod: ${mode})`);
+      showToast(typeof t === "function" ? t("toast_hw_mode", "", { mode }) : `Donanım modu değiştirildi (Kod: ${mode})`);
       await refreshPerformance();
     } catch (e) {
-      showToast(`Hata: ${e}`);
+      showToast(`${typeof t === "function" ? t("error_prefix") : "Hata:"} ${e}`);
     }
   });
 });
@@ -86,10 +86,10 @@ document.querySelectorAll("[data-os]").forEach((el) => {
     const profile = el.getAttribute("data-os");
     try {
       await invoke("set_os_power_profile", { profile });
-      showToast(`Fedora güç kipi '${profile}' olarak ayarlandı`);
+      showToast(typeof t === "function" ? t("toast_os_mode", "", { profile }) : `İşletim sistemi güç kipi '${profile}' olarak ayarlandı`);
       await refreshPerformance();
     } catch (e) {
-      showToast(`Hata: ${e}`);
+      showToast(`${typeof t === "function" ? t("error_prefix") : "Hata:"} ${e}`);
     }
   });
 });

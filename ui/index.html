@@ -6,7 +6,7 @@
   <title>Monster Kontrol Merkezi</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-i18n-page="lobby_title">
 
   <!-- Permission Banner -->
   <div id="perm-banner" class="alert-banner hidden">
@@ -16,9 +16,9 @@
         <line x1="12" y1="9" x2="12" y2="13"/>
         <line x1="12" y1="17" x2="12.01" y2="17"/>
       </svg>
-      <span>Donanım erişimi için root izni gerekiyor (<code>/proc/acpi/call</code>).</span>
+      <span data-i18n="perm_banner_text">Donanım erişimi için root izni gerekiyor (<code>/proc/acpi/call</code>).</span>
     </div>
-    <button id="btn-grant-perm" class="btn-primary-sm">İzin Ver</button>
+    <button id="btn-grant-perm" class="btn-primary-sm" data-i18n="perm_btn_grant">İzin Ver</button>
   </div>
 
   <!-- Main Lobby View -->
@@ -27,7 +27,7 @@
       <div class="hero-logo-container">
         <img src="assets/logo.png" alt="Monster Logo" class="hero-logo">
       </div>
-      <h1 class="hero-title">Kontrol Merkezi</h1>
+      <h1 class="hero-title" data-i18n="hero_title">Kontrol Merkezi</h1>
     </section>
 
     <!-- Bottom Half: Menu Tiles (centered in upper sub-half) -->
@@ -40,8 +40,8 @@
           <img src="assets/btn-main-switch.png" alt="Genel Ayarlar">
         </div>
         <div class="tile-text">
-          <h2 class="tile-title">Genel Ayarlar</h2>
-          <p class="tile-desc">Kolay Ayar, Windows Aygıtları, Oyun içi Hızlı Bilgi Ekranı, Klavye Haritalandırması</p>
+          <h2 class="tile-title" data-i18n="menu_general">Genel Ayarlar</h2>
+          <p class="tile-desc" data-i18n="menu_general_desc">Kolay Ayar, Windows Aygıtları, Oyun içi Hızlı Bilgi Ekranı, Klavye Haritalandırması</p>
         </div>
       </a>
 
@@ -51,8 +51,8 @@
           <img src="assets/btn-main-performance.png" alt="Performans">
         </div>
         <div class="tile-text">
-          <h2 class="tile-title">Performans</h2>
-          <p class="tile-desc">Donanım & Güç Kipi Seçimi</p>
+          <h2 class="tile-title" data-i18n="menu_perf">Performans</h2>
+          <p class="tile-desc" data-i18n="menu_perf_desc">Donanım & Güç Kipi Seçimi</p>
         </div>
       </a>
 
@@ -62,8 +62,8 @@
           <img src="assets/btn-main-light.png" alt="Aydınlatma Ayarları">
         </div>
         <div class="tile-text">
-          <h2 class="tile-title">Aydınlatma Ayarları</h2>
-          <p class="tile-desc">Klavye Aydınlatması</p>
+          <h2 class="tile-title" data-i18n="menu_light">Aydınlatma Ayarları</h2>
+          <p class="tile-desc" data-i18n="menu_light_desc">Klavye Aydınlatması</p>
         </div>
       </a>
 
@@ -73,8 +73,8 @@
           <img src="assets/btn-main-battery.png" alt="Pil">
         </div>
         <div class="tile-text">
-          <h2 class="tile-title">Pil</h2>
-          <p class="tile-desc">Pil Modu, Pil Durumu</p>
+          <h2 class="tile-title" data-i18n="menu_battery">Pil</h2>
+          <p class="tile-desc" data-i18n="menu_battery_desc">Pil Modu, Pil Durumu</p>
         </div>
       </a>
 
@@ -84,8 +84,8 @@
           <img src="assets/btn-main-display.png" alt="Görüntü Ayarları">
         </div>
         <div class="tile-text">
-          <h2 class="tile-title">Görüntü Ayarları</h2>
-          <p class="tile-desc">Ekran Fonksiyonları</p>
+          <h2 class="tile-title" data-i18n="menu_display">Görüntü Ayarları</h2>
+          <p class="tile-desc" data-i18n="menu_display_desc">Ekran Fonksiyonları</p>
         </div>
       </a>
 
@@ -95,8 +95,8 @@
           <img src="assets/btn-main-system.png" alt="Cihaz Bilgileri">
         </div>
         <div class="tile-text">
-          <h2 class="tile-title">Cihaz Bilgileri</h2>
-          <p class="tile-desc">Cihaz Bilgileri, Hakkında</p>
+          <h2 class="tile-title" data-i18n="menu_device">Cihaz Bilgileri</h2>
+          <p class="tile-desc" data-i18n="menu_device_desc">Cihaz Bilgileri, Hakkında</p>
         </div>
       </a>
     </div>
@@ -106,6 +106,7 @@
 
   <div id="toast" class="toast hidden"></div>
 
+  <script src="i18n.js"></script>
   <script src="main.js"></script>
 </body>
 </html>

@@ -44,13 +44,13 @@ async function refreshStatus() {
     if (!data.has_permission) {
       if (permBanner) permBanner.classList.remove("hidden");
       if (statusIndicator) statusIndicator.classList.add("error");
-      if (statusText) statusText.textContent = "İzin Gerekli";
+      if (statusText) statusText.textContent = typeof t === "function" ? t("status_perm_required") : "İzin Gerekli";
       return;
     }
 
     if (permBanner) permBanner.classList.add("hidden");
     if (statusIndicator) statusIndicator.classList.remove("error");
-    if (statusText) statusText.textContent = "Bağlandı";
+    if (statusText) statusText.textContent = typeof t === "function" ? t("status_connected") : "Bağlandı";
   } catch (err) {
     console.error("Status error:", err);
   }
@@ -59,12 +59,12 @@ async function refreshStatus() {
 if (btnGrantPerm) {
   btnGrantPerm.addEventListener("click", async () => {
     try {
-      showToast("pkexec ile izin isteniyor...");
+      showToast(typeof t === "function" ? t("perm_requesting") : "pkexec ile izin isteniyor...");
       const msg = await invoke("grant_permissions");
-      showToast(msg || "İzin verildi");
+      showToast(msg || (typeof t === "function" ? t("perm_granted") : "İzin verildi"));
       setTimeout(refreshStatus, 600);
     } catch (e) {
-      showToast(`İzin hatası: ${e}`);
+      showToast(`${typeof t === "function" ? t("perm_error") : "İzin hatası:"} ${e}`);
     }
   });
 }

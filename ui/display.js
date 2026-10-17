@@ -118,9 +118,9 @@ if (btnReset) {
     try {
       const def = await invoke("reset_display_settings");
       updateUI(def);
-      showToast("Görüntü ayarları sıfırlandı");
+      showToast(typeof t === "function" ? t("toast_display_reset") : "Görüntü ayarları sıfırlandı");
     } catch (err) {
-      showToast(`Hata: ${err}`);
+      showToast(`${typeof t === "function" ? t("error_prefix") : "Hata:"} ${err}`);
     }
   });
 }
