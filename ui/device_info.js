@@ -27,7 +27,7 @@ async function loadDeviceInfo() {
     const info = await invoke("get_device_info");
     if (!info) return;
 
-    if (info.acpi_call_available) {
+    if (info.driver_available ?? info.acpi_call_available) {
       if (permBanner) permBanner.classList.add("hidden");
     } else {
       if (permBanner) permBanner.classList.remove("hidden");

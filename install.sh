@@ -77,10 +77,14 @@ echo "[*] Configuring udev rules for LEDs and hardware control..."
 UDEV_RULE_FILE="/etc/udev/rules.d/99-monster-control-center.rules"
 UDEV_CONTENT='SUBSYSTEM=="leds", KERNEL=="*kbd_backlight*", ACTION=="add", RUN+="/bin/chmod -R a+rX /sys%p", RUN+="/bin/chmod 666 /sys%p/brightness /sys%p/multi_intensity"
 SUBSYSTEM=="platform", DRIVER=="tuxedo_keyboard", ACTION=="add", RUN+="/bin/chmod -R a+rX /sys%p", RUN+="/bin/chmod 666 /sys%p/fn_lock"
+SUBSYSTEM=="platform_profile", ACTION=="add", RUN+="/bin/chmod 666 /sys/firmware/acpi/platform_profile"
 KERNEL=="tuxedo_io", MODE="0666"'
 
 if [ ! -f "$UDEV_RULE_FILE" ]; then
     SETUP_CMD="
+        mkdir -p /etc/modules-load.d
+        printf 'tuxedo_keyboard\nuniwill_wmi\ntuxedo_io\n' > /etc/modules-load.d/tuxedo.conf
+        modprobe uniwill_wmi 2>/dev/null || true
         echo '$UDEV_CONTENT' > $UDEV_RULE_FILE
         udevadm control --reload-rules 2>/dev/null || true
         udevadm trigger --subsystem-match=leds 2>/dev/null || true
@@ -89,6 +93,8 @@ if [ ! -f "$UDEV_RULE_FILE" ]; then
         chmod -R a+rw /sys/devices/platform/tuxedo_keyboard/leds 2>/dev/null || true
         chmod 0666 /sys/devices/platform/tuxedo_keyboard/fn_lock 2>/dev/null || true
         chmod 0666 /dev/tuxedo_io 2>/dev/null || true
+        chmod 0666 /sys/firmware/acpi/platform_profile* 2>/dev/null || true
+        chmod 0666 /sys/class/hwmon/hwmon*/fan* 2>/dev/null || true
     "
     if command -v pkexec &>/dev/null; then
         echo "[*] Installing udev rule via pkexec..."

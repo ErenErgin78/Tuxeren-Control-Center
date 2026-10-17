@@ -37,6 +37,7 @@ pub struct DeviceInfo {
     pub graphics_driver: String,
 
     // Auxiliary status
+    pub driver_available: bool,
     pub acpi_call_available: bool,
 }
 
@@ -364,6 +365,7 @@ pub fn get_device_info() -> Result<DeviceInfo, String> {
         desktop_protocol,
         kernel,
         graphics_driver,
+        driver_available,
         acpi_call_available: driver_available,
     })
 }

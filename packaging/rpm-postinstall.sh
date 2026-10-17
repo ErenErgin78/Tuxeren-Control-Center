@@ -7,27 +7,38 @@ echo "[*] Monster Control Center: Donanım sürücüsü yapılandırılıyor..."
 SRC_DIR="/usr/src/tuxedo-drivers-monster-4.25.0"
 BUNDLED_DIR="/usr/lib/Monster Control Center/_root_/usr/src/tuxedo-drivers-monster-4.25.0"
 
-if [ -d "$BUNDLED_DIR" ] && [ ! -d "$SRC_DIR" ]; then
+if [ -d "$BUNDLED_DIR" ]; then
     mkdir -p "$SRC_DIR"
-    cp -r "$BUNDLED_DIR"/* "$SRC_DIR/"
+    cp -rf "$BUNDLED_DIR"/* "$SRC_DIR/"
 fi
 
 # 2. DKMS'e sürücüyü kaydet ve derle
 if command -v dkms &>/dev/null; then
-    dkms add -m tuxedo-drivers-monster -v 4.25.0 || true
+    dkms remove -m tuxedo-drivers-monster -v 4.25.0 --all 2>/dev/null || true
+    dkms add -m tuxedo-drivers-monster -v 4.25.0 2>/dev/null || true
     dkms build -m tuxedo-drivers-monster -v 4.25.0 || true
     dkms install -m tuxedo-drivers-monster -v 4.25.0 --force || true
 fi
 
-# 2. Çekirdek modüllerini yükle
+# 3. Otomatik yükleme konfigürasyonu
+mkdir -p /etc/modules-load.d
+cat << 'MCONF' > /etc/modules-load.d/tuxedo.conf
+tuxedo_keyboard
+uniwill_wmi
+tuxedo_io
+MCONF
+
+# 4. Çekirdek modüllerini yükle / yenile
+modprobe -r tuxedo_nb02_nvidia_power_ctrl clevo_wmi uniwill_wmi tuxedo_io tuxedo_keyboard 2>/dev/null || true
 modprobe tuxedo_keyboard 2>/dev/null || true
 modprobe uniwill_wmi 2>/dev/null || true
 modprobe tuxedo_io 2>/dev/null || true
 
-# 3. Udev kurallarını kur ve tetikle
+# 5. Udev kurallarını kur ve tetikle
 cat << 'UDEV_EOF' > /etc/udev/rules.d/99-monster-control-center.rules
 SUBSYSTEM=="leds", KERNEL=="*kbd_backlight*", ACTION=="add", RUN+="/bin/chmod -R a+rX /sys%p", RUN+="/bin/chmod 666 /sys%p/brightness /sys%p/multi_intensity"
 SUBSYSTEM=="platform", DRIVER=="tuxedo_keyboard", ACTION=="add", RUN+="/bin/chmod -R a+rX /sys%p", RUN+="/bin/chmod 666 /sys%p/fn_lock"
+SUBSYSTEM=="platform_profile", ACTION=="add", RUN+="/bin/chmod 666 /sys/firmware/acpi/platform_profile"
 KERNEL=="tuxedo_io", MODE="0666"
 UDEV_EOF
 
@@ -40,5 +51,7 @@ chmod -R a+rX /sys/devices/platform/tuxedo_keyboard 2>/dev/null || true
 chmod -R a+rw /sys/devices/platform/tuxedo_keyboard/leds 2>/dev/null || true
 chmod 0666 /sys/devices/platform/tuxedo_keyboard/fn_lock 2>/dev/null || true
 chmod 0666 /dev/tuxedo_io 2>/dev/null || true
+chmod 0666 /sys/firmware/acpi/platform_profile* 2>/dev/null || true
+chmod 0666 /sys/class/hwmon/hwmon*/fan* 2>/dev/null || true
 
 echo "[+] Sürücü ve izinler başarıyla aktif edildi."

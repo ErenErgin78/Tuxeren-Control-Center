@@ -36,11 +36,15 @@
 #include <linux/slab.h>
 #include <linux/i8042.h>
 #include <linux/serio.h>
+#include <linux/hwmon.h>
+#include <linux/platform_profile.h>
 #include <acpi/battery.h>
 #include "uniwill_interfaces.h"
 #include "uniwill_leds.h"
 
 #define FAN_ON_MIN_SPEED_PERCENT 25
+
+static struct device *uw_platform_profile_dev = NULL;
 
 #define UNIWILL_OSD_RADIOON				0x01A
 #define UNIWILL_OSD_RADIOOFF				0x01B
@@ -307,6 +311,8 @@ void uniwill_event_callb(u32 code)
 			input_report_key(uniwill_keyboard_driver.input_device, KEY_LEFTALT, 0);
 			input_report_key(uniwill_keyboard_driver.input_device, KEY_LEFTMETA, 0);
 			input_sync(uniwill_keyboard_driver.input_device);
+			if (uw_platform_profile_dev)
+				platform_profile_notify(uw_platform_profile_dev);
 			break;
 		case UNIWILL_OSD_DC_ADAPTER_CHANGE:
 			// Refresh keyboard state and charging settings on cable switch event and make sure that the custom
@@ -1443,6 +1449,246 @@ static ssize_t uw_mini_led_local_dimming_store(struct device *child,
 		return -EIO;
 }
 
+// ---------------------------------------------------------
+// Uniwill hwmon (fans & temps) & platform_profile implementation
+// ---------------------------------------------------------
+static struct device *uw_hwmon_dev;
+
+static u16 uw_read_fan_rpm(int fan_index)
+{
+	u8 high = 0, low = 0;
+	u16 reg_high = (fan_index == 0) ? 0x0464 : 0x046C;
+	u16 reg_low = (fan_index == 0) ? 0x0465 : 0x046D;
+	u16 rpm = 0;
+
+	if (uniwill_read_ec_ram(reg_high, &high) == 0 &&
+	    uniwill_read_ec_ram(reg_low, &low) == 0) {
+		rpm = ((u16)high << 8) | (u16)low;
+		if (rpm > 10000)
+			rpm = 0;
+	}
+
+	// Fallback to duty estimation if RPM register is not populated by EC
+	if (rpm == 0) {
+		u8 duty = 0;
+		u16 duty_reg = (fan_index == 0) ? 0x1804 : 0x1809;
+		if (uniwill_read_ec_ram(duty_reg, &duty) == 0 && duty > 0) {
+			rpm = ((u32)duty * 5500) / 100;
+		}
+	}
+
+	return rpm;
+}
+
+static u8 uw_read_temp_c(int temp_index)
+{
+	u8 temp = 0;
+	u16 reg = (temp_index == 0) ? 0x043E : 0x044F;
+	uniwill_read_ec_ram(reg, &temp);
+	return temp;
+}
+
+static umode_t uw_hwmon_is_visible(const void *drvdata, enum hwmon_sensor_types type,
+				   u32 attr, int channel)
+{
+	switch (type) {
+	case hwmon_temp:
+		if (attr == hwmon_temp_input || attr == hwmon_temp_label)
+			return 0444;
+		break;
+	case hwmon_fan:
+		if (attr == hwmon_fan_input || attr == hwmon_fan_label ||
+		    attr == hwmon_fan_min || attr == hwmon_fan_max)
+			return 0444;
+		break;
+	default:
+		break;
+	}
+	return 0;
+}
+
+static int uw_hwmon_read(struct device *dev, enum hwmon_sensor_types type,
+			 u32 attr, int channel, long *val)
+{
+	switch (type) {
+	case hwmon_temp:
+		if (attr == hwmon_temp_input) {
+			*val = (long)uw_read_temp_c(channel) * 1000;
+			return 0;
+		}
+		break;
+	case hwmon_fan:
+		switch (attr) {
+		case hwmon_fan_input:
+			*val = (long)uw_read_fan_rpm(channel);
+			return 0;
+		case hwmon_fan_min:
+			*val = 0;
+			return 0;
+		case hwmon_fan_max:
+			*val = 5500;
+			return 0;
+		default:
+			break;
+		}
+		break;
+	default:
+		break;
+	}
+	return -EOPNOTSUPP;
+}
+
+static int uw_hwmon_read_string(struct device *dev, enum hwmon_sensor_types type,
+				u32 attr, int channel, const char **str)
+{
+	switch (type) {
+	case hwmon_temp:
+		if (attr == hwmon_temp_label) {
+			*str = (channel == 0) ? "CPU Temp" : "GPU Temp";
+			return 0;
+		}
+		break;
+	case hwmon_fan:
+		if (attr == hwmon_fan_label) {
+			*str = (channel == 0) ? "CPU Fan" : "GPU Fan";
+			return 0;
+		}
+		break;
+	default:
+		break;
+	}
+	return -EOPNOTSUPP;
+}
+
+static const struct hwmon_ops uw_hwmon_ops = {
+	.is_visible = uw_hwmon_is_visible,
+	.read = uw_hwmon_read,
+	.read_string = uw_hwmon_read_string,
+};
+
+static const struct hwmon_channel_info *const uw_hwmon_info[] = {
+	HWMON_CHANNEL_INFO(temp,
+			   HWMON_T_INPUT | HWMON_T_LABEL,
+			   HWMON_T_INPUT | HWMON_T_LABEL),
+	HWMON_CHANNEL_INFO(fan,
+			   HWMON_F_INPUT | HWMON_F_LABEL | HWMON_F_MIN | HWMON_F_MAX,
+			   HWMON_F_INPUT | HWMON_F_LABEL | HWMON_F_MIN | HWMON_F_MAX),
+	NULL
+};
+
+static const struct hwmon_chip_info uw_hwmon_chip_info = {
+	.ops = &uw_hwmon_ops,
+	.info = uw_hwmon_info,
+};
+
+static void uw_hwmon_init(struct platform_device *pdev)
+{
+	uw_hwmon_dev = devm_hwmon_device_register_with_info(&pdev->dev,
+							    "uniwill",
+							    NULL,
+							    &uw_hwmon_chip_info,
+							    NULL);
+	if (IS_ERR(uw_hwmon_dev)) {
+		pr_err("Failed to register uniwill hwmon device: %ld\n", PTR_ERR(uw_hwmon_dev));
+		uw_hwmon_dev = NULL;
+	}
+}
+
+// Platform profile implementation
+static int uw_platform_profile_probe(void *drvdata, unsigned long *choices)
+{
+	set_bit(PLATFORM_PROFILE_LOW_POWER, choices);
+	set_bit(PLATFORM_PROFILE_BALANCED, choices);
+	set_bit(PLATFORM_PROFILE_PERFORMANCE, choices);
+	return 0;
+}
+
+static int uw_platform_profile_get(struct device *dev, enum platform_profile_option *profile)
+{
+	u8 fan_byte = 0;
+	uniwill_read_ec_ram(0x0751, &fan_byte);
+
+	switch (fan_byte) {
+	case 0x30:
+	case 0x10:
+		*profile = PLATFORM_PROFILE_PERFORMANCE;
+		break;
+	case 0x20:
+	case 0x00:
+		*profile = PLATFORM_PROFILE_BALANCED;
+		break;
+	case 0xA0:
+	default:
+		*profile = PLATFORM_PROFILE_LOW_POWER;
+		break;
+	}
+	return 0;
+}
+
+static int uw_platform_profile_set(struct device *dev, enum platform_profile_option profile)
+{
+	u8 fan_byte = 0xA0;
+	u8 pl1 = 45;
+	u8 pl2 = 45;
+	u8 mode_code = 0;
+
+	switch (profile) {
+	case PLATFORM_PROFILE_LOW_POWER:
+		fan_byte = 0xA0;
+		pl1 = 45;
+		pl2 = 45;
+		mode_code = 0;
+		break;
+	case PLATFORM_PROFILE_BALANCED:
+		fan_byte = 0x20;
+		pl1 = 75;
+		pl2 = 75;
+		mode_code = 1;
+		break;
+	case PLATFORM_PROFILE_PERFORMANCE:
+		fan_byte = 0x30;
+		pl1 = 90;
+		pl2 = 90;
+		mode_code = 2;
+		break;
+	default:
+		return -EOPNOTSUPP;
+	}
+
+	uniwill_write_ec_ram(0x0751, fan_byte);
+	uniwill_write_ec_ram(0x046A, pl1);
+	uniwill_write_ec_ram(0x046B, pl2);
+	uniwill_write_ec_ram(0x07AB, mode_code);
+
+	return 0;
+}
+
+static const struct platform_profile_ops uw_platform_profile_ops = {
+	.probe = uw_platform_profile_probe,
+	.profile_get = uw_platform_profile_get,
+	.profile_set = uw_platform_profile_set,
+};
+
+static void uw_platform_profile_init(struct platform_device *pdev)
+{
+	uw_platform_profile_dev = platform_profile_register(&pdev->dev,
+							    "uniwill_platform_profile",
+							    NULL,
+							    &uw_platform_profile_ops);
+	if (IS_ERR(uw_platform_profile_dev)) {
+		pr_err("Failed to register uniwill platform_profile: %ld\n", PTR_ERR(uw_platform_profile_dev));
+		uw_platform_profile_dev = NULL;
+	}
+}
+
+static void uw_platform_profile_cleanup(void)
+{
+	if (uw_platform_profile_dev && !IS_ERR(uw_platform_profile_dev)) {
+		platform_profile_remove(uw_platform_profile_dev);
+		uw_platform_profile_dev = NULL;
+	}
+}
+
 static efi_guid_t uw_oem_magic_guid =
 	EFI_GUID(0x9f33f85c, 0x13ca, 0x4fd1,
 	         0x9c, 0x4a, 0x96, 0x21, 0x77, 0x22, 0xc5, 0x93);
@@ -2201,26 +2447,8 @@ static int uniwill_keyboard_probe(struct platform_device *dev)
 
 	uw_feats = uniwill_get_device_features();
 
-	// FIXME Hard set balanced profile until we have implemented a way to
-	// switch it while tuxedo_io is loaded
-	// uw_ec_write_addr(0x51, 0x07, 0x00, 0x00, &reg_write_return);
-	uniwill_write_ec_ram(0x0751, 0x00);
-
-	if (uw_feats->uniwill_profile_v1) {
-		// Set manual-mode fan-curve in 0x0743 - 0x0747
-		// Some kind of default fan-curve is stored in 0x0786 - 0x078a: Using it to initialize manual-mode fan-curve
-		for (i = 0; i < 5; ++i) {
-			uniwill_read_ec_ram(0x0786 + i, &data);
-			uniwill_write_ec_ram(0x0743 + i, data);
-		}
-	}
-
-	// Make sure custom TDP/custom fan curve mode is set. Using the
-	// custom profile mode flag to ID this set of devices.
-	uniwill_set_custom_profile_mode(true);
-
-	// Enable manual mode
-	uniwill_write_ec_ram(0x0741, 0x01);
+	// Keep hardware automatic EC control mode (disables manual override so physical mode button & LED work)
+	uniwill_write_ec_ram(0x0741, 0x00);
 
 	// Zero second fan temp for detection
 	uniwill_write_ec_ram(0x044f, 0x00);
@@ -2243,6 +2471,8 @@ static int uniwill_keyboard_probe(struct platform_device *dev)
 	uw_mini_led_local_dimming_init(dev);
 	uw_show_hidden_bios_options();
 	uw_battery_init();
+	uw_hwmon_init(dev);
+	uw_platform_profile_init(dev);
 
 	// Ignore return value, it just means there is already a filter active
 	// which is fine, because it is probably just the upstream patch of this
@@ -2263,6 +2493,8 @@ static int uniwill_keyboard_remove(struct platform_device *dev)
 static void uniwill_keyboard_remove(struct platform_device *dev)
 #endif
 {
+	uw_platform_profile_cleanup();
+
 	if (uw_charging_prio_loaded)
 		sysfs_remove_group(&dev->dev.kobj, &uw_charging_prio_attr_group);
 

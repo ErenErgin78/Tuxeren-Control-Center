@@ -3,7 +3,7 @@ const translations = {
     // Navigation & Common
     nav_main_menu: "Ana Menü",
     nav_back: "Geri",
-    perm_banner_text: "Donanım erişimi için root izni gerekiyor (<code>/proc/acpi/call</code>).",
+    perm_banner_text: "Donanım erişimi için sürücü izni gerekiyor (<code>tuxedo-drivers</code>).",
     perm_btn_grant: "İzin Ver",
     perm_requesting: "pkexec ile izin isteniyor...",
     perm_granted: "İzin verildi",
@@ -185,7 +185,7 @@ const translations = {
     // Navigation & Common
     nav_main_menu: "Main Menu",
     nav_back: "Back",
-    perm_banner_text: "Root permission required for hardware access (<code>/proc/acpi/call</code>).",
+    perm_banner_text: "Driver permission required for hardware access (<code>tuxedo-drivers</code>).",
     perm_btn_grant: "Grant Permission",
     perm_requesting: "Requesting permission via pkexec...",
     perm_granted: "Permission granted",

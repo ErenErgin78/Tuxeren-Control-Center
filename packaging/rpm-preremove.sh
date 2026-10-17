@@ -11,6 +11,7 @@ if command -v dkms &>/dev/null; then
     dkms remove -m tuxedo-drivers-monster -v 4.25.0 --all 2>/dev/null || true
 fi
 
-# Udev kuralını sil
+# Udev kuralını ve modül otomatik yükleme konfigürasyonunu sil
 rm -f /etc/udev/rules.d/99-monster-control-center.rules 2>/dev/null || true
+rm -f /etc/modules-load.d/tuxedo.conf 2>/dev/null || true
 udevadm control --reload-rules 2>/dev/null || true

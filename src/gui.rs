@@ -43,6 +43,11 @@ fn set_keyboard_rgb(r: u8, g: u8, b: u8, brightness: u8) -> Result<(), String> {
 #[tauri::command]
 fn grant_permissions() -> Result<String, String> {
     let script = r#"
+        modprobe uniwill_wmi 2>/dev/null || true
+        modprobe tuxedo_keyboard 2>/dev/null || true
+        modprobe tuxedo_io 2>/dev/null || true
+        mkdir -p /etc/modules-load.d
+        printf "tuxedo_keyboard\nuniwill_wmi\ntuxedo_io\n" > /etc/modules-load.d/tuxedo.conf 2>/dev/null || true
         udevadm control --reload-rules 2>/dev/null || true
         udevadm trigger --subsystem-match=leds 2>/dev/null || true
         udevadm trigger --name-match=tuxedo_io 2>/dev/null || true
@@ -50,6 +55,8 @@ fn grant_permissions() -> Result<String, String> {
         chmod -R a+rw /sys/devices/platform/tuxedo_keyboard/leds 2>/dev/null || true
         chmod 0666 /sys/devices/platform/tuxedo_keyboard/fn_lock 2>/dev/null || true
         chmod 0666 /dev/tuxedo_io 2>/dev/null || true
+        chmod 0666 /sys/firmware/acpi/platform_profile* 2>/dev/null || true
+        chmod 0666 /sys/class/hwmon/hwmon*/fan* 2>/dev/null || true
     "#;
     let output = Command::new("pkexec")
         .arg("bash")

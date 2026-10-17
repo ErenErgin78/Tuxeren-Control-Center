@@ -67,8 +67,7 @@ pub fn write_byte(reg: u16, val: u8) -> Result<(), String> {
     Ok(())
 }
 
-/// Reads a single byte from an EC RAM register via Linux debugfs if available,
-/// or queries battery cycle count / chassis project ID fallbacks.
+/// Reads a single byte from an EC RAM register via Linux debugfs if available.
 ///
 /// # Arguments
 /// * `reg` - 16-bit EC register address.
