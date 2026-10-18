@@ -1,0 +1,4 @@
+[submodule "driver/tuxedo-drivers-monster-4.25.0"]
+	path = driver/tuxedo-drivers-monster-4.25.0
+	url = git@github.com:ErenErgin78/tuxedo-drivers.git
+	branch = monster-support
