@@ -26,12 +26,13 @@ ICON_DIR="$HOME/.local/share/icons/hicolor/128x128/apps"
 mkdir -p "$ICON_DIR"
 echo "[*] Installing application icon..."
 cp -f icons/128x128.png "$ICON_DIR/monster-control-center.png"
+cp -f icons/128x128.png "$ICON_DIR/monster-control-center-gui.png"
 
 # 4. Setup Desktop Launcher
 DESKTOP_DIR="$HOME/.local/share/applications"
 mkdir -p "$DESKTOP_DIR"
 echo "[*] Registering desktop application..."
-cat << 'EOF' > "$DESKTOP_DIR/com.monster.controlcenter.desktop"
+cat << 'EOF' > "$DESKTOP_DIR/monster-control-center-gui.desktop"
 [Desktop Entry]
 Name=Monster Control Center
 Comment=Keyboard RGB & EC Control for Monster / Tongfang Laptops
@@ -41,10 +42,11 @@ Terminal=false
 Type=Application
 Categories=System;HardwareSettings;
 Keywords=monster;control;center;rgb;keyboard;backlight;
-StartupWMClass=Monster Control Center
+StartupWMClass=monster-control-center-gui
 EOF
 
-chmod +x "$DESKTOP_DIR/com.monster.controlcenter.desktop"
+cp -f "$DESKTOP_DIR/monster-control-center-gui.desktop" "$DESKTOP_DIR/com.monster.controlcenter.desktop"
+chmod +x "$DESKTOP_DIR/monster-control-center-gui.desktop" "$DESKTOP_DIR/com.monster.controlcenter.desktop"
 
 # 5. Update desktop caches
 update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true

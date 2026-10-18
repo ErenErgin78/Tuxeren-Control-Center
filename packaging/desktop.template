@@ -4,7 +4,7 @@ Categories={{categories}}
 Comment={{comment}}
 {{/if}}
 Exec=monster-control-center-gui
-StartupWMClass=Monster Control Center
+StartupWMClass=monster-control-center-gui
 Icon={{icon}}
 Name={{name}}
 Terminal=false
