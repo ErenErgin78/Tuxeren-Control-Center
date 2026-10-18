@@ -50,12 +50,14 @@ fn grant_permissions() -> Result<String, String> {
         printf "tuxedo_keyboard\nuniwill_wmi\ntuxedo_io\n" > /etc/modules-load.d/tuxedo.conf 2>/dev/null || true
         udevadm control --reload-rules 2>/dev/null || true
         udevadm trigger --subsystem-match=leds 2>/dev/null || true
+        udevadm trigger --subsystem-match=platform-profile 2>/dev/null || true
         udevadm trigger --name-match=tuxedo_io 2>/dev/null || true
         chmod -R a+rX /sys/devices/platform/tuxedo_keyboard 2>/dev/null || true
         chmod -R a+rw /sys/devices/platform/tuxedo_keyboard/leds 2>/dev/null || true
         chmod 0666 /sys/devices/platform/tuxedo_keyboard/fn_lock 2>/dev/null || true
         chmod 0666 /dev/tuxedo_io 2>/dev/null || true
         chmod 0666 /sys/firmware/acpi/platform_profile* 2>/dev/null || true
+        chmod 0666 /sys/devices/platform/tuxedo_keyboard/platform-profile/platform-profile-*/profile 2>/dev/null || true
         chmod 0666 /sys/class/hwmon/hwmon*/fan* 2>/dev/null || true
     "#;
     let output = Command::new("pkexec")

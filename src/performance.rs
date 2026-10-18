@@ -201,17 +201,26 @@ pub fn set_os_profile(profile: &str) -> Result<(), String> {
 pub fn apply_mode(mode: PerformanceMode) -> Result<(), String> {
     let (pl1, pl2, epp, _) = mode.config();
 
-    // 1. Standart Linux ACPI Platform Profile
-    let profile_path = "/sys/firmware/acpi/platform_profile";
     let prof = match mode {
         PerformanceMode::Office => "low-power",
         PerformanceMode::Gaming => "balanced",
         PerformanceMode::Turbo => "performance",
     };
 
-    if Path::new(profile_path).exists() {
-        fs::write(profile_path, prof)
-            .map_err(|e| format!("Platform profile yazılamadı ({}): {}", profile_path, e))?;
+    let primary_path = Path::new("/sys/firmware/acpi/platform_profile");
+    let fallback_path = Path::new("/sys/devices/platform/tuxedo_keyboard/platform-profile/platform-profile-0/profile");
+
+    let written = if primary_path.exists() {
+        fs::write(primary_path, prof)
+            .or_else(|_| if fallback_path.exists() { fs::write(fallback_path, prof) } else { Err(std::io::Error::new(std::io::ErrorKind::NotFound, "no fallback")) })
+    } else if fallback_path.exists() {
+        fs::write(fallback_path, prof)
+    } else {
+        Ok(())
+    };
+
+    if let Err(e) = written {
+        return Err(format!("Platform profile yazılamadı: Erişim engellendi ({})", e));
     }
 
     // 2. Linux Kernel Intel RAPL Güç Sınırları

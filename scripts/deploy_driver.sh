@@ -48,12 +48,13 @@ UDEV_RULE_FILE="/etc/udev/rules.d/99-monster-control-center.rules"
 cat << 'UCONF' > "$UDEV_RULE_FILE"
 SUBSYSTEM=="leds", KERNEL=="*kbd_backlight*", ACTION=="add", RUN+="/bin/chmod -R a+rX /sys%p", RUN+="/bin/chmod 666 /sys%p/brightness /sys%p/multi_intensity"
 SUBSYSTEM=="platform", DRIVER=="tuxedo_keyboard", ACTION=="add", RUN+="/bin/chmod -R a+rX /sys%p", RUN+="/bin/chmod 666 /sys%p/fn_lock"
-SUBSYSTEM=="platform_profile", ACTION=="add", RUN+="/bin/chmod 666 /sys/firmware/acpi/platform_profile"
+SUBSYSTEM=="platform-profile", ACTION=="add", RUN+="/bin/chmod 666 /sys%p/profile /sys/firmware/acpi/platform_profile"
 KERNEL=="tuxedo_io", MODE="0666"
 UCONF
 
 udevadm control --reload-rules 2>/dev/null || true
 udevadm trigger --subsystem-match=leds 2>/dev/null || true
+udevadm trigger --subsystem-match=platform-profile 2>/dev/null || true
 udevadm trigger --name-match=tuxedo_io 2>/dev/null || true
 
 # Apply permissions immediately to active nodes
@@ -62,6 +63,7 @@ chmod -R a+rw /sys/devices/platform/tuxedo_keyboard/leds 2>/dev/null || true
 chmod 0666 /sys/devices/platform/tuxedo_keyboard/fn_lock 2>/dev/null || true
 chmod 0666 /dev/tuxedo_io 2>/dev/null || true
 chmod 0666 /sys/firmware/acpi/platform_profile* 2>/dev/null || true
+chmod 0666 /sys/devices/platform/tuxedo_keyboard/platform-profile/platform-profile-*/profile 2>/dev/null || true
 chmod 0666 /sys/class/hwmon/hwmon*/fan* 2>/dev/null || true
 
 echo "=== Driver Deployment Finished Successfully ==="
