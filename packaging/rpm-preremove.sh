@@ -1,17 +1,10 @@
 #!/bin/bash
-echo "[*] Monster Control Center: Sürücü temizleniyor..."
-
-# Modülleri kaldır
-modprobe -r tuxedo_keyboard 2>/dev/null || true
-modprobe -r uniwill_wmi 2>/dev/null || true
-modprobe -r tuxedo_io 2>/dev/null || true
-
-# DKMS kaydını sil
-if command -v dkms &>/dev/null; then
+# DKMS kaydını sadece özellikle istendiğinde kaldır (REMOVE_DKMS=1)
+if [ "${REMOVE_DKMS:-0}" = "1" ] && command -v dkms &>/dev/null; then
+    echo "[*] Monster Control Center: DKMS sürücüsü siliniyor..."
+    modprobe -r tuxedo_keyboard uniwill_wmi tuxedo_io 2>/dev/null || true
     dkms remove -m tuxedo-drivers-monster -v 4.25.0 --all 2>/dev/null || true
+    rm -f /etc/udev/rules.d/99-monster-control-center.rules 2>/dev/null || true
+    rm -f /etc/modules-load.d/tuxedo.conf 2>/dev/null || true
+    udevadm control --reload-rules 2>/dev/null || true
 fi
-
-# Udev kuralını ve modül otomatik yükleme konfigürasyonunu sil
-rm -f /etc/udev/rules.d/99-monster-control-center.rules 2>/dev/null || true
-rm -f /etc/modules-load.d/tuxedo.conf 2>/dev/null || true
-udevadm control --reload-rules 2>/dev/null || true

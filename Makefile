@@ -37,17 +37,21 @@ build-rpm: ## Build RPM package only
 	@bash scripts/build_packages.sh rpm
 
 install-rpm: build-rpm ## Build RPM and reinstall on local system (sudo dnf)
+	@sudo -v
+	@if (command -v rpm >/dev/null 2>&1 && rpm -q monster-control-center >/dev/null 2>&1) || command -v monster-control-center >/dev/null 2>&1 || [ -f "$$HOME/.local/bin/monster-control-center" ]; then \
+		echo "[*] Existing installation detected. Running uninstall script..."; \
+		bash scripts/uninstall.sh; \
+	fi
 	@echo "[+] Installing freshly built Monster Control Center RPM package..."
 	@RPM_FILE=$$(ls dist/Monster*Control*Center-$${APP_VERSION:-*}-*.rpm dist/monster*control*center-$${APP_VERSION:-*}-*.rpm dist/*$${APP_VERSION:-*}*.rpm 2>/dev/null | sort -V | tail -n 1); \
 	if [ -z "$$RPM_FILE" ]; then \
 		RPM_FILE=$$(ls dist/*.rpm 2>/dev/null | sort -V | tail -n 1); \
 	fi; \
-	if [ -n "$$RPM_FILE" ]; then \
-		echo "[*] Installing package: $$RPM_FILE..."; \
-		sudo dnf install -y "$$RPM_FILE"; \
-	else \
+	if [ -z "$$RPM_FILE" ]; then \
 		echo "[-] Error: RPM package not found in dist/!" >&2; exit 1; \
-	fi
+	fi; \
+	echo "[*] Installing package: $$RPM_FILE..."; \
+	sudo dnf install -y "$$RPM_FILE"
 	@update-desktop-database ~/.local/share/applications 2>/dev/null || true
 	@echo "========================================================"
 	@echo "  Monster Control Center RPM successfully installed!"

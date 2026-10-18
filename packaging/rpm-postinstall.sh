@@ -14,10 +14,16 @@ fi
 
 # 2. DKMS'e sürücüyü kaydet ve derle
 if command -v dkms &>/dev/null; then
-    dkms remove -m tuxedo-drivers-monster -v 4.25.0 --all 2>/dev/null || true
-    dkms add -m tuxedo-drivers-monster -v 4.25.0 2>/dev/null || true
-    dkms build -m tuxedo-drivers-monster -v 4.25.0 || true
-    dkms install -m tuxedo-drivers-monster -v 4.25.0 --force || true
+    CURRENT_KERNEL="$(uname -r)"
+    if dkms status -m tuxedo-drivers-monster -v 4.25.0 -k "$CURRENT_KERNEL" 2>/dev/null | grep -q "installed" && modinfo tuxedo_keyboard >/dev/null 2>&1; then
+        echo "[*] DKMS sürücüsü (tuxedo-drivers-monster/4.25.0, $CURRENT_KERNEL için) zaten kurulu, derleme adımı atlanıyor."
+    else
+        echo "[*] DKMS sürücüsü (tuxedo-drivers-monster/4.25.0) yapılandırılıyor ve derleniyor..."
+        dkms remove -m tuxedo-drivers-monster -v 4.25.0 --all 2>/dev/null || true
+        dkms add -m tuxedo-drivers-monster -v 4.25.0 2>/dev/null || true
+        dkms build -m tuxedo-drivers-monster -v 4.25.0 || true
+        dkms install -m tuxedo-drivers-monster -v 4.25.0 --force || true
+    fi
 fi
 
 # 3. Otomatik yükleme konfigürasyonu
