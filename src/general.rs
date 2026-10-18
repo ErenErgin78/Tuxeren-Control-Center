@@ -86,16 +86,31 @@ pub fn is_touchpad_disabled_system() -> bool {
 /// Retrieves the current status of general settings, reading live desktop state.
 pub fn get_general_settings() -> GeneralSettings {
     let mut settings = load_settings();
+    settings.win_key_disabled = is_win_key_disabled_system();
     settings.touchpad_disabled = is_touchpad_disabled_system();
     settings
 }
 
-/// Sets whether the Windows key is disabled.
-pub fn set_win_key_disabled(disabled: bool) -> Result<(), String> {
+/// Applies Windows key disabled state locally within this process.
+pub fn set_win_key_disabled_local(disabled: bool) -> Result<(), String> {
     let mut current = load_settings();
     current.win_key_disabled = disabled;
     save_settings(&current);
     apply_win_key_state(disabled)
+}
+
+/// Sets whether the Windows key is disabled. Delegates to daemon if running, else applies locally.
+pub fn set_win_key_disabled(disabled: bool) -> Result<(), String> {
+    if !IS_DAEMON_SERVER.load(Ordering::SeqCst) {
+        let cmd = if disabled { "set_win:1" } else { "set_win:0" };
+        if let Ok(resp) = send_daemon_command(cmd) {
+            if resp == "ok" {
+                return Ok(());
+            }
+        }
+    }
+
+    set_win_key_disabled_local(disabled)
 }
 
 /// Applies touchpad state locally within this process.
@@ -208,6 +223,16 @@ pub fn run_daemon_server() {
                     let resp = if res.is_ok() { "ok\n" } else { "err\n" };
                     let _ = writer.write_all(resp.as_bytes());
                 }
+                "set_win:1" => {
+                    let res = set_win_key_disabled_local(true);
+                    let resp = if res.is_ok() { "ok\n" } else { "err\n" };
+                    let _ = writer.write_all(resp.as_bytes());
+                }
+                "set_win:0" => {
+                    let res = set_win_key_disabled_local(false);
+                    let resp = if res.is_ok() { "ok\n" } else { "err\n" };
+                    let _ = writer.write_all(resp.as_bytes());
+                }
                 _ => {
                     let _ = writer.write_all(b"unknown\n");
                 }
@@ -255,13 +280,86 @@ fn save_settings(settings: &GeneralSettings) {
     }
 }
 
+/// Queries whether the Windows (Super) key is disabled across supported desktop environments or hardware.
+pub fn is_win_key_disabled_system() -> bool {
+    let desktop = std::env::var("XDG_CURRENT_DESKTOP")
+        .unwrap_or_default()
+        .to_uppercase();
+
+    if desktop.contains("KDE") {
+        for reader in ["kreadconfig6", "kreadconfig5"] {
+            let mut kde_cmd = Command::new(reader);
+            kde_cmd.args(["--file", "kwinrc", "--group", "ModifierOnlyShortcuts", "--key", "Meta"]);
+            setup_desktop_env(&mut kde_cmd);
+            if let Ok(output) = kde_cmd.output() {
+                if output.status.success() {
+                    return String::from_utf8_lossy(&output.stdout).trim().is_empty();
+                }
+            }
+        }
+    } else if desktop.contains("GNOME") {
+        let mut cmd = Command::new("gsettings");
+        cmd.args(["get", "org.gnome.mutter", "overlay-key"]);
+        setup_desktop_env(&mut cmd);
+        if let Ok(output) = cmd.output() {
+            let text = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            if text.contains("''") || text == "''" {
+                return true;
+            }
+            if text.contains("Super") {
+                return false;
+            }
+        }
+    }
+
+    let fn_lock_path = "/sys/devices/platform/tuxedo_keyboard/fn_lock";
+    if let Ok(content) = fs::read_to_string(fn_lock_path) {
+        return content.trim() == "1";
+    }
+
+    false
+}
+
 fn apply_win_key_state(disabled: bool) -> Result<(), String> {
     let fn_lock_path = "/sys/devices/platform/tuxedo_keyboard/fn_lock";
     if Path::new(fn_lock_path).exists() {
         let val = if disabled { "1" } else { "0" };
-        fs::write(fn_lock_path, val)
-            .map_err(|e| format!("Donanımsal Fn/Win kilidi uygulanamadı: {}", e))?;
+        let _ = fs::write(fn_lock_path, val);
     }
+
+    // 1. GNOME / Mutter (Wayland & X11)
+    let overlay_val = if disabled { "''" } else { "'Super'" };
+    let mut gnome_cmd = Command::new("gsettings");
+    gnome_cmd.args(["set", "org.gnome.mutter", "overlay-key", overlay_val]);
+    setup_desktop_env(&mut gnome_cmd);
+    let _ = gnome_cmd.output();
+
+    // 2. KDE Plasma (Wayland & X11)
+    let kde_writers = ["kwriteconfig6", "kwriteconfig5"];
+    let meta_val = if disabled { "" } else { "org.kde.plasmashell,/PlasmaShell,org.kde.PlasmaShell,activateLauncherMenu" };
+    for writer in kde_writers {
+        let mut kcmd = Command::new(writer);
+        kcmd.args(["--file", "kwinrc", "--group", "ModifierOnlyShortcuts", "--key", "Meta", meta_val]);
+        setup_desktop_env(&mut kcmd);
+        if let Ok(status) = kcmd.status() {
+            if status.success() {
+                let mut reconf = Command::new("qdbus");
+                reconf.args(["org.kde.KWin", "/KWin", "reconfigure"]);
+                setup_desktop_env(&mut reconf);
+                let _ = reconf.status();
+                break;
+            }
+        }
+    }
+
+    // 3. Standalone X11 environments (XFCE, i3, etc.)
+    if std::env::var("DISPLAY").is_ok() && std::env::var("WAYLAND_DISPLAY").is_err() {
+        let key_mapping = if disabled { "keycode 133 = " } else { "keycode 133 = Super_L NoSymbol Super_L" };
+        let mut xmod = Command::new("xmodmap");
+        xmod.args(["-e", key_mapping]);
+        let _ = xmod.output();
+    }
+
     Ok(())
 }
 
