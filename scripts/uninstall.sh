@@ -23,6 +23,7 @@ rm -f "$HOME/.local/bin/txectrl" \
       "$HOME/.local/bin/monster-control-center-gui" \
       "$HOME/.local/share/applications/txectrl-gui.desktop" \
       "$HOME/.local/share/applications/org.txectrl.app.desktop" \
+      "$HOME/.local/share/applications/monster-control-center-gui.desktop" \
       "$HOME/.local/share/applications/com.monster.controlcenter.desktop" \
       "$HOME/.local/share/icons/hicolor/128x128/apps/txectrl.png" \
       "$HOME/.local/share/icons/hicolor/128x128/apps/txectrl-gui.png" \
@@ -31,15 +32,26 @@ rm -rf "$HOME/.config/txectrl" "$HOME/.config/monster-control-center"
 
 # 4. Remove package manager installations if present
 if command -v rpm &>/dev/null; then
-    rpm -q txectrl &>/dev/null && sudo rpm -e txectrl || true
-    rpm -q monster-control-center &>/dev/null && sudo rpm -e monster-control-center || true
+    for pkg in tuxeren-control-center txectrl monster-control-center; do
+        if rpm -q "$pkg" &>/dev/null; then
+            echo "[*] Removing RPM package $pkg..."
+            sudo rpm -e "$pkg" || true
+        fi
+    done
 elif command -v dpkg &>/dev/null; then
-    dpkg -s txectrl &>/dev/null && sudo dpkg -r txectrl || true
-    dpkg -s monster-control-center &>/dev/null && sudo dpkg -r monster-control-center || true
+    for pkg in tuxeren-control-center txectrl monster-control-center; do
+        if dpkg -s "$pkg" &>/dev/null; then
+            echo "[*] Removing DEB package $pkg..."
+            sudo dpkg -r "$pkg" || true
+        fi
+    done
 fi
 
 # 5. Refresh desktop and icon databases
 update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
 gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
+if [ -d "/usr/share/applications" ]; then
+    update-desktop-database /usr/share/applications 2>/dev/null || true
+fi
 
 echo "[✓] Tuxeren Control Center successfully uninstalled."

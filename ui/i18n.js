@@ -15,7 +15,7 @@ const translations = {
 
     // Lobby (index.html)
     lobby_title: "Tuxeren Control Center (TxeCtrl)",
-    hero_title: "Kontrol Merkezi",
+    hero_title: "Tuxeren Kontrol Merkezi",
     menu_general: "Genel Ayarlar",
     menu_general_desc: "Kolay Ayar, Windows Aygıtları, Oyun içi Hızlı Bilgi Ekranı, Klavye Haritalandırması",
     menu_perf: "Performans",
@@ -197,7 +197,7 @@ const translations = {
 
     // Lobby (index.html)
     lobby_title: "Tuxeren Control Center (TxeCtrl)",
-    hero_title: "Control Center",
+    hero_title: "Tuxeren Control Center",
     menu_general: "General Settings",
     menu_general_desc: "Quick Settings, Windows Devices, In-game OSD, Keyboard Mapping",
     menu_perf: "Performance",

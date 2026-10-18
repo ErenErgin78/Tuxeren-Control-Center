@@ -38,7 +38,7 @@ build-rpm: ## Build RPM package only
 
 install-rpm: build-rpm ## Build RPM and reinstall on local system (sudo dnf)
 	@sudo -v
-	@if (command -v rpm >/dev/null 2>&1 && (rpm -q txectrl >/dev/null 2>&1 || rpm -q monster-control-center >/dev/null 2>&1)) || command -v txectrl >/dev/null 2>&1 || [ -f "$$HOME/.local/bin/txectrl" ]; then \
+	@if (command -v rpm >/dev/null 2>&1 && (rpm -q tuxeren-control-center >/dev/null 2>&1 || rpm -q txectrl >/dev/null 2>&1 || rpm -q monster-control-center >/dev/null 2>&1)) || command -v txectrl >/dev/null 2>&1 || [ -f "$$HOME/.local/bin/txectrl" ]; then \
 		echo "[*] Existing installation detected. Running uninstall script..."; \
 		bash scripts/uninstall.sh; \
 	fi
