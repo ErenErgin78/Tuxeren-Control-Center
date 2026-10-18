@@ -70,3 +70,58 @@ if (btnGrantPerm) {
 }
 
 refreshStatus();
+
+// Hero Logo Fan Speed Controller
+// Continuous rotation without jumping or rewinding angle
+const heroLogoContainer = document.querySelector(".hero-logo-container");
+const heroFanArray = document.querySelector(".hero-fan-array");
+
+if (heroLogoContainer && heroFanArray) {
+  // Playback rates relative to base 12s period:
+  // 1x = 12s, 3x = 4s, 12x = 1s, 0x = stopped
+  const speedStages = [
+    { rate: 2 },
+    { rate: 6 },
+    { rate: 12 },
+    { rate: 0 }
+  ];
+  const STORAGE_KEY = "mcc_fan_speed_stage";
+
+  const fanAnimation = heroFanArray.animate(
+    [
+      { transform: "rotate(0deg)" },
+      { transform: "rotate(360deg)" }
+    ],
+    {
+      duration: 12000,
+      iterations: Infinity,
+      easing: "linear"
+    }
+  );
+
+  const applyStage = (index) => {
+    const stage = speedStages[index];
+    if (stage.rate === 0) {
+      fanAnimation.pause();
+    } else {
+      if (fanAnimation.playState === "paused") {
+        fanAnimation.play();
+      }
+      if (typeof fanAnimation.updatePlaybackRate === "function") {
+        fanAnimation.updatePlaybackRate(stage.rate);
+      } else {
+        fanAnimation.playbackRate = stage.rate;
+      }
+    }
+  };
+
+  const savedIndex = parseInt(localStorage.getItem(STORAGE_KEY), 10);
+  let currentStageIndex = !isNaN(savedIndex) && savedIndex >= 0 && savedIndex < speedStages.length ? savedIndex : 0;
+  applyStage(currentStageIndex);
+
+  heroLogoContainer.addEventListener("click", () => {
+    currentStageIndex = (currentStageIndex + 1) % speedStages.length;
+    localStorage.setItem(STORAGE_KEY, currentStageIndex);
+    applyStage(currentStageIndex);
+  });
+}

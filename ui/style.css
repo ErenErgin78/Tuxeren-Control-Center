@@ -253,12 +253,24 @@ body {
   align-items: center;
   justify-content: center;
   filter: drop-shadow(0 0 25px rgba(0, 255, 180, 0.45));
+  cursor: pointer;
+  user-select: none;
 }
 
-.hero-logo {
+.hero-logo,
+.hero-logo-svg {
   width: clamp(114px, 15vw, 180px);
   height: clamp(114px, 15vw, 180px);
   object-fit: contain;
+  transition: transform 0.15s ease;
+}
+
+.hero-logo-container:active .hero-logo-svg {
+  transform: scale(0.96);
+}
+
+.hero-fan-array {
+  transform-origin: 256px 256px;
 }
 
 .hero-title {
