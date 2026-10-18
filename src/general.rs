@@ -11,13 +11,10 @@ use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Mutex;
 use std::time::Duration;
 
 const SETTINGS_FILE: &str = "/etc/monster-control-center/general_settings.json";
-const TOUCHPAD_STATE_FILE: &str = "/dev/shm/touchpad_locker_state";
 
-static TOUCHPAD_DEVS: Mutex<Vec<Device>> = Mutex::new(Vec::new());
 static DAEMON_STARTED: AtomicBool = AtomicBool::new(false);
 static IS_DAEMON_SERVER: AtomicBool = AtomicBool::new(false);
 static IS_TOUCHPAD_DISABLED: AtomicBool = AtomicBool::new(false);
@@ -44,10 +41,12 @@ impl Default for GeneralSettings {
 /// Retrieves the socket path for the background daemon IPC.
 pub fn socket_path() -> PathBuf {
     if let Ok(runtime) = std::env::var("XDG_RUNTIME_DIR") {
-        PathBuf::from(runtime).join("monster_control.sock")
-    } else {
-        PathBuf::from("/dev/shm/monster_control.sock")
+        let p = PathBuf::from(runtime);
+        if p.is_dir() {
+            return p.join("monster_control.sock");
+        }
     }
+    PathBuf::from("/dev/shm/monster_control.sock")
 }
 
 /// Sends a command to the background daemon via Unix domain socket and reads one line response.
@@ -72,20 +71,22 @@ pub fn is_daemon_alive() -> bool {
     send_daemon_command("ping").map(|r| r == "pong").unwrap_or(false)
 }
 
-/// Retrieves the current status of general settings, querying daemon if running.
+/// Queries the desktop environment (GNOME/mutter) directly as the single source of truth.
+pub fn is_touchpad_disabled_system() -> bool {
+    let mut cmd = Command::new("gsettings");
+    cmd.args(["get", "org.gnome.desktop.peripherals.touchpad", "send-events"]);
+    setup_desktop_env(&mut cmd);
+    if let Ok(output) = cmd.output() {
+        let text = String::from_utf8_lossy(&output.stdout);
+        return text.contains("disabled");
+    }
+    IS_TOUCHPAD_DISABLED.load(Ordering::SeqCst)
+}
+
+/// Retrieves the current status of general settings, reading live desktop state.
 pub fn get_general_settings() -> GeneralSettings {
     let mut settings = load_settings();
-
-    // In client (GUI): live lock state is tracked by the daemon
-    if !IS_DAEMON_SERVER.load(Ordering::SeqCst) {
-        if let Ok(resp) = send_daemon_command("get") {
-            settings.touchpad_disabled = resp == "1";
-            return settings;
-        }
-    }
-
-    // In daemon or standalone: use atomic memory state
-    settings.touchpad_disabled = IS_TOUCHPAD_DISABLED.load(Ordering::SeqCst);
+    settings.touchpad_disabled = is_touchpad_disabled_system();
     settings
 }
 
@@ -121,8 +122,9 @@ pub fn set_touchpad_disabled(disabled: bool) -> Result<(), String> {
 
 /// Toggles touchpad disabled state.
 pub fn toggle_touchpad() -> Result<bool, String> {
-    let new_state = !IS_TOUCHPAD_DISABLED.load(Ordering::SeqCst);
-    set_touchpad_disabled_local(new_state)?;
+    let current_dis = get_general_settings().touchpad_disabled;
+    let new_state = !current_dis;
+    set_touchpad_disabled(new_state)?;
     Ok(new_state)
 }
 
@@ -187,7 +189,7 @@ pub fn run_daemon_server() {
                     let _ = writer.write_all(b"pong\n");
                 }
                 "get" => {
-                    let is_dis = IS_TOUCHPAD_DISABLED.load(Ordering::SeqCst);
+                    let is_dis = is_touchpad_disabled_system();
                     let resp = if is_dis { b"1\n" } else { b"0\n" };
                     let _ = writer.write_all(resp);
                 }
@@ -281,11 +283,7 @@ fn find_device_by_keys(required_keys: &[KeyCode]) -> Option<Device> {
     None
 }
 
-fn run_desktop_touchpad_toggle(disabled: bool) {
-    let mode = if disabled { "disabled" } else { "enabled" };
-    let mut cmd = Command::new("gsettings");
-    cmd.args(["set", "org.gnome.desktop.peripherals.touchpad", "send-events", mode]);
-
+fn setup_desktop_env(cmd: &mut Command) {
     if std::env::var("DBUS_SESSION_BUS_ADDRESS").is_err() {
         unsafe extern "C" {
             fn getuid() -> u32;
@@ -300,29 +298,14 @@ fn run_desktop_touchpad_toggle(disabled: bool) {
             cmd.env("XDG_RUNTIME_DIR", runtime_path);
         }
     }
-    let _ = cmd.output();
 }
 
-fn find_touchpad_devices() -> Vec<Device> {
-    let mut devices = Vec::new();
-    if let Ok(entries) = fs::read_dir("/dev/input") {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.to_string_lossy().contains("event") {
-                if let Ok(device) = Device::open(&path) {
-                    let name = device.name().unwrap_or("").to_lowercase();
-                    let is_touchpad = name.contains("touchpad")
-                        || (name.contains("uniw") && name.contains("mouse"))
-                        || device.supported_keys().is_some_and(|keys| keys.contains(KeyCode::BTN_TOUCH));
-
-                    if is_touchpad {
-                        devices.push(device);
-                    }
-                }
-            }
-        }
-    }
-    devices
+fn run_desktop_touchpad_toggle(disabled: bool) {
+    let mode = if disabled { "disabled" } else { "enabled" };
+    let mut cmd = Command::new("gsettings");
+    cmd.args(["set", "org.gnome.desktop.peripherals.touchpad", "send-events", mode]);
+    setup_desktop_env(&mut cmd);
+    let _ = cmd.output();
 }
 
 fn find_f24_device() -> Option<Device> {
@@ -330,27 +313,8 @@ fn find_f24_device() -> Option<Device> {
 }
 
 fn apply_touchpad_state(disabled: bool) -> Result<(), String> {
-    // 1. Wayland / GNOME desktop-level touchpad disable/enable
     run_desktop_touchpad_toggle(disabled);
-
-    // 2. evdev hardware grab on all touchpad / UNIW mouse devices
-    let mut devs_lock = TOUCHPAD_DEVS.lock().map_err(|e| e.to_string())?;
-    if disabled {
-        if devs_lock.is_empty() {
-            *devs_lock = find_touchpad_devices();
-        }
-        for dev in devs_lock.iter_mut() {
-            let _ = dev.grab();
-        }
-        IS_TOUCHPAD_DISABLED.store(true, Ordering::SeqCst);
-        let _ = fs::write(TOUCHPAD_STATE_FILE, "kapali");
-    } else {
-        for mut dev in devs_lock.drain(..) {
-            let _ = dev.ungrab();
-        }
-        IS_TOUCHPAD_DISABLED.store(false, Ordering::SeqCst);
-        let _ = fs::write(TOUCHPAD_STATE_FILE, "aktif");
-    }
+    IS_TOUCHPAD_DISABLED.store(disabled, Ordering::SeqCst);
     Ok(())
 }
 
