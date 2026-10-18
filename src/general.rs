@@ -13,7 +13,7 @@ use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
-const SETTINGS_FILE: &str = "/etc/monster-control-center/general_settings.json";
+const SETTINGS_FILE: &str = "/etc/txectrl/general_settings.json";
 
 static DAEMON_STARTED: AtomicBool = AtomicBool::new(false);
 static IS_DAEMON_SERVER: AtomicBool = AtomicBool::new(false);
@@ -43,10 +43,10 @@ pub fn socket_path() -> PathBuf {
     if let Ok(runtime) = std::env::var("XDG_RUNTIME_DIR") {
         let p = PathBuf::from(runtime);
         if p.is_dir() {
-            return p.join("monster_control.sock");
+            return p.join("txectrl.sock");
         }
     }
-    PathBuf::from("/dev/shm/monster_control.sock")
+    PathBuf::from("/dev/shm/txectrl.sock")
 }
 
 /// Sends a command to the background daemon via Unix domain socket and reads one line response.
@@ -150,7 +150,7 @@ pub fn ensure_daemon_running() {
     }
 
     let _ = Command::new("systemctl")
-        .args(["--user", "start", "monster-control-center.service"])
+        .args(["--user", "start", "txectrl.service"])
         .status();
 
     for _ in 0..5 {
@@ -162,16 +162,16 @@ pub fn ensure_daemon_running() {
 
     let exe = std::env::current_exe()
         .ok()
-        .and_then(|p| p.parent().map(|dir| dir.join("monster-control-center")));
+        .and_then(|p| p.parent().map(|dir| dir.join("txectrl")));
 
     let bin = exe.filter(|p| p.exists()).unwrap_or_else(|| {
         if let Ok(home) = std::env::var("HOME") {
-            let p = PathBuf::from(home).join(".local/bin/monster-control-center");
+            let p = PathBuf::from(home).join(".local/bin/txectrl");
             if p.exists() {
                 return p;
             }
         }
-        PathBuf::from("monster-control-center")
+        PathBuf::from("txectrl")
     });
 
     let _ = Command::new(bin).arg("daemon").spawn();
@@ -245,7 +245,7 @@ pub fn run_daemon_server() {
 fn user_settings_file() -> Option<PathBuf> {
     std::env::var("HOME")
         .ok()
-        .map(|h| PathBuf::from(h).join(".config/monster-control-center/general_settings.json"))
+        .map(|h| PathBuf::from(h).join(".config/txectrl/general_settings.json"))
 }
 
 fn load_settings() -> GeneralSettings {

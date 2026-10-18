@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Monster Control Center Package Builder (Tauri CLI)
+# Tuxeren Control Center (TxeCtrl) Package Builder (Tauri CLI)
 # Builds Linux desktop packages (.rpm, .deb, .AppImage) using Tauri bundler.
 set -euo pipefail
 
@@ -13,7 +13,7 @@ TARGET_BUNDLES="${1:-}"
 export NO_STRIP=true
 
 echo "========================================================"
-echo "    Monster Control Center Package Builder (Tauri)"
+echo "    Tuxeren Control Center (TxeCtrl) Package Builder"
 echo "========================================================"
 
 ensure_system_deps() {

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Monster Control Center Release & Tag Script
+# Tuxeren Control Center (TxeCtrl) Release & Tag Script
 #
 # 1. Bumps version via scripts/bump_version.sh (default: patch)
 # 2. Commits updated version files

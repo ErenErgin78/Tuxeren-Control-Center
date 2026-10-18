@@ -14,7 +14,7 @@ if [ "$EUID" -ne 0 ]; then
     fi
 fi
 
-echo "=== Deploying Monster Tuxedo Driver ==="
+echo "=== Deploying Tuxeren / Uniwill / Tongfang Kernel Driver ==="
 
 # 1. Sync source files to /usr/src
 mkdir -p "$DKMS_DEST"
@@ -44,7 +44,7 @@ tuxedo_io
 MCONF
 
 # 5. Configure udev permissions
-UDEV_RULE_FILE="/etc/udev/rules.d/99-monster-control-center.rules"
+UDEV_RULE_FILE="/etc/udev/rules.d/99-tuxeren-control-center.rules"
 cat << 'UCONF' > "$UDEV_RULE_FILE"
 SUBSYSTEM=="leds", KERNEL=="*kbd_backlight*", ACTION=="add", RUN+="/bin/chmod -R a+rX /sys%p", RUN+="/bin/chmod 666 /sys%p/brightness /sys%p/multi_intensity"
 SUBSYSTEM=="platform", DRIVER=="tuxedo_keyboard", ACTION=="add", RUN+="/bin/chmod -R a+rX /sys%p", RUN+="/bin/chmod 666 /sys%p/fn_lock"

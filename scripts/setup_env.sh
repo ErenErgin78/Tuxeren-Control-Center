@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Monster Control Center Development & Environment Setup Script
+# Tuxeren Control Center (TxeCtrl) Development & Environment Setup Script
 # Verifies Rust toolchain, Node.js dependencies, and system build libraries
 set -e
 
@@ -7,7 +7,7 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." >/dev/null 2>&1 && pwd)"
 cd "$PROJECT_ROOT"
 
 echo "========================================================"
-echo "    Monster Control Center Environment Setup"
+echo "    Tuxeren Control Center (TxeCtrl) Environment Setup"
 echo "========================================================"
 
 detect_and_install_deps() {
@@ -101,6 +101,6 @@ echo "[+] Checking Rust backend build..."
 cargo check
 
 echo "========================================================"
-echo "  Setup Complete! Ready to launch Monster Control Center."
+echo "  Setup Complete! Ready to launch Tuxeren Control Center (TxeCtrl)."
 echo "  Run 'make dev' to start development mode."
 echo "========================================================"

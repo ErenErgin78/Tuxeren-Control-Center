@@ -4,10 +4,10 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-echo "=== Monster Control Center Installer ==="
+echo "=== Tuxeren Control Center (TxeCtrl) Installer ==="
 
 # 1. Compile release binaries if missing
-if [ ! -f "target/release/monster-control-center-gui" ]; then
+if [ ! -f "target/release/txectrl-gui" ]; then
     echo "[*] Building release binaries..."
     cargo build --release
 fi
@@ -17,36 +17,36 @@ BIN_DIR="$HOME/.local/bin"
 mkdir -p "$BIN_DIR"
 
 echo "[*] Installing binaries to $BIN_DIR..."
-cp -f target/release/monster-control-center "$BIN_DIR/monster-control-center"
-cp -f target/release/monster-control-center-gui "$BIN_DIR/monster-control-center-gui"
-chmod +x "$BIN_DIR/monster-control-center" "$BIN_DIR/monster-control-center-gui"
+cp -f target/release/txectrl "$BIN_DIR/txectrl"
+cp -f target/release/txectrl-gui "$BIN_DIR/txectrl-gui"
+chmod +x "$BIN_DIR/txectrl" "$BIN_DIR/txectrl-gui"
 
 # 3. Setup application icon
 ICON_DIR="$HOME/.local/share/icons/hicolor/128x128/apps"
 mkdir -p "$ICON_DIR"
 echo "[*] Installing application icon..."
-cp -f icons/128x128.png "$ICON_DIR/monster-control-center.png"
-cp -f icons/128x128.png "$ICON_DIR/monster-control-center-gui.png"
+cp -f icons/128x128.png "$ICON_DIR/txectrl.png"
+cp -f icons/128x128.png "$ICON_DIR/txectrl-gui.png"
 
 # 4. Setup Desktop Launcher
 DESKTOP_DIR="$HOME/.local/share/applications"
 mkdir -p "$DESKTOP_DIR"
 echo "[*] Registering desktop application..."
-cat << 'EOF' > "$DESKTOP_DIR/monster-control-center-gui.desktop"
+cat << 'EOF' > "$DESKTOP_DIR/txectrl-gui.desktop"
 [Desktop Entry]
-Name=Monster Control Center
-Comment=Keyboard RGB & EC Control for Monster / Tongfang Laptops
-Exec=monster-control-center-gui
-Icon=monster-control-center
+Name=Tuxeren Control Center
+Comment=Keyboard RGB & EC Control for Uniwill / Tongfang Laptops
+Exec=txectrl-gui
+Icon=txectrl
 Terminal=false
 Type=Application
 Categories=System;HardwareSettings;
-Keywords=monster;control;center;rgb;keyboard;backlight;
-StartupWMClass=monster-control-center-gui
+Keywords=txectrl;tuxeren;monster;control;center;rgb;keyboard;backlight;uniwill;tongfang;
+StartupWMClass=txectrl-gui
 EOF
 
-cp -f "$DESKTOP_DIR/monster-control-center-gui.desktop" "$DESKTOP_DIR/com.monster.controlcenter.desktop"
-chmod +x "$DESKTOP_DIR/monster-control-center-gui.desktop" "$DESKTOP_DIR/com.monster.controlcenter.desktop"
+cp -f "$DESKTOP_DIR/txectrl-gui.desktop" "$DESKTOP_DIR/org.txectrl.app.desktop"
+chmod +x "$DESKTOP_DIR/txectrl-gui.desktop" "$DESKTOP_DIR/org.txectrl.app.desktop"
 
 # 5. Update desktop caches
 update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
@@ -56,14 +56,14 @@ gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" 2>/dev/null || tr
 echo "[*] Setting up systemd user service for background daemon..."
 SERVICE_DIR="$HOME/.config/systemd/user"
 mkdir -p "$SERVICE_DIR"
-cat << 'EOF' > "$SERVICE_DIR/monster-control-center.service"
+cat << 'EOF' > "$SERVICE_DIR/txectrl.service"
 [Unit]
-Description=Monster Control Center Background Daemon
+Description=Tuxeren Control Center Background Daemon
 After=default.target
 
 [Service]
 Type=simple
-ExecStart=%h/.local/bin/monster-control-center daemon
+ExecStart=%h/.local/bin/txectrl daemon
 Restart=on-failure
 RestartSec=3
 
@@ -72,11 +72,11 @@ WantedBy=default.target
 EOF
 
 systemctl --user daemon-reload 2>/dev/null || true
-systemctl --user enable --now monster-control-center.service 2>/dev/null || true
+systemctl --user enable --now txectrl.service 2>/dev/null || true
 
 # 7. Configure udev rules for tuxedo keyboard LEDs and hardware control
 echo "[*] Configuring udev rules for LEDs and hardware control..."
-UDEV_RULE_FILE="/etc/udev/rules.d/99-monster-control-center.rules"
+UDEV_RULE_FILE="/etc/udev/rules.d/99-tuxeren-control-center.rules"
 UDEV_CONTENT='SUBSYSTEM=="leds", KERNEL=="*kbd_backlight*", ACTION=="add", RUN+="/bin/chmod -R a+rX /sys%p", RUN+="/bin/chmod 666 /sys%p/brightness /sys%p/multi_intensity"
 SUBSYSTEM=="platform", DRIVER=="tuxedo_keyboard", ACTION=="add", RUN+="/bin/chmod -R a+rX /sys%p", RUN+="/bin/chmod 666 /sys%p/fn_lock"
 SUBSYSTEM=="platform-profile", ACTION=="add", RUN+="/bin/chmod 666 /sys%p/profile /sys/firmware/acpi/platform_profile"
@@ -108,4 +108,4 @@ fi
 
 echo "=== Installation Complete ==="
 echo "Launch from application menu or run:"
-echo "  monster-control-center-gui"
+echo "  txectrl-gui"

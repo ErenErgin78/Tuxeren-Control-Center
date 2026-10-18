@@ -1,5 +1,5 @@
 [package]
-name = "monster-control-center"
+name = "txectrl"
 version = "1.0.4"
 edition = "2024"
 
@@ -13,9 +13,9 @@ evdev = "0.13"
 tauri-build = { version = "2.7.3", features = [] }
 
 [[bin]]
-name = "monster-control-center-gui"
+name = "txectrl-gui"
 path = "src/gui.rs"
 
 [[bin]]
-name = "monster-control-center"
+name = "txectrl"
 path = "src/main.rs"

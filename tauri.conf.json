@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Monster Control Center",
+  "productName": "Tuxeren Control Center",
   "version": "1.0.4",
-  "identifier": "com.monster.controlcenter",
+  "identifier": "org.txectrl.app",
   "build": {
     "frontendDist": "./ui"
   },
@@ -11,7 +11,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Monster Control Center",
+        "title": "Tuxeren Control Center",
         "width": 1020,
         "height": 680,
         "minWidth": 860,
@@ -38,8 +38,8 @@
       "icons/icon.png"
     ],
     "category": "Utility",
-    "shortDescription": "Monster Control Center for Linux",
-    "longDescription": "Keyboard RGB and EC Control for Monster / Tongfang Laptops",
+    "shortDescription": "Tuxeren Control Center (TxeCtrl) for Linux",
+    "longDescription": "Hardware, Keyboard RGB and EC Control for Uniwill / Tongfang Laptops",
     "resources": {
       "driver/tuxedo-drivers-monster-4.25.0": "/usr/src/tuxedo-drivers-monster-4.25.0"
     },

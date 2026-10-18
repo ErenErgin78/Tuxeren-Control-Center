@@ -1,7 +1,7 @@
-//! # Monster / Tongfang Hardware Control Library (`monster_control_center`)
+//! # Tuxeren Control Center Library (`txectrl`)
 //!
 //! A clean-room hardware control library for Uniwill / Tongfang ODM laptop chassis
-//! (Monster Notebook Tulpar, Abra, Semruk) running on Linux.
+//! (Monster, Tuxedo, Schenker, Eluktronics, Mechrevo, etc.) running on Linux.
 //! Interfaces with the Embedded Controller (EC) via ACPI methods `\_SB.INOU.ECRR` and `\_SB.INOU.ECRW`.
 
 pub mod battery;

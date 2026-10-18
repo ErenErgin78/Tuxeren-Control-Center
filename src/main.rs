@@ -1,18 +1,18 @@
-//! # Monster Control Center CLI Binary
+//! # Tuxeren Control Center CLI Binary
 //!
 //! Clean-room CLI for single-zone RGB keyboard lighting and raw EC access.
 
 use std::os::unix::process::CommandExt;
 use std::process::Command;
 
-use monster_control_center::{device_info, ec, keyboard, get_chassis_project_id};
+use txectrl::{device_info, ec, keyboard, get_chassis_project_id};
 
 /// Prints CLI usage and available subcommands.
 fn print_help() {
-    println!(r#"monster-control-center: Keyboard & EC hardware control for Monster / Tongfang laptops
+    println!(r#"txectrl: Keyboard & EC hardware control for Tuxeren Control Center (Uniwill / Tongfang laptops)
 
 USAGE:
-    monster-control-center <COMMAND> [OPTIONS]
+    txectrl <COMMAND> [OPTIONS]
 
 COMMANDS:
     gui                         Launch graphical user interface (default)
@@ -46,7 +46,7 @@ fn launch_gui() {
 
     if let Ok(current_exe) = std::env::current_exe() {
         if let Some(parent) = current_exe.parent() {
-            let gui_path = parent.join("monster-control-center-gui");
+            let gui_path = parent.join("txectrl-gui");
             if gui_path.is_file() {
                 let err = Command::new(gui_path).exec();
                 eprintln!("[-] Failed to launch GUI binary: {}", err);
@@ -55,8 +55,8 @@ fn launch_gui() {
         }
     }
 
-    let err = Command::new("monster-control-center-gui").exec();
-    eprintln!("[-] Failed to launch monster-control-center-gui: {}", err);
+    let err = Command::new("txectrl-gui").exec();
+    eprintln!("[-] Failed to launch txectrl-gui: {}", err);
     print_help();
 }
 
@@ -91,7 +91,7 @@ fn main() {
         "info" => {
             match device_info::get_device_info() {
                 Ok(info) => {
-                    println!("=== Monster Cihaz Bilgileri ===");
+                    println!("=== Tuxeren Cihaz Bilgileri ===");
                     println!("\n[Panel 1: Cihaz & Kasa]");
                     println!("  Model Adı:        {}", info.model_name);
                     println!("  Üretici:          {}", info.vendor);
@@ -130,7 +130,7 @@ fn main() {
             }
             if args[2] == "rgb" {
                 if args.len() < 6 {
-                    println!("Usage: monster-control-center color rgb <R> <G> <B> [brightness: 1-4]");
+                    println!("Usage: txectrl color rgb <R> <G> <B> [brightness: 1-4]");
                     return;
                 }
                 let r: u8 = args[3].parse().expect("Invalid R value (0-255)");
@@ -148,7 +148,7 @@ fn main() {
         }
         "read" => {
             if args.len() < 3 {
-                println!("Usage: monster-control-center read <0xXXXX>");
+                println!("Usage: txectrl read <0xXXXX>");
                 return;
             }
             let reg_str = args[2].strip_prefix("0x").unwrap_or(&args[2]);
@@ -163,7 +163,7 @@ fn main() {
         }
         "write" => {
             if args.len() < 4 {
-                println!("Usage: monster-control-center write <0xXXXX> <0xYY>");
+                println!("Usage: txectrl write <0xXXXX> <0xYY>");
                 return;
             }
             let reg_str = args[2].strip_prefix("0x").unwrap_or(&args[2]);
@@ -174,11 +174,11 @@ fn main() {
         }
         "perf" => {
             if args.len() < 3 {
-                match monster_control_center::performance::get_performance_state() {
+                match txectrl::performance::get_performance_state() {
                     Ok(state) => {
                         println!("Donanım (BIOS/EC) Modu: {} (Kod: {})", state.hardware_mode_name, state.hardware_mode);
                         println!("Sistem (OS/D-Bus) Kipi: {}", state.os_profile);
-                        if let Ok(m) = monster_control_center::performance::get_system_metrics() {
+                        if let Ok(m) = txectrl::performance::get_system_metrics() {
                             println!("CPU: {:.1}% ({}°C) | GPU: {:.1}% ({}°C)", m.cpu_percent, m.cpu_temp, m.gpu_percent, m.gpu_temp);
                             println!("RAM: {:.1}% ({:.1} GB / {:.1} GB) | Disk: {:.1}% ({:.1} GB / {:.1} GB)", m.ram_percent, m.ram_used_gb, m.ram_total_gb, m.disk_percent, m.disk_used_gb, m.disk_total_gb);
                             println!("Fanlar: CPU {} RPM ({}%) | GPU {} RPM ({}%)", m.cpu_fan_rpm, m.cpu_fan_duty, m.gpu_fan_rpm, m.gpu_fan_duty);
@@ -197,25 +197,25 @@ fn main() {
                 }
             } else {
                 match args[2].to_lowercase().as_str() {
-                    "office" | "ofis" => monster_control_center::performance::set_hardware_mode(0)
+                    "office" | "ofis" => txectrl::performance::set_hardware_mode(0)
                         .map(|_| println!("[ok] Donanım modu 'Ofis' (0) olarak ayarlandı.")),
-                    "gaming" | "oyun" => monster_control_center::performance::set_hardware_mode(1)
+                    "gaming" | "oyun" => txectrl::performance::set_hardware_mode(1)
                         .map(|_| println!("[ok] Donanım modu 'Oyun' (1) olarak ayarlandı.")),
-                    "battery" | "pil" | "eco" => monster_control_center::performance::set_hardware_mode(3)
+                    "battery" | "pil" | "eco" => txectrl::performance::set_hardware_mode(3)
                         .map(|_| println!("[ok] Donanım modu 'Pil Tasarrufu' (3) olarak ayarlandı.")),
-                    "turbo" => monster_control_center::performance::set_hardware_mode(4)
+                    "turbo" => txectrl::performance::set_hardware_mode(4)
                         .map(|_| println!("[ok] Donanım modu 'Turbo' (4) olarak ayarlandı.")),
                     "os" => {
                         if args.len() < 4 {
-                            println!("Usage: monster-control-center perf os <power-saver|balanced|performance>");
+                            println!("Usage: txectrl perf os <power-saver|balanced|performance>");
                             return;
                         }
-                        monster_control_center::performance::set_os_profile(&args[3])
+                        txectrl::performance::set_os_profile(&args[3])
                             .map(|_| println!("[ok] Sistem güç kipi '{}' olarak ayarlandı.", args[3]))
                     }
                     "watch" | "daemon" => {
                         println!("[*] EC Donanım Buton İzleyici başlatıldı (~250ms). Çıkmak için Ctrl+C.");
-                        monster_control_center::performance::start_polling_daemon();
+                        txectrl::performance::start_polling_daemon();
                         loop {
                             std::thread::sleep(std::time::Duration::from_secs(3600));
                         }
@@ -226,7 +226,7 @@ fn main() {
         }
         "display" => {
             if args.len() == 2 {
-                let s = monster_control_center::display::get_display_settings();
+                let s = txectrl::display::get_display_settings();
                 println!("=== Görüntü Ayarları ===");
                 println!("  Parlaklık (Brightness):       %{}", s.brightness);
                 println!("  Renk Sıcaklığı (Color Temp):  {} K", s.color_temp);
@@ -239,7 +239,7 @@ fn main() {
             } else {
                 match args[2].as_str() {
                     "reset" => {
-                        monster_control_center::display::reset_display_settings()
+                        txectrl::display::reset_display_settings()
                             .map(|_| println!("[ok] Görüntü ayarları sıfırlandı."))
                     }
                     "brightness" => {
@@ -248,9 +248,9 @@ fn main() {
                         } else {
                             match args[3].parse::<u32>() {
                                 Ok(val) => {
-                                    let mut s = monster_control_center::display::get_display_settings();
+                                    let mut s = txectrl::display::get_display_settings();
                                     s.brightness = val;
-                                    monster_control_center::display::apply_display_settings(s)
+                                    txectrl::display::apply_display_settings(s)
                                         .map(|_| println!("[ok] Ekran parlaklığı %{} olarak ayarlandı.", val))
                                 }
                                 Err(_) => Err("Geçersiz parlaklık değeri.".to_string()),
@@ -263,9 +263,9 @@ fn main() {
                         } else {
                             match args[3].parse::<u32>() {
                                 Ok(val) => {
-                                    let mut s = monster_control_center::display::get_display_settings();
+                                    let mut s = txectrl::display::get_display_settings();
                                     s.color_temp = val;
-                                    monster_control_center::display::apply_display_settings(s)
+                                    txectrl::display::apply_display_settings(s)
                                         .map(|_| println!("[ok] Renk sıcaklığı {} K olarak ayarlandı.", val))
                                 }
                                 Err(_) => Err("Geçersiz renk sıcaklığı değeri.".to_string()),
@@ -277,10 +277,10 @@ fn main() {
             }
         }
         "daemon" | "service" => {
-            println!("[*] Monster Control Center arkaplan servisi başlatıldı.");
-            monster_control_center::performance::start_polling_daemon();
-            monster_control_center::general::start_touchpad_daemon();
-            monster_control_center::general::run_daemon_server();
+            println!("[*] Tuxeren Control Center (TxeCtrl) arkaplan servisi başlatıldı.");
+            txectrl::performance::start_polling_daemon();
+            txectrl::general::start_touchpad_daemon();
+            txectrl::general::run_daemon_server();
             Ok(())
         }
         "-h" | "--help" | "help" => {

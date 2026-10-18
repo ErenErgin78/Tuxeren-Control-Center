@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Monster Control Center Version Bumper
+# Tuxeren Control Center (TxeCtrl) Version Bumper
 # Synchronizes version across:
 #   - tauri.conf.json  ("version")
 #   - Cargo.toml       ([package] version)
-#   - Cargo.lock       (monster-control-center package)
+#   - Cargo.lock       (txectrl package)
 #
 # Usage:
 #   ./scripts/bump_version.sh patch          # 0.1.0 -> 0.1.1
@@ -113,14 +113,14 @@ assert done, "Cargo.toml [package] version not found"
 with open(cargo_toml, "w") as f:
     f.writelines(out)
 
-# 3. Cargo.lock -> name = "monster-control-center" package block
+# 3. Cargo.lock -> name = "txectrl" package block
 if os.path.exists(cargo_lock):
     with open(cargo_lock) as f:
         lines = f.readlines()
     out, i, changed = [], 0, False
     while i < len(lines):
         out.append(lines[i])
-        if lines[i].strip() == 'name = "monster-control-center"':
+        if lines[i].strip() == 'name = "txectrl"':
             j = i + 1
             while j < len(lines) and lines[j].strip() != "":
                 if re.match(r'^version\s*=', lines[j].strip()):

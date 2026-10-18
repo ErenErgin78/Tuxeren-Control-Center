@@ -14,7 +14,7 @@ const translations = {
     modal_close: "Kapat",
 
     // Lobby (index.html)
-    lobby_title: "Monster Kontrol Merkezi",
+    lobby_title: "Tuxeren Control Center (TxeCtrl)",
     hero_title: "Kontrol Merkezi",
     menu_general: "Genel Ayarlar",
     menu_general_desc: "Kolay Ayar, Windows Aygıtları, Oyun içi Hızlı Bilgi Ekranı, Klavye Haritalandırması",
@@ -30,7 +30,7 @@ const translations = {
     menu_device_desc: "Cihaz Bilgileri, Hakkında",
 
     // General Settings (general.html)
-    general_title: "Genel Ayarlar - Monster Kontrol Merkezi",
+    general_title: "Genel Ayarlar - Tuxeren Control Center",
     page_general_heading: "Genel Ayarlar",
     setting_language_title: "Uygulama Dili",
     setting_language_desc: "Arayüzün görüntüleneceği dili seçin",
@@ -45,7 +45,7 @@ const translations = {
     toast_lang_changed: "Dil Türkçe olarak ayarlandı",
 
     // Performance (performance.html)
-    perf_title: "Performans Yönetimi - Monster Kontrol Merkezi",
+    perf_title: "Performans Yönetimi - Tuxeren Control Center",
     page_perf_heading: "Performans Yönetimi",
     telemetry_title: "Sistem İzleme",
     telemetry_cpu: "İŞLEMCİ (CPU)",
@@ -76,7 +76,7 @@ const translations = {
     toast_os_mode: "İşletim sistemi güç kipi '{profile}' olarak ayarlandı",
 
     // Battery (battery.html)
-    battery_title: "Pil & Güç Durumu - Monster Kontrol Merkezi",
+    battery_title: "Pil & Güç Durumu - Tuxeren Control Center",
     page_battery_heading: "Pil Durumu",
     bat_card_level: "Pil Doluluk & Güç Durumu",
     bat_est_time: "Tahmini Kalan Süre:",
@@ -103,7 +103,7 @@ const translations = {
     bat_unknown: "Bilinmiyor",
 
     // Display (display.html)
-    display_title: "Görüntü Ayarları - Monster Kontrol Merkezi",
+    display_title: "Görüntü Ayarları - Tuxeren Control Center",
     page_display_heading: "Görüntü Ayarları",
     btn_reset_defaults: "Varsayılana Sıfırla",
     btn_reset_title: "Tüm görüntü ve renk ayarlarını fabrika ayarlarına sıfırla",
@@ -126,7 +126,7 @@ const translations = {
     toast_display_reset: "Görüntü ayarları sıfırlandı",
 
     // Device Info (device_info.html)
-    device_info_title: "Cihaz Bilgileri - Monster Kontrol Merkezi",
+    device_info_title: "Cihaz Bilgileri - Tuxeren Control Center",
     page_device_heading: "Cihaz Bilgileri",
     panel_device_chassis: "Cihaz & Kasa",
     info_model_name: "Model Adı:",
@@ -152,7 +152,7 @@ const translations = {
     info_graphics_driver: "Grafik Sürücüsü:",
 
     // Keyboard Light (keyboard_light.html)
-    kbd_title: "Aydınlatma Ayarları - Monster Kontrol Merkezi",
+    kbd_title: "Aydınlatma Ayarları - Tuxeren Control Center",
     page_kbd_heading: "Aydınlatma Ayarları",
     section_main_colors: "Ana Renkler",
     section_custom_color: "Özel Renk",
@@ -196,7 +196,7 @@ const translations = {
     modal_close: "Close",
 
     // Lobby (index.html)
-    lobby_title: "Monster Control Center",
+    lobby_title: "Tuxeren Control Center (TxeCtrl)",
     hero_title: "Control Center",
     menu_general: "General Settings",
     menu_general_desc: "Quick Settings, Windows Devices, In-game OSD, Keyboard Mapping",
@@ -212,7 +212,7 @@ const translations = {
     menu_device_desc: "Device Details, About",
 
     // General Settings (general.html)
-    general_title: "General Settings - Monster Control Center",
+    general_title: "General Settings - Tuxeren Control Center",
     page_general_heading: "General Settings",
     setting_language_title: "Application Language",
     setting_language_desc: "Select the display language for the interface",
@@ -227,7 +227,7 @@ const translations = {
     toast_lang_changed: "Language set to English",
 
     // Performance (performance.html)
-    perf_title: "Performance Management - Monster Control Center",
+    perf_title: "Performance Management - Tuxeren Control Center",
     page_perf_heading: "Performance Management",
     telemetry_title: "System Monitoring",
     telemetry_cpu: "PROCESSOR (CPU)",
@@ -258,7 +258,7 @@ const translations = {
     toast_os_mode: "OS power profile set to '{profile}'",
 
     // Battery (battery.html)
-    battery_title: "Battery & Power Status - Monster Control Center",
+    battery_title: "Battery & Power Status - Tuxeren Control Center",
     page_battery_heading: "Battery Status",
     bat_card_level: "Battery Level & Power Status",
     bat_est_time: "Estimated Remaining Time:",
@@ -285,7 +285,7 @@ const translations = {
     bat_unknown: "Unknown",
 
     // Display (display.html)
-    display_title: "Display Settings - Monster Control Center",
+    display_title: "Display Settings - Tuxeren Control Center",
     page_display_heading: "Display Settings",
     btn_reset_defaults: "Reset to Defaults",
     btn_reset_title: "Reset all display and color settings to factory defaults",
@@ -308,7 +308,7 @@ const translations = {
     toast_display_reset: "Display settings reset to defaults",
 
     // Device Info (device_info.html)
-    device_info_title: "Device Information - Monster Control Center",
+    device_info_title: "Device Information - Tuxeren Control Center",
     page_device_heading: "Device Information",
     panel_device_chassis: "Device & Chassis",
     info_model_name: "Model Name:",
@@ -334,7 +334,7 @@ const translations = {
     info_graphics_driver: "Graphics Driver:",
 
     // Keyboard Light (keyboard_light.html)
-    kbd_title: "Lighting Settings - Monster Control Center",
+    kbd_title: "Lighting Settings - Tuxeren Control Center",
     page_kbd_heading: "Lighting Settings",
     section_main_colors: "Primary Colors",
     section_custom_color: "Custom Color",

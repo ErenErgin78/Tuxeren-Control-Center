@@ -10,7 +10,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-const SETTINGS_FILE: &str = "/etc/monster-control-center/display_settings.json";
+const SETTINGS_FILE: &str = "/etc/txectrl/display_settings.json";
 const BACKLIGHT_PATH: &str = "/sys/class/backlight/intel_backlight";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -52,9 +52,9 @@ fn config_path() -> PathBuf {
     }
     if let Ok(home) = std::env::var("HOME") {
         PathBuf::from(home)
-            .join(".config/monster-control-center/display_settings.json")
+            .join(".config/txectrl/display_settings.json")
     } else {
-        PathBuf::from("/dev/shm/monster_display_settings.json")
+        PathBuf::from("/dev/shm/txectrl_display_settings.json")
     }
 }
 

@@ -67,7 +67,7 @@ jobs:
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: monster-control-center-linux-packages
+          name: txectrl-linux-packages
           path: dist/*
 
       - name: Create GitHub Release

@@ -1,11 +1,11 @@
 #!/bin/bash
 set -e
 
-echo "[*] Monster Control Center: Donanım sürücüsü yapılandırılıyor..."
+echo "[*] Tuxeren Control Center (TxeCtrl): Donanım sürücüsü yapılandırılıyor..."
 
 # 1. Kaynak kodları /usr/src dizinine yerleştir
 SRC_DIR="/usr/src/tuxedo-drivers-monster-4.25.0"
-BUNDLED_DIR="/usr/lib/Monster Control Center/_root_/usr/src/tuxedo-drivers-monster-4.25.0"
+BUNDLED_DIR="/usr/lib/Tuxeren Control Center/_root_/usr/src/tuxedo-drivers-monster-4.25.0"
 
 if [ -d "$BUNDLED_DIR" ]; then
     mkdir -p "$SRC_DIR"
@@ -41,7 +41,7 @@ modprobe uniwill_wmi 2>/dev/null || true
 modprobe tuxedo_io 2>/dev/null || true
 
 # 5. Udev kurallarını kur ve tetikle
-cat << 'UDEV_EOF' > /etc/udev/rules.d/99-monster-control-center.rules
+cat << 'UDEV_EOF' > /etc/udev/rules.d/99-tuxeren-control-center.rules
 SUBSYSTEM=="leds", KERNEL=="*kbd_backlight*", ACTION=="add", RUN+="/bin/chmod -R a+rX /sys%p", RUN+="/bin/chmod 666 /sys%p/brightness /sys%p/multi_intensity"
 SUBSYSTEM=="platform", DRIVER=="tuxedo_keyboard", ACTION=="add", RUN+="/bin/chmod -R a+rX /sys%p", RUN+="/bin/chmod 666 /sys%p/fn_lock"
 SUBSYSTEM=="platform-profile", ACTION=="add", RUN+="/bin/chmod 666 /sys%p/profile /sys/firmware/acpi/platform_profile"

@@ -1,5 +1,5 @@
 # ==============================================================================
-# Monster Control Center - Linux Makefile
+# Tuxeren Control Center (TxeCtrl) - Linux Makefile
 # ==============================================================================
 
 .PHONY: help setup setup-deps dev build build-rpm build-deb build-appimage install install-rpm install-deb install-appimage uninstall clean test lint bump bump-patch bump-minor bump-major set-version release release-patch
@@ -7,7 +7,7 @@
 .DEFAULT_GOAL := help
 
 help: ## Show available make targets
-	@echo "Monster Control Center Commands:"
+	@echo "Tuxeren Control Center (TxeCtrl) Commands:"
 	@echo ""
 	@LC_ALL=C grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
 	@echo ""
@@ -18,7 +18,7 @@ setup: ## Verify environment and toolchain
 setup-deps: ## Check and prompt to install system-level build dependencies
 	@bash scripts/setup_env.sh --install-deps
 
-dev: ## Start Monster Control Center in development mode
+dev: ## Start Tuxeren Control Center in development mode
 	@bash scripts/run.sh
 
 build: ## Build release packages for all configured targets (rpm, deb, appimage)
@@ -28,7 +28,7 @@ install: ## Build release binary and install locally via install.sh
 	@cargo build --release
 	@bash install.sh
 
-uninstall: ## Remove Monster Control Center and desktop integration
+uninstall: ## Remove Tuxeren Control Center and desktop integration
 	@bash scripts/uninstall.sh
 
 APP_VERSION ?= $(shell grep -m1 '"version"' tauri.conf.json 2>/dev/null | cut -d '"' -f 4)
@@ -38,12 +38,12 @@ build-rpm: ## Build RPM package only
 
 install-rpm: build-rpm ## Build RPM and reinstall on local system (sudo dnf)
 	@sudo -v
-	@if (command -v rpm >/dev/null 2>&1 && rpm -q monster-control-center >/dev/null 2>&1) || command -v monster-control-center >/dev/null 2>&1 || [ -f "$$HOME/.local/bin/monster-control-center" ]; then \
+	@if (command -v rpm >/dev/null 2>&1 && (rpm -q txectrl >/dev/null 2>&1 || rpm -q monster-control-center >/dev/null 2>&1)) || command -v txectrl >/dev/null 2>&1 || [ -f "$$HOME/.local/bin/txectrl" ]; then \
 		echo "[*] Existing installation detected. Running uninstall script..."; \
 		bash scripts/uninstall.sh; \
 	fi
-	@echo "[+] Installing freshly built Monster Control Center RPM package..."
-	@RPM_FILE=$$(ls dist/Monster*Control*Center-$${APP_VERSION:-*}-*.rpm dist/monster*control*center-$${APP_VERSION:-*}-*.rpm dist/*$${APP_VERSION:-*}*.rpm 2>/dev/null | sort -V | tail -n 1); \
+	@echo "[+] Installing freshly built Tuxeren Control Center RPM package..."
+	@RPM_FILE=$$(ls dist/Tuxeren*Control*Center-$${APP_VERSION:-*}-*.rpm dist/txectrl-$${APP_VERSION:-*}-*.rpm dist/*$${APP_VERSION:-*}*.rpm 2>/dev/null | sort -V | tail -n 1); \
 	if [ -z "$$RPM_FILE" ]; then \
 		RPM_FILE=$$(ls dist/*.rpm 2>/dev/null | sort -V | tail -n 1); \
 	fi; \
@@ -54,15 +54,15 @@ install-rpm: build-rpm ## Build RPM and reinstall on local system (sudo dnf)
 	sudo dnf install -y "$$RPM_FILE"
 	@update-desktop-database ~/.local/share/applications 2>/dev/null || true
 	@echo "========================================================"
-	@echo "  Monster Control Center RPM successfully installed!"
+	@echo "  Tuxeren Control Center RPM successfully installed!"
 	@echo "========================================================"
 
 build-deb: ## Build DEB package only
 	@bash scripts/build_packages.sh deb
 
 install-deb: build-deb ## Build DEB and reinstall on local system (sudo apt)
-	@echo "[+] Installing Monster Control Center DEB package..."
-	@DEB_FILE=$$(ls dist/Monster*Control*Center*$${APP_VERSION:-*}*.deb dist/monster*control*center*$${APP_VERSION:-*}*.deb dist/*$${APP_VERSION:-*}*.deb 2>/dev/null | sort -V | tail -n 1); \
+	@echo "[+] Installing Tuxeren Control Center DEB package..."
+	@DEB_FILE=$$(ls dist/Tuxeren*Control*Center*$${APP_VERSION:-*}*.deb dist/txectrl*$${APP_VERSION:-*}*.deb dist/*$${APP_VERSION:-*}*.deb 2>/dev/null | sort -V | tail -n 1); \
 	if [ -z "$$DEB_FILE" ]; then \
 		DEB_FILE=$$(ls dist/*.deb 2>/dev/null | sort -V | tail -n 1); \
 	fi; \
@@ -75,28 +75,28 @@ install-deb: build-deb ## Build DEB and reinstall on local system (sudo apt)
 	fi
 	@update-desktop-database ~/.local/share/applications 2>/dev/null || true
 	@echo "========================================================"
-	@echo "  Monster Control Center DEB successfully installed!"
+	@echo "  Tuxeren Control Center DEB successfully installed!"
 	@echo "========================================================"
 
 build-appimage: ## Build AppImage package only
 	@bash scripts/build_packages.sh appimage
 
 install-appimage: build-appimage ## Build AppImage and integrate to user system (~/.local/bin)
-	@echo "[+] Installing Monster Control Center AppImage to ~/.local/bin..."
+	@echo "[+] Installing Tuxeren Control Center AppImage to ~/.local/bin..."
 	@mkdir -p ~/.local/bin ~/.local/share/applications ~/.local/share/icons/hicolor/128x128/apps
-	@APPIMAGE_PATH=$$(ls dist/Monster*Control*Center*$${APP_VERSION:-*}*.AppImage dist/monster*control*center*$${APP_VERSION:-*}*.AppImage dist/*$${APP_VERSION:-*}*.AppImage 2>/dev/null | sort -V | tail -n 1); \
+	@APPIMAGE_PATH=$$(ls dist/Tuxeren*Control*Center*$${APP_VERSION:-*}*.AppImage dist/txectrl*$${APP_VERSION:-*}*.AppImage dist/*$${APP_VERSION:-*}*.AppImage 2>/dev/null | sort -V | tail -n 1); \
 	if [ -z "$$APPIMAGE_PATH" ]; then \
 		APPIMAGE_PATH=$$(ls dist/*.AppImage 2>/dev/null | sort -V | tail -n 1); \
 	fi; \
 	if [ -n "$$APPIMAGE_PATH" ]; then \
-		cp "$$APPIMAGE_PATH" ~/.local/bin/monster-control-center-gui && chmod +x ~/.local/bin/monster-control-center-gui; \
+		cp "$$APPIMAGE_PATH" ~/.local/bin/txectrl-gui && chmod +x ~/.local/bin/txectrl-gui; \
 	fi
 	@if [ -f icons/128x128.png ]; then \
-		cp icons/128x128.png ~/.local/share/icons/hicolor/128x128/apps/monster-control-center.png; \
+		cp icons/128x128.png ~/.local/share/icons/hicolor/128x128/apps/txectrl.png; \
 	fi
 	@update-desktop-database ~/.local/share/applications 2>/dev/null || true
 	@echo "========================================================"
-	@echo "  Monster Control Center AppImage installed to ~/.local/bin/monster-control-center-gui"
+	@echo "  Tuxeren Control Center AppImage installed to ~/.local/bin/txectrl-gui"
 	@echo "========================================================"
 
 test: ## Run Rust tests

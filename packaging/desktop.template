@@ -3,8 +3,8 @@ Categories={{categories}}
 {{#if comment}}
 Comment={{comment}}
 {{/if}}
-Exec=monster-control-center-gui
-StartupWMClass=monster-control-center-gui
+Exec=txectrl-gui
+StartupWMClass=txectrl-gui
 Icon={{icon}}
 Name={{name}}
 Terminal=false

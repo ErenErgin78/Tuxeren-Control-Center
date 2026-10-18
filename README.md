@@ -1,6 +1,6 @@
-# Monster Control Center (Linux)
+# Tuxeren Control Center (TxeCtrl) - Linux
 
-A clean-room, zero-dependency Rust CLI and Tauri desktop application for hardware control on Uniwill / Tongfang chassis laptops (such as Monster Notebook Tulpar, Abra, and Semruk series) running Linux.
+A clean-room, Rust CLI and Tauri desktop application for hardware control on Uniwill / Tongfang chassis laptops running Linux.
 
 ## Kernel Driver Architecture: Transition from `acpi_call` to `tuxedo-drivers`
 
@@ -64,10 +64,10 @@ Run the installer script or make target to build and install both the GUI deskto
 ./install.sh
 ```
 
-Once installed, **Monster Control Center** can be launched from your application launcher or by running:
+Once installed, **Tuxeren Control Center** can be launched from your application launcher or by running:
 
 ```bash
-monster-control-center-gui
+txectrl-gui
 ```
 
 ## CLI Usage
@@ -76,34 +76,36 @@ The standalone CLI is available in PATH:
 
 ```bash
 # View chassis project ID
-monster-control-center chassis
+txectrl chassis
 
 # System and hardware specifications
-monster-control-center info
+txectrl info
 
 # Keyboard lighting presets
-monster-control-center color cyan 4
-monster-control-center color off
+txectrl color cyan 4
+txectrl color off
 
 # Custom RGB
-monster-control-center color rgb 255 60 0 4
+txectrl color rgb 255 60 0 4
 
 # Performance modes and telemetry
-monster-control-center perf
-monster-control-center perf turbo
-monster-control-center perf os performance
-monster-control-center perf watch
+txectrl perf
+txectrl perf turbo
+txectrl perf os performance
+txectrl perf watch
 
 # Display settings and calibration
-monster-control-center display
-monster-control-center display brightness 80
-monster-control-center display temp 6500
-monster-control-center display reset
+txectrl display
+txectrl display brightness 80
+txectrl display temp 6500
+txectrl display reset
 
 # Background daemon (touchpad F24 switch & performance sync)
-monster-control-center daemon
+txectrl daemon
 
 # Direct EC register debugging
-monster-control-center read 0x0769
-monster-control-center write 0x078C 0x01
+txectrl read 0x0769
+txectrl write 0x078C 0x01
 ```
+
+Disclaimer: This project is an independent, community-driven open-source tool and is not affiliated with, endorsed by, or associated with Tongfang Co., Ltd., Tuxedo Computers or any of their subsidiaries. All trademarks and brand names belong to their respective owners.

@@ -1,8 +1,8 @@
-//! # Monster Control Center GUI Application
+//! # Tuxeren Control Center GUI Application
 //!
 //! Tauri v2 desktop application for single-zone RGB keyboard control and EC management.
 
-use monster_control_center::{battery, device_info, display, ec, keyboard, get_chassis_project_id};
+use txectrl::{battery, device_info, display, ec, keyboard, get_chassis_project_id};
 use serde::Serialize;
 use std::process::Command;
 
@@ -88,38 +88,38 @@ fn get_battery_info() -> Result<battery::BatteryInfo, String> {
 }
 
 #[tauri::command]
-fn get_performance_state() -> Result<monster_control_center::performance::PerformanceState, String> {
-    monster_control_center::performance::get_performance_state()
+fn get_performance_state() -> Result<txectrl::performance::PerformanceState, String> {
+    txectrl::performance::get_performance_state()
 }
 
 #[tauri::command]
-fn get_system_metrics() -> Result<monster_control_center::performance::SystemMetrics, String> {
-    monster_control_center::performance::get_system_metrics()
+fn get_system_metrics() -> Result<txectrl::performance::SystemMetrics, String> {
+    txectrl::performance::get_system_metrics()
 }
 
 #[tauri::command]
 fn set_hardware_mode(mode: u8) -> Result<(), String> {
-    monster_control_center::performance::set_hardware_mode(mode)
+    txectrl::performance::set_hardware_mode(mode)
 }
 
 #[tauri::command]
 fn set_os_power_profile(profile: String) -> Result<(), String> {
-    monster_control_center::performance::set_os_profile(&profile)
+    txectrl::performance::set_os_profile(&profile)
 }
 
 #[tauri::command]
-fn get_general_settings() -> Result<monster_control_center::general::GeneralSettings, String> {
-    Ok(monster_control_center::general::get_general_settings())
+fn get_general_settings() -> Result<txectrl::general::GeneralSettings, String> {
+    Ok(txectrl::general::get_general_settings())
 }
 
 #[tauri::command]
 fn set_win_key_disabled(disabled: bool) -> Result<(), String> {
-    monster_control_center::general::set_win_key_disabled(disabled)
+    txectrl::general::set_win_key_disabled(disabled)
 }
 
 #[tauri::command]
 fn set_touchpad_disabled(disabled: bool) -> Result<(), String> {
-    monster_control_center::general::set_touchpad_disabled(disabled)
+    txectrl::general::set_touchpad_disabled(disabled)
 }
 
 #[tauri::command]
@@ -138,10 +138,10 @@ fn reset_display_settings() -> Result<display::DisplaySettings, String> {
 }
 
 fn main() {
-    monster_control_center::general::ensure_daemon_running();
-    monster_control_center::performance::start_polling_daemon();
-    if !monster_control_center::general::is_daemon_alive() {
-        monster_control_center::general::start_touchpad_daemon();
+    txectrl::general::ensure_daemon_running();
+    txectrl::performance::start_polling_daemon();
+    if !txectrl::general::is_daemon_alive() {
+        txectrl::general::start_touchpad_daemon();
     }
 
     tauri::Builder::default()
