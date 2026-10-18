@@ -1826,7 +1826,7 @@ dependencies = [
 
 [[package]]
 name = "monster-control-center"
-version = "1.0.2"
+version = "1.0.3"
 dependencies = [
  "evdev",
  "serde",
