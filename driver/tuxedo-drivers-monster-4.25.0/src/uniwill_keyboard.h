@@ -2472,7 +2472,7 @@ static int uniwill_keyboard_probe(struct platform_device *dev)
 	uw_show_hidden_bios_options();
 	uw_battery_init();
 	uw_hwmon_init(dev);
-	uw_platform_profile_init(dev);
+	// uw_platform_profile_init(dev); // Disabled: Keeps BIOS power mode and OS power profile fully independent without tuned/D-Bus collisions
 
 	// Ignore return value, it just means there is already a filter active
 	// which is fine, because it is probably just the upstream patch of this

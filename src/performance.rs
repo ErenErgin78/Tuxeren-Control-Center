@@ -90,8 +90,14 @@ pub struct PerformanceState {
     pub os_profile: String,
 }
 
-/// Reads the current hardware performance mode from ACPI platform_profile.
+/// Reads the current hardware performance mode from EC register 0x0751 or fallback.
 pub fn get_hardware_mode() -> Result<u8, String> {
+    if let Ok(fan_byte) = crate::ec::read_byte(0x0751) {
+        if let Some(mode) = PerformanceMode::from_fan_byte(fan_byte) {
+            return Ok(mode as u8);
+        }
+    }
+
     let profile_path = "/sys/firmware/acpi/platform_profile";
     if let Ok(content) = fs::read_to_string(profile_path) {
         let mode = match content.trim() {
@@ -197,31 +203,16 @@ pub fn set_os_profile(profile: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// Mod değişimini Linux platform_profile, Kernel RAPL ve CPU EPP limitlerine uygular.
+/// Mod değişimini EC donanım kayıtlarına (0x0751, 0x046A, 0x046B, 0x07AB) ve Kernel RAPL limitlerine uygular.
+/// OS güç kipi (D-Bus / tuned-ppd) ile çakışmaması için platform_profile dosyasına dokunmaz.
 pub fn apply_mode(mode: PerformanceMode) -> Result<(), String> {
-    let (pl1, pl2, epp, _) = mode.config();
+    let (pl1, pl2, epp, fan_byte) = mode.config();
 
-    let prof = match mode {
-        PerformanceMode::Office => "low-power",
-        PerformanceMode::Gaming => "balanced",
-        PerformanceMode::Turbo => "performance",
-    };
-
-    let primary_path = Path::new("/sys/firmware/acpi/platform_profile");
-    let fallback_path = Path::new("/sys/devices/platform/tuxedo_keyboard/platform-profile/platform-profile-0/profile");
-
-    let written = if primary_path.exists() {
-        fs::write(primary_path, prof)
-            .or_else(|_| if fallback_path.exists() { fs::write(fallback_path, prof) } else { Err(std::io::Error::new(std::io::ErrorKind::NotFound, "no fallback")) })
-    } else if fallback_path.exists() {
-        fs::write(fallback_path, prof)
-    } else {
-        Ok(())
-    };
-
-    if let Err(e) = written {
-        return Err(format!("Platform profile yazılamadı: Erişim engellendi ({})", e));
-    }
+    // 1. EC Donanım Düzeyi Kayıtları (Fan eğrisi, LED rengi ve PL sınırları)
+    let _ = crate::ec::write_byte(0x0751, fan_byte);
+    let _ = crate::ec::write_byte(0x046A, pl1);
+    let _ = crate::ec::write_byte(0x046B, pl2);
+    let _ = crate::ec::write_byte(0x07AB, mode as u8);
 
     // 2. Linux Kernel Intel RAPL Güç Sınırları
     if let Err(e) = apply_kernel_rapl(pl1 as u32, pl2 as u32) {

@@ -51,7 +51,7 @@ pub fn find_kbd_leds_path() -> Option<PathBuf> {
     None
 }
 
-/// Writes a single byte to an EC RAM register via Linux debugfs if available.
+/// Writes a single byte to an EC RAM register via debugfs or acpi_call.
 ///
 /// # Arguments
 /// * `reg` - 16-bit EC register address (e.g. `0x0751`).
@@ -64,10 +64,19 @@ pub fn write_byte(reg: u16, val: u8) -> Result<(), String> {
             }
         }
     }
+
+    if Path::new("/proc/acpi/call").exists() {
+        if let Ok(mut f) = OpenOptions::new().write(true).open("/proc/acpi/call") {
+            let cmd = format!("\\_SB.INOU.ECRW 0x{:04X} 0x{:02X}\n", reg, val);
+            let _ = f.write_all(cmd.as_bytes());
+            return Ok(());
+        }
+    }
+
     Ok(())
 }
 
-/// Reads a single byte from an EC RAM register via Linux debugfs if available.
+/// Reads a single byte from an EC RAM register via debugfs or acpi_call.
 ///
 /// # Arguments
 /// * `reg` - 16-bit EC register address.
@@ -77,6 +86,21 @@ pub fn read_byte(reg: u16) -> Result<u8, String> {
             let mut buf = [0u8; 1];
             if f.seek(SeekFrom::Start(reg as u64)).is_ok() && f.read_exact(&mut buf).is_ok() {
                 return Ok(buf[0]);
+            }
+        }
+    }
+
+    if Path::new("/proc/acpi/call").exists() {
+        if let Ok(mut f) = OpenOptions::new().write(true).read(true).open("/proc/acpi/call") {
+            let cmd = format!("\\_SB.INOU.ECRR 0x{:04X}\n", reg);
+            if f.write_all(cmd.as_bytes()).is_ok() {
+                let mut out = String::new();
+                if f.read_to_string(&mut out).is_ok() {
+                    let clean = out.trim().trim_matches('\0').trim_start_matches("0x");
+                    if let Ok(val) = u8::from_str_radix(clean, 16) {
+                        return Ok(val);
+                    }
+                }
             }
         }
     }

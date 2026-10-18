@@ -1,2 +1,14 @@
 /target
 /dist
+*.ko
+*.mod*
+*.o
+*.cmd
+modules.order
+Module.symvers
+driver/**/src/**/*.o
+driver/**/src/**/*.ko
+driver/**/src/**/*.mod*
+driver/**/src/**/*.cmd
+driver/**/src/**/modules.order
+driver/**/src/**/Module.symvers
