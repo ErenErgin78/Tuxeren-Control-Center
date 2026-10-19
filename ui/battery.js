@@ -61,7 +61,36 @@ async function updateBatteryUI() {
     // 3. Time remaining / Estimated shutdown
     const timeEl = document.getElementById("bat-time-remaining");
     if (timeEl) {
-      timeEl.textContent = data.estimated_time_str;
+      let timeText = data.estimated_time_str;
+      if (typeof t === "function") {
+        if (data.is_charging) {
+          if (data.status && data.status.toLowerCase() === "full") {
+            timeText = t("bat_status_full_mains");
+          } else {
+            timeText = t("bat_status_charging");
+          }
+        } else if (!data.on_battery) {
+          timeText = t("bat_status_not_charging");
+        } else if (data.estimated_minutes_left !== null && data.estimated_minutes_left !== undefined) {
+          const minsTotal = data.estimated_minutes_left;
+          const h = Math.floor(minsTotal / 60);
+          const m = minsTotal % 60;
+          if (h > 0) {
+            timeText = t("bat_time_hours_mins", { hours: h, mins: m });
+          } else {
+            timeText = t("bat_time_mins", { mins: m });
+          }
+        } else if (data.estimated_time_str === "No draw detected (0 mA)") {
+          timeText = t("bat_status_no_draw");
+        } else if (data.estimated_time_str === "Waiting for discharge rate...") {
+          timeText = t("bat_status_waiting_rate");
+        } else if (data.estimated_time_str === "Waiting for sensor data") {
+          timeText = t("bat_status_waiting_sensor");
+        } else {
+          timeText = t("bat_status_calculating");
+        }
+      }
+      timeEl.textContent = timeText;
     }
 
     // 4. Battery Health

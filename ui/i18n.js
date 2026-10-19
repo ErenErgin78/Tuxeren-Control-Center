@@ -101,6 +101,15 @@ const translations = {
     bat_not_measured: "0 W / Ölçülemedi",
     bat_not_supported: "Desteklenmiyor / 0",
     bat_unknown: "Bilinmiyor",
+    bat_status_full_mains: "Tam Dolu (Şebekeye Bağlı)",
+    bat_status_charging: "Şarj Ediliyor",
+    bat_status_not_charging: "Şarj Olmuyor (Şebeke Bağlı)",
+    bat_status_calculating: "Hesaplanıyor...",
+    bat_status_no_draw: "Tüketim tespit edilemiyor (0 mA)",
+    bat_status_waiting_rate: "Tüketim hızı bekleniyor...",
+    bat_status_waiting_sensor: "Sensör verisi bekleniyor",
+    bat_time_hours_mins: "{hours} saat {mins} dakika",
+    bat_time_mins: "{mins} dakika",
 
     // Display (display.html)
     display_title: "Görüntü Ayarları - Tuxeren Control Center",
@@ -283,6 +292,15 @@ const translations = {
     bat_not_measured: "0 W / Unmeasured",
     bat_not_supported: "Unsupported / 0",
     bat_unknown: "Unknown",
+    bat_status_full_mains: "Fully Charged (AC Connected)",
+    bat_status_charging: "Charging",
+    bat_status_not_charging: "Not Charging (AC Connected)",
+    bat_status_calculating: "Calculating...",
+    bat_status_no_draw: "No draw detected (0 mA)",
+    bat_status_waiting_rate: "Waiting for discharge rate...",
+    bat_status_waiting_sensor: "Waiting for sensor data",
+    bat_time_hours_mins: "{hours} hr {mins} min",
+    bat_time_mins: "{mins} min",
 
     // Display (display.html)
     display_title: "Display Settings - Tuxeren Control Center",

@@ -149,14 +149,14 @@ pub fn get_battery_info() -> Result<BatteryInfo, String> {
     let mut estimated_minutes_left: Option<u32> = None;
     let mut estimated_time_str = if is_charging {
         if status_raw.eq_ignore_ascii_case("full") {
-            "Tam Dolu (Şebekeye Bağlı)".to_string()
+            "Full (AC Connected)".to_string()
         } else {
-            "Şarj Ediliyor".to_string()
+            "Charging".to_string()
         }
     } else if !on_battery {
-        "Şarj Olmuyor (Şebeke Bağlı)".to_string()
+        "Not Charging (AC Connected)".to_string()
     } else {
-        "Hesaplanıyor...".to_string()
+        "Calculating...".to_string()
     };
 
     if on_battery {
@@ -167,12 +167,12 @@ pub fn get_battery_info() -> Result<BatteryInfo, String> {
                 let h = mins / 60;
                 let m = mins % 60;
                 estimated_time_str = if h > 0 {
-                    format!("{} saat {} dakika", h, m)
+                    format!("{}h {}m", h, m)
                 } else {
-                    format!("{} dakika", m)
+                    format!("{}m", m)
                 };
             } else {
-                estimated_time_str = "Tüketim tespit edilemiyor (0 mA)".to_string();
+                estimated_time_str = "No draw detected (0 mA)".to_string();
             }
         } else if let (Some(now_p), Some(p_w)) = (charge_now, power_watts) {
             if p_w > 0.05 {
@@ -181,15 +181,15 @@ pub fn get_battery_info() -> Result<BatteryInfo, String> {
                 let h = mins / 60;
                 let m = mins % 60;
                 estimated_time_str = if h > 0 {
-                    format!("{} saat {} dakika", h, m)
+                    format!("{}h {}m", h, m)
                 } else {
-                    format!("{} dakika", m)
+                    format!("{}m", m)
                 };
             } else {
-                estimated_time_str = "Tüketim hızı bekleniyor...".to_string();
+                estimated_time_str = "Waiting for discharge rate...".to_string();
             }
         } else {
-            estimated_time_str = "Sensör verisi bekleniyor".to_string();
+            estimated_time_str = "Waiting for sensor data".to_string();
         }
     }
 
@@ -199,7 +199,7 @@ pub fn get_battery_info() -> Result<BatteryInfo, String> {
         .or_else(|| read_u64(&bat_dir.join("cycle_count")).filter(|&c| c > 0).map(|c| c as u32));
 
     // Model name
-    let model = read_trimmed(&bat_dir.join("model_name")).unwrap_or_else(|| "Standart Batarya".to_string());
+    let model = read_trimmed(&bat_dir.join("model_name")).unwrap_or_else(|| "Standard Battery".to_string());
 
     Ok(BatteryInfo {
         percentage,
