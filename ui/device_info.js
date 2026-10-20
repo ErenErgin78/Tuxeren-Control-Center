@@ -66,6 +66,9 @@ async function loadDeviceInfo() {
   } catch (err) {
     console.error("Device info load error:", err);
     showToast(`${typeof t === "function" ? t("error_prefix") : "Hata:"} ${err}`);
+  } finally {
+    const overlay = document.getElementById("loading-overlay");
+    if (overlay) overlay.classList.add("hidden");
   }
 }
 

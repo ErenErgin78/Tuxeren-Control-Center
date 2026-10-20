@@ -346,7 +346,34 @@ fn get_cpu_temp() -> u32 {
     0
 }
 
+fn is_nvidia_gpu_suspended() -> bool {
+    let pci_dir = Path::new("/sys/bus/pci/devices");
+    if let Ok(entries) = pci_dir.read_dir() {
+        for entry in entries.flatten() {
+            let p = entry.path();
+            if let Ok(vendor) = fs::read_to_string(p.join("vendor")) {
+                if vendor.trim() == "0x10de" {
+                    if let Ok(class) = fs::read_to_string(p.join("class")) {
+                        if class.trim().starts_with("0x03") {
+                            if let Ok(status) = fs::read_to_string(p.join("power/runtime_status")) {
+                                if status.trim() == "suspended" {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    false
+}
+
 fn get_gpu_metrics() -> (f32, u32) {
+    if is_nvidia_gpu_suspended() {
+        return (0.0, 0);
+    }
+
     if let Ok(out) = Command::new("nvidia-smi")
         .args(["--query-gpu=utilization.gpu,temperature.gpu", "--format=csv,noheader,nounits"])
         .output()

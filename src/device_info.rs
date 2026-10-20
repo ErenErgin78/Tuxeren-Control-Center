@@ -7,6 +7,7 @@ use serde::Serialize;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
+use std::sync::OnceLock;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct DeviceInfo {
@@ -296,7 +297,13 @@ fn get_graphics_driver() -> String {
     "Mesa / DRM Açık Kaynak".to_string()
 }
 
+static CACHED_DEVICE_INFO: OnceLock<DeviceInfo> = OnceLock::new();
+
 pub fn get_device_info() -> Result<DeviceInfo, String> {
+    if let Some(cached) = CACHED_DEVICE_INFO.get() {
+        return Ok(cached.clone());
+    }
+
     // Panel 1: Cihaz & Kasa
     let model_name = read_sys_file("/sys/class/dmi/id/product_name")
         .unwrap_or_else(|| "Bilinmiyor".to_string());
@@ -346,7 +353,7 @@ pub fn get_device_info() -> Result<DeviceInfo, String> {
     let kernel = read_sys_file("/proc/sys/kernel/osrelease").unwrap_or_else(|| "-".to_string());
     let graphics_driver = get_graphics_driver();
 
-    Ok(DeviceInfo {
+    let info = DeviceInfo {
         model_name,
         vendor,
         chassis_code,
@@ -367,5 +374,8 @@ pub fn get_device_info() -> Result<DeviceInfo, String> {
         graphics_driver,
         driver_available,
         acpi_call_available: driver_available,
-    })
+    };
+
+    let _ = CACHED_DEVICE_INFO.set(info.clone());
+    Ok(info)
 }

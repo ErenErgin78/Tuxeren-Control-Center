@@ -159,6 +159,7 @@ const translations = {
     info_desktop_protocol: "Masaüstü & Protokol:",
     info_kernel: "Linux Çekirdeği:",
     info_graphics_driver: "Grafik Sürücüsü:",
+    loading_device_info: "Donanım bilgileri taranıyor...",
 
     // Keyboard Light (keyboard_light.html)
     kbd_title: "Aydınlatma Ayarları - Tuxeren Control Center",
@@ -350,6 +351,7 @@ const translations = {
     info_desktop_protocol: "Desktop & Protocol:",
     info_kernel: "Linux Kernel:",
     info_graphics_driver: "Graphics Driver:",
+    loading_device_info: "Probing hardware devices...",
 
     // Keyboard Light (keyboard_light.html)
     kbd_title: "Lighting Settings - Tuxeren Control Center",
