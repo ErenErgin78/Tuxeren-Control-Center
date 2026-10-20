@@ -12,3 +12,4 @@ driver/**/src/**/*.mod*
 driver/**/src/**/*.cmd
 driver/**/src/**/modules.order
 driver/**/src/**/Module.symvers
+Report.md
