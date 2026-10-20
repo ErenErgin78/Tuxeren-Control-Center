@@ -12,6 +12,7 @@
 
 <p align="center">
   <a href="#features">Features</a> •
+  <a href="#screenshots">Screenshots</a> •
   <a href="#installation">Installation</a> •
   <a href="#launching-the-gui">Launching the GUI</a> •
   <a href="#cli-usage">CLI Usage</a> •
@@ -60,6 +61,16 @@ Tuxeren Control Center (`txectrl`) is a Rust-based hardware control suite design
 - Platform identification: Chassis family code (e.g. GM7, PF4/PF5), motherboard SKU, and serial number.
 - BIOS and EC firmware version reporting.
 - Component breakdown: CPU, integrated graphics (iGPU), dedicated GPU (dGPU), memory, kernel version, and display server (Wayland / X11).
+
+---
+
+## Screenshots
+
+| System Overview & Telemetry | Performance & Power Modes |
+| :---: | :---: |
+| [![System Overview & Telemetry](ui/assets/ui_main.png)](ui/assets/ui_main.png) | [![Performance & Power Modes](ui/assets/ui_performance.png)](ui/assets/ui_performance.png) |
+| **Keyboard Backlight Control** | **Display Calibration** |
+| [![Keyboard Backlight Control](ui/assets/ui_keyboard.png)](ui/assets/ui_keyboard.png) | [![Display Calibration](ui/assets/ui_display.png)](ui/assets/ui_display.png) |
 
 ---
 
