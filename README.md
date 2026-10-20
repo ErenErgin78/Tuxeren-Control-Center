@@ -1,94 +1,148 @@
-# Tuxeren Control Center (TxeCtrl) - Linux
+<div align="center">
 
-A clean-room, Rust CLI and Tauri desktop application for hardware control on Uniwill / Tongfang chassis laptops running Linux.
+<img src="ui/assets/tuxeren_logo_256.png" alt="Tuxeren Control Center Logo" width="140" height="140" />
 
-## Kernel Driver Architecture: Transition from `acpi_call` to `tuxedo-drivers`
+# Tuxeren Control Center (TxeCtrl)
 
-Historically, this project relied on the third-party `acpi_call` kernel module to execute raw AML methods (`\_SB.INOU.ECRR` and `\_SB.INOU.ECRW`). While functional for initial reverse engineering, `acpi_call` posed major drawbacks:
-- It was blocked under UEFI Secure Boot and Linux Kernel Lockdown.
-- It required elevated permissions (`/proc/acpi/call` rw access) and raw byte parsing in userspace.
+**Hardware Control Center and CLI for Uniwill / Tongfang Chassis Laptops on Linux**
 
-The project has transitioned to the official **`tuxedo-drivers` (Uniwill / Tongfang WMI and platform driver stack)** and standard Linux kernel subsystems:
-- **Keyboard Lighting**: Managed via the Linux LED class (`/sys/devices/platform/tuxedo_keyboard/leds/rgb:kbd_backlight/`) utilizing `multi_intensity` and `brightness` attributes.
-- **Hardware I/O & Fan Telemetry**: Controlled through the character device `/dev/tuxedo_io` and native sysfs platform nodes.
-- **Power & Thermal Management**: Integrated with Linux ACPI `platform_profile` and D-Bus `power-profiles-daemon`, backed by Intel RAPL and CPU EPP sysfs knobs.
-- **Input & Fn-Lock**: Controlled natively via `/sys/devices/platform/tuxedo_keyboard/fn_lock` and low-level `evdev` event monitoring.
+[![Latest Release](https://img.shields.io/github/v/release/ErenErgin78/Monster-Control-Center-Linux?color=00c853&label=Release&style=for-the-badge)](https://github.com/ErenErgin78/Monster-Control-Center-Linux/releases)
+[![License](https://img.shields.io/badge/License-GPL--3.0-orange.svg?style=for-the-badge)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20x86__64-purple.svg?style=for-the-badge)](#)
 
-## What Is Implemented
+<p align="center">
+  <a href="#features">Features</a> •
+  <a href="#installation">Installation</a> •
+  <a href="#launching-the-gui">Launching the GUI</a> •
+  <a href="#cli-usage">CLI Usage</a> •
+  <a href="#technical-architecture">Technical Architecture</a>
+</p>
 
-The codebase is organized into modular Rust components with both a standalone CLI and a Tauri v2 desktop application, featuring six core subsystems:
+</div>
 
-- **Desktop Application (`gui.rs` + `ui/`)**:
-  - Native Tauri v2 desktop interface matching the OEM Control Center experience.
-  - Automated `udev` rules configuration granting non-root user access to keyboard backlight nodes and `/dev/tuxedo_io`.
-- **Keyboard Lighting (`keyboard.rs` + `ui/keyboard_light.html`)**:
-  - 11 optically balanced color presets (`cyan`, `ice_blue`, `blue`, `purple`, `magenta`, `pink`, `red`, `orange`, `yellow`, `green`, `white`) and `off`.
-  - Custom color picker with an interactive 2D HSV canvas (saturation & value) and hue slider, plus quick-apply swatch and a 5-color recent history.
-  - Hardware brightness levels (`0`..`4`, from off to maximum).
-  - Direct kernel multicolor LED integration without requiring root privileges or manual Fn-key toggling.
-- **Performance Management & System Telemetry (`performance.rs` + `ui/performance.html`)**:
-  - **Hardware/BIOS Power Modes**: Office, Gaming, and Turbo modes applied via driver interfaces, EC fallbacks, and Intel RAPL power caps.
-  - **OS Power Profiles**: Bi-directional integration with Linux power profiles (`power-saver`, `balanced`, `performance`) via D-Bus `power-profiles-daemon`.
-  - **Chassis Mode Button Synchronization**: Background hardware watcher thread monitoring physical mode button toggles with desktop OSD notification sync.
-  - **Live System Telemetry Dashboard**: Real-time polling for CPU usage % & temp (°C), GPU usage % & temp (°C), RAM usage & capacity (GB), Disk space usage & capacity, cooling fan RPMs, and live network throughput.
-- **General Laptop Settings (`general.rs` + `ui/general.html`)**:
-  - **Windows Key Lock**: Hardware-level toggle via `tuxedo_keyboard/fn_lock` (eliminates environment-specific `gsettings` or `xmodmap` hacks).
-  - **Touchpad Lock & Hardware Switch**: Software touchpad disable toggle, integrated with low-level `evdev` listening for the physical touchpad double-tap corner switch (F24 key event).
-  - **Background Daemon & IPC (`daemon`)**: Lightweight background service with Unix domain socket IPC managing input locks and hardware event listening.
-- **Display Calibration (`display.rs` + `ui/display.html`)**:
-  - Screen brightness adjustment via sysfs backlight interface.
-  - Color temperature calibration (Kelvin scale, 3000K to 9000K).
-  - Saturation and gamma curve correction.
-  - Per-channel RGB calibration (Red, Green, Blue sliders).
-  - Factory reset function to restore neutral calibration.
-- **Battery Health & Power Telemetry (`battery.rs` + `ui/battery.html`)**:
-  - Real-time battery charge percentage, charging state (Charging, Discharging, Full), and power source (AC adapter vs Battery).
-  - Estimated discharge duration remaining.
-  - Battery health and wear level calculation (Full Charge Capacity vs Design Capacity).
-  - Electrical telemetry: Operating voltage, instantaneous power draw rate (Watts), and power source type.
-  - Hardware charging cycle count queried via sysfs power supply class with EC fallbacks.
-- **Device & Hardware Information (`device_info.rs` + `ui/device_info.html`)**:
-  - **Device & Chassis**: Laptop model name, vendor, Tongfang chassis/platform family code (e.g. GM7, PF4/PF5), motherboard SKU/revision, and serial number.
-  - **Firmware & Controller**: BIOS version and release date, EC firmware version, and active platform kernel driver (`tuxedo-drivers (uniwill_wmi)`).
-  - **Core Hardware**: Processor (CPU), Integrated Graphics (iGPU), Dedicated GPU (dGPU), System RAM, and storage drives.
-  - **OS & Environment**: Linux distribution/version, desktop environment & display protocol (Wayland / X11), kernel version, and active graphics drivers.
-- **Driver & Hardware Communication Layer (`ec.rs`)**:
-  - Abstracted hardware interface prioritizing official kernel sysfs endpoints and `/dev/tuxedo_io`.
-  - Direct debugfs EC RAM inspection (`/sys/kernel/debug/ec/ec0/io`) for low-level diagnostic analysis.
+---
 
-## Installation & Desktop Integration
+## Features
 
-Run the installer script or make target to build and install both the GUI desktop app and CLI to `~/.local/bin`, register the desktop launcher icon, and set up non-root `udev` permissions:
+Tuxeren Control Center (`txectrl`) is a Rust-based hardware control suite designed for Tongfang and Uniwill chassis laptops (such as Monster Notebook and Tuxedo devices) running Linux. It provides both a native Tauri v2 desktop interface and a standalone command-line tool.
+
+### Keyboard Backlight Control
+- 11 color presets (`cyan`, `ice_blue`, `blue`, `purple`, `magenta`, `pink`, `red`, `orange`, `yellow`, `green`, `white`) and quick off state.
+- Custom color picker with interactive 2D HSV canvas, hue slider, and a 5-color recent history.
+- 4-level hardware brightness scaling (0 to 4).
+- Direct kernel LED integration via non-root `udev` permissions.
+
+### Performance Management and Telemetry
+- **Hardware Power Modes**: Switch between Office, Gaming, and Turbo hardware profiles backed by driver interfaces, EC fallbacks, and Intel RAPL limits.
+- **OS Power Profiles**: Bi-directional integration with Linux `power-profiles-daemon` via D-Bus (`power-saver`, `balanced`, `performance`).
+- **Physical Mode Button Sync**: Hardware listener thread for physical chassis mode buttons with desktop OSD notification sync.
+- **System Telemetry Dashboard**: Real-time polling for CPU/GPU usage and temperatures, RAM and disk usage, fan RPMs, and network throughput.
+
+### General Laptop Settings & Interface
+- **Multi-Language Support (i18n)**: Full interface localization with instant switching between English and Turkish.
+- **Windows Key Lock**: Hardware-level lock toggled via platform sysfs attributes.
+- **Touchpad Lock and Hardware Switch**: Software disable toggle with low-level `evdev` monitoring for corner double-tap (F24) hardware events.
+- **One-Click Driver Permission Grants**: GUI banner with `pkexec` privilege elevation to configure driver modules (`uniwill_wmi`, `tuxedo_keyboard`, `tuxedo_io`) and `udev` access rules without manual terminal intervention.
+
+### Display Calibration
+- Screen backlight brightness adjustment.
+- Color temperature calibration (Kelvin scale, 3000K to 9000K).
+- Saturation, gamma correction, and per-channel RGB balance adjustments.
+- Factory reset option for neutral calibration.
+
+### Battery Health and Power Monitoring
+- Charge percentage, charging state (Charging, Discharging, Full), and power source.
+- Estimated discharge time remaining.
+- Battery health calculations (Full Charge Capacity vs Design Capacity) and wear level.
+- Electrical metrics: Voltage, instantaneous power draw rate (Watts), and cycle count.
+
+### Device and Chassis Information
+- Platform identification: Chassis family code (e.g. GM7, PF4/PF5), motherboard SKU, and serial number.
+- BIOS and EC firmware version reporting.
+- Component breakdown: CPU, integrated graphics (iGPU), dedicated GPU (dGPU), memory, kernel version, and display server (Wayland / X11).
+
+---
+
+## Installation
+
+### Pre-built Packages (Recommended)
+
+Pre-compiled packages are available on the [Releases](https://github.com/ErenErgin78/Monster-Control-Center-Linux/releases) page:
+
+- **Fedora / RHEL / openSUSE (`.rpm`)**:
+  ```bash
+  sudo dnf install ./tuxeren-control-center-*.rpm
+  ```
+- **Ubuntu / Debian (`.deb`)**:
+  ```bash
+  sudo apt install ./tuxeren-control-center-*.deb
+  ```
+- **Universal Linux (`.AppImage`)**:
+  ```bash
+  chmod +x tuxeren-control-center-*.AppImage
+  ./tuxeren-control-center-*.AppImage
+  ```
+
+---
+
+### Building from Source
+
+Clone the repository:
 
 ```bash
-./install.sh
+git clone https://github.com/ErenErgin78/Monster-Control-Center-Linux.git
+cd Monster-Control-Center-Linux
 ```
 
-Once installed, **Tuxeren Control Center** can be launched from your application launcher or by running:
+#### Using Makefile
+
+- **Build and install RPM locally (Fedora / RHEL)**:
+  ```bash
+  make install-rpm
+  ```
+- **Build and install DEB locally (Ubuntu / Debian)**:
+  ```bash
+  make install-deb
+  ```
+- **Local user installation** (`~/.local/bin`):
+  ```bash
+  make install
+  # or directly: ./install.sh
+  ```
+
+Ensure `~/.local/bin` is in your `PATH` if using user-level installation. Re-logging or reloading `udev` rules may be required for non-root hardware access to take immediate effect.
+
+---
+
+## Launching the GUI
+
+Once installed, **Tuxeren Control Center** integrates with your desktop environment and appears in your system's application menu/launcher (e.g. GNOME Dash, KDE Kickoff, Application Drawer) alongside your regular apps. You can launch it by searching for **Tuxeren Control Center** or running:
 
 ```bash
 txectrl-gui
 ```
 
+---
+
 ## CLI Usage
 
-The standalone CLI is available in PATH:
+Hardware controls can be managed directly via the standalone `txectrl` command-line utility:
 
 ```bash
-# View chassis project ID
-txectrl chassis
-
-# System and hardware specifications
+# Display system and hardware specifications
 txectrl info
 
-# Keyboard lighting presets
+# Show chassis project identifier
+txectrl chassis
+
+# Keyboard backlight presets
 txectrl color cyan 4
 txectrl color off
 
-# Custom RGB
+# Custom RGB color and brightness (R G B Brightness)
 txectrl color rgb 255 60 0 4
 
-# Performance modes and telemetry
+# Performance modes and monitoring
 txectrl perf
 txectrl perf turbo
 txectrl perf os performance
@@ -100,12 +154,33 @@ txectrl display brightness 80
 txectrl display temp 6500
 txectrl display reset
 
-# Background daemon (touchpad F24 switch & performance sync)
+# Background daemon (touchpad F24 switch and mode button sync)
 txectrl daemon
 
-# Direct EC register debugging
+# Low-level EC register access (read / write)
 txectrl read 0x0769
 txectrl write 0x078C 0x01
 ```
 
-Disclaimer: This project is an independent, community-driven open-source tool and is not affiliated with, endorsed by, or associated with Tongfang Co., Ltd., Tuxedo Computers or any of their subsidiaries. All trademarks and brand names belong to their respective owners.
+---
+
+## Technical Architecture
+
+The suite interacts with laptop hardware via standard Linux kernel subsystems and `tuxedo-drivers`:
+
+- **Keyboard Backlight**: Managed through the Linux LED class (`/sys/devices/platform/tuxedo_keyboard/leds/rgb:kbd_backlight/`) utilizing `multi_intensity` and `brightness` attributes.
+- **Hardware I/O & Fan Telemetry**: Interfaced through the `/dev/tuxedo_io` character device and platform sysfs nodes.
+- **Power & Thermal Controls**: Integrated with Linux ACPI `platform_profile`, D-Bus `power-profiles-daemon`, Intel RAPL, and CPU EPP sysfs nodes.
+- **Input & Fn-Lock**: Managed via `/sys/devices/platform/tuxedo_keyboard/fn_lock` and low-level `evdev` event monitoring.
+- **EC Interface**: Hardware abstraction layer in `src/ec.rs` prioritizing sysfs endpoints and `/dev/tuxedo_io`, with debugfs EC RAM inspection (`/sys/kernel/debug/ec/ec0/io`) available for low-level diagnostics.
+- **dGPU Power-State Optimization**: Checks NVIDIA dGPU runtime power state via sysfs before querying `nvidia-smi` to prevent PCIe D3cold wake latency, with cached static specs via `std::sync::OnceLock`.
+
+---
+
+<div align="center">
+
+<sub>Disclaimer: This project is an independent, community-driven open-source tool and is not affiliated with, endorsed by, or associated with Tongfang Co., Ltd., Tuxedo Computers, Monster Notebook, or any of their subsidiaries. All trademarks belong to their respective owners.</sub>
+
+</div>
+
+
