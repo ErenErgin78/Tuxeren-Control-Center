@@ -413,18 +413,17 @@ fn find_hwmon_fans() -> (Option<PathBuf>, Option<PathBuf>) {
 fn get_fan_metrics() -> (u16, u8, u16, u8) {
     let (fan1_path, fan2_path) = find_hwmon_fans();
 
-    let cpu_rpm = fan1_path
-        .and_then(|p| fs::read_to_string(p).ok())
-        .and_then(|s| s.trim().parse::<u16>().ok())
-        .unwrap_or(0);
+    let parse_fan = |path: Option<PathBuf>| {
+        let rpm = path
+            .and_then(|p| fs::read_to_string(p).ok())
+            .and_then(|s| s.trim().parse::<u16>().ok())
+            .unwrap_or(0);
+        let duty = ((rpm as f32 / 5500.0) * 100.0).round().clamp(0.0, 100.0) as u8;
+        (rpm, duty)
+    };
 
-    let gpu_rpm = fan2_path
-        .and_then(|p| fs::read_to_string(p).ok())
-        .and_then(|s| s.trim().parse::<u16>().ok())
-        .unwrap_or(0);
-
-    let cpu_duty = ((cpu_rpm as f32 / 5500.0) * 100.0).round().clamp(0.0, 100.0) as u8;
-    let gpu_duty = ((gpu_rpm as f32 / 5500.0) * 100.0).round().clamp(0.0, 100.0) as u8;
+    let (cpu_rpm, cpu_duty) = parse_fan(fan1_path);
+    let (gpu_rpm, gpu_duty) = parse_fan(fan2_path);
 
     (cpu_rpm, cpu_duty, gpu_rpm, gpu_duty)
 }

@@ -49,6 +49,10 @@ fn read_sys_file(path: &str) -> Option<String> {
         .filter(|s| !s.is_empty())
 }
 
+fn read_sys_or(path: &str, default: &str) -> String {
+    read_sys_file(path).unwrap_or_else(|| default.to_string())
+}
+
 /// Maps the EC chassis project ID (register 0x0740) to known Tongfang chassis families.
 pub fn chassis_family_name(project_id: u8) -> &'static str {
     match project_id {
@@ -305,10 +309,8 @@ pub fn get_device_info() -> Result<DeviceInfo, String> {
     }
 
     // Panel 1: Cihaz & Kasa
-    let model_name = read_sys_file("/sys/class/dmi/id/product_name")
-        .unwrap_or_else(|| "Bilinmiyor".to_string());
-    let vendor = read_sys_file("/sys/class/dmi/id/sys_vendor")
-        .unwrap_or_else(|| "Bilinmiyor".to_string());
+    let model_name = read_sys_or("/sys/class/dmi/id/product_name", "Bilinmiyor");
+    let vendor = read_sys_or("/sys/class/dmi/id/sys_vendor", "Bilinmiyor");
 
     let chassis_project_id = crate::get_chassis_project_id().unwrap_or(0);
     let chassis_family = chassis_family_name(chassis_project_id);
@@ -318,7 +320,7 @@ pub fn get_device_info() -> Result<DeviceInfo, String> {
         chassis_family.to_string()
     };
 
-    let board_name = read_sys_file("/sys/class/dmi/id/board_name").unwrap_or_else(|| "-".to_string());
+    let board_name = read_sys_or("/sys/class/dmi/id/board_name", "-");
     let board_ver = read_sys_file("/sys/class/dmi/id/board_version");
     let board_sku_rev = match board_ver {
         Some(ver) if !ver.is_empty() && ver != "-" => format!("{} (Rev: {})", board_name, ver),
@@ -331,9 +333,9 @@ pub fn get_device_info() -> Result<DeviceInfo, String> {
         .unwrap_or_else(|| "Bilinmiyor".to_string());
 
     // Panel 2: Firmware & Denetleyici
-    let bios_version = read_sys_file("/sys/class/dmi/id/bios_version").unwrap_or_else(|| "-".to_string());
-    let bios_date = read_sys_file("/sys/class/dmi/id/bios_date").unwrap_or_else(|| "-".to_string());
-    let ec_version = read_sys_file("/sys/class/dmi/id/ec_firmware_release").unwrap_or_else(|| "-".to_string());
+    let bios_version = read_sys_or("/sys/class/dmi/id/bios_version", "-");
+    let bios_date = read_sys_or("/sys/class/dmi/id/bios_date", "-");
+    let ec_version = read_sys_or("/sys/class/dmi/id/ec_firmware_release", "-");
     let driver_available = crate::ec::is_driver_available();
     let platform_driver = if driver_available {
         "tuxedo-drivers (uniwill_wmi)".to_string()
@@ -350,7 +352,7 @@ pub fn get_device_info() -> Result<DeviceInfo, String> {
     // Panel 4: İşletim Sistemi & Sürücüler
     let os = get_os_info();
     let desktop_protocol = get_desktop_and_protocol();
-    let kernel = read_sys_file("/proc/sys/kernel/osrelease").unwrap_or_else(|| "-".to_string());
+    let kernel = read_sys_or("/proc/sys/kernel/osrelease", "-");
     let graphics_driver = get_graphics_driver();
 
     let info = DeviceInfo {

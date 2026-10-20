@@ -162,34 +162,28 @@ pub fn get_battery_info() -> Result<BatteryInfo, String> {
     if on_battery {
         if let (Some(now), Some(cur)) = (charge_now, current_now) {
             if cur > 0 {
-                let mins = ((now as u128 * 60) / cur as u128) as u32;
-                estimated_minutes_left = Some(mins);
-                let h = mins / 60;
-                let m = mins % 60;
-                estimated_time_str = if h > 0 {
-                    format!("{}h {}m", h, m)
-                } else {
-                    format!("{}m", m)
-                };
+                estimated_minutes_left = Some(((now as u128 * 60) / cur as u128) as u32);
             } else {
                 estimated_time_str = "No draw detected (0 mA)".to_string();
             }
         } else if let (Some(now_p), Some(p_w)) = (charge_now, power_watts) {
             if p_w > 0.05 {
-                let mins = ((now_p as f64 / (p_w as f64 * 1_000_000.0)) * 60.0) as u32;
-                estimated_minutes_left = Some(mins);
-                let h = mins / 60;
-                let m = mins % 60;
-                estimated_time_str = if h > 0 {
-                    format!("{}h {}m", h, m)
-                } else {
-                    format!("{}m", m)
-                };
+                estimated_minutes_left = Some(((now_p as f64 / (p_w as f64 * 1_000_000.0)) * 60.0) as u32);
             } else {
                 estimated_time_str = "Waiting for discharge rate...".to_string();
             }
         } else {
             estimated_time_str = "Waiting for sensor data".to_string();
+        }
+
+        if let Some(mins) = estimated_minutes_left {
+            let h = mins / 60;
+            let m = mins % 60;
+            estimated_time_str = if h > 0 {
+                format!("{}h {}m", h, m)
+            } else {
+                format!("{}m", m)
+            };
         }
     }
 
