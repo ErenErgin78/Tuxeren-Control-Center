@@ -45,8 +45,8 @@ Keywords=txectrl;tuxeren;monster;control;center;rgb;keyboard;backlight;uniwill;t
 StartupWMClass=txectrl-gui
 EOF
 
-cp -f "$DESKTOP_DIR/txectrl-gui.desktop" "$DESKTOP_DIR/org.txectrl.app.desktop"
-chmod +x "$DESKTOP_DIR/txectrl-gui.desktop" "$DESKTOP_DIR/org.txectrl.app.desktop"
+cp -f "$DESKTOP_DIR/txectrl-gui.desktop" "$DESKTOP_DIR/org.txectrl.tcc.desktop"
+chmod +x "$DESKTOP_DIR/txectrl-gui.desktop" "$DESKTOP_DIR/org.txectrl.tcc.desktop"
 
 # 5. Update desktop caches
 update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true

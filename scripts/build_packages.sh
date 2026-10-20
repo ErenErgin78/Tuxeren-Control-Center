@@ -99,7 +99,7 @@ echo "[+] Building release binaries..."
 (cd "$PROJECT_ROOT" && cargo build --release)
 
 echo "[+] Running Tauri build..."
-BUILD_ARGS=()
+BUILD_ARGS=(--no-binary-patching)
 if [ -n "$TARGET_BUNDLES" ]; then
     echo "    Target bundles: $TARGET_BUNDLES"
     BUILD_ARGS+=(--bundles "$TARGET_BUNDLES")

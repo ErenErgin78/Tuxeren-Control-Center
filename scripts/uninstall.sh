@@ -22,6 +22,7 @@ rm -f "$HOME/.local/bin/txectrl" \
       "$HOME/.local/bin/monster-control-center" \
       "$HOME/.local/bin/monster-control-center-gui" \
       "$HOME/.local/share/applications/txectrl-gui.desktop" \
+      "$HOME/.local/share/applications/org.txectrl.tcc.desktop" \
       "$HOME/.local/share/applications/org.txectrl.app.desktop" \
       "$HOME/.local/share/applications/monster-control-center-gui.desktop" \
       "$HOME/.local/share/applications/com.monster.controlcenter.desktop" \
