@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="ui/assets/tuxeren_logo_256.png" alt="Tuxeren Control Center Logo" width="140" height="140" />
+<img src="ui/assets/tuxeren_fan_animated.svg" alt="Tuxeren Control Center Logo" width="140" height="140" />
 
 # Tuxeren Control Center (TxeCtrl)
 
