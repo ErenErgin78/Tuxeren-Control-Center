@@ -33,9 +33,26 @@ async function loadDeviceInfo() {
       if (permBanner) permBanner.classList.remove("hidden");
     }
 
+    const localizeValue = (str) => {
+      if (!str || typeof str !== "string") return str || "-";
+      return str
+        .replace(/Çekirdek/g, t("val_cores", "Çekirdek"))
+        .replace(/İş Parçacığı/g, t("val_threads", "İş Parçacığı"))
+        .replace(/Kullanılabilir/g, t("val_available", "Kullanılabilir"))
+        .replace(/Tek Kanal/g, t("val_single_channel", "Tek Kanal"))
+        .replace(/Çift Kanal/g, t("val_dual_channel", "Çift Kanal"))
+        .replace(/Proje ID/g, t("val_project_id", "Proje ID"))
+        .replace(/Yüklü Değil/g, t("val_not_installed", "Yüklü Değil"))
+        .replace(/Open Kernel Sürücüsü/g, t("val_open_kernel_driver", "Open Kernel Driver"))
+        .replace(/Sürücüsü/g, t("val_driver", "Driver"))
+        .replace(/Açık Kaynak/g, t("val_open_source", "Open Source"))
+        .replace(/Bilinmiyor/g, t("val_unknown", "Unknown"))
+        .replace(/^Yok$/, t("val_none", "None"));
+    };
+
     const setVal = (id, val) => {
       const el = document.getElementById(id);
-      if (el) el.textContent = val || "-";
+      if (el) el.textContent = localizeValue(val);
     };
 
     // Panel 1: Cihaz & Kasa (Sol Üst)
@@ -84,5 +101,9 @@ if (btnGrantPerm) {
     }
   });
 }
+
+window.addEventListener("mcc_language_changed", () => {
+  loadDeviceInfo();
+});
 
 loadDeviceInfo();
