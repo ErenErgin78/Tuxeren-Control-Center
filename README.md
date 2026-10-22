@@ -13,6 +13,7 @@
 <p align="center">
   <a href="#features">Features</a> •
   <a href="#screenshots">Screenshots</a> •
+  <a href="#benchmark--resource-usage">Benchmark</a> •
   <a href="#installation">Installation</a> •
   <a href="#launching-the-gui">Launching the GUI</a> •
   <a href="#cli-usage">CLI Usage</a> •
@@ -71,6 +72,25 @@ Tuxeren Control Center (`txectrl`) is a Rust-based hardware control suite design
 | [![System Overview & Telemetry](ui/assets/ui_main.png)](ui/assets/ui_main.png) | [![Performance & Power Modes](ui/assets/ui_performance.png)](ui/assets/ui_performance.png) |
 | **Keyboard Backlight Control** | **Display Calibration** |
 | [![Keyboard Backlight Control](ui/assets/ui_keyboard.png)](ui/assets/ui_keyboard.png) | [![Display Calibration](ui/assets/ui_display.png)](ui/assets/ui_display.png) |
+
+---
+
+## Benchmark & Resource Usage
+
+Benchmark comparison with Tuxedo Control Center using the same `tuxedo-drivers` kernel module:
+
+> Measured on Monster Tulpar T7 V20.7 over an interactive 30-second UI page navigation session (switching between Dashboard, Performance, Keyboard Backlight, Display, and Battery) sampling full process trees (GUI, renderers, GPU processes, and background daemons).
+
+| Metric | Tuxedo Control Center (Electron + Node) | Tuxeren / Monster CC (Tauri + Rust) | Difference / Efficiency |
+| :--- | :---: | :---: | :---: |
+| **Background Daemon RAM** | 114.33 MB | 2.54 MB | **-97.78%** *(~45x lighter)* |
+| **UI Navigation RAM Growth** | +251.91 MB | +28.11 MB | **-88.84%** *(negligible bloat/leak)* |
+| **Peak RAM Consumption** | 1233.21 MB | 539.74 MB | **-56.23%** |
+| **Average Total RAM (RSS)** | 1122.26 MB | 518.28 MB | **-53.82%** |
+| **GUI Average RAM** | 1007.93 MB | 515.74 MB | **-48.83%** |
+| **Average CPU Usage** | 10.16% | 7.49% | **-26.28%** |
+| **Peak CPU Spike** | 24.80% | 19.20% | **-22.58%** |
+| **Idle Baseline CPU** | 1.90% | 0.00% | **0.00%** *(true sleep)* |
 
 ---
 
