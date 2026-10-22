@@ -21,11 +21,16 @@ rm -f "$HOME/.local/bin/txectrl" \
       "$HOME/.local/bin/txectrl-gui" \
       "$HOME/.local/bin/monster-control-center" \
       "$HOME/.local/bin/monster-control-center-gui" \
+      "$HOME/.local/share/applications/tuxeren-control-center.desktop" \
       "$HOME/.local/share/applications/txectrl-gui.desktop" \
       "$HOME/.local/share/applications/org.txectrl.tcc.desktop" \
       "$HOME/.local/share/applications/org.txectrl.app.desktop" \
       "$HOME/.local/share/applications/monster-control-center-gui.desktop" \
       "$HOME/.local/share/applications/com.monster.controlcenter.desktop" \
+      "$HOME/.local/share/metainfo/tuxeren-control-center.metainfo.xml" \
+      "$HOME/.local/share/icons/hicolor/256x256/apps/tuxeren-control-center.png" \
+      "$HOME/.local/share/icons/hicolor/128x128/apps/tuxeren-control-center.png" \
+      "$HOME/.local/share/icons/hicolor/scalable/apps/tuxeren-control-center.svg" \
       "$HOME/.local/share/icons/hicolor/128x128/apps/txectrl.png" \
       "$HOME/.local/share/icons/hicolor/128x128/apps/txectrl-gui.png" \
       "$HOME/.local/share/icons/hicolor/128x128/apps/monster-control-center.png"
@@ -53,6 +58,9 @@ update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
 gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
 if [ -d "/usr/share/applications" ]; then
     update-desktop-database /usr/share/applications 2>/dev/null || true
+fi
+if command -v appstreamcli &>/dev/null; then
+    appstreamcli refresh-cache --force 2>/dev/null || true
 fi
 
 echo "[✓] Tuxeren Control Center successfully uninstalled."

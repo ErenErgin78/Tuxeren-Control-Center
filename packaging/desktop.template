@@ -1,11 +1,11 @@
 [Desktop Entry]
-Categories={{categories}}
-{{#if comment}}
-Comment={{comment}}
-{{/if}}
+Name=Tuxeren Control Center
+Comment=Hardware, Keyboard RGB and EC Control for Uniwill / Tongfang Laptops
+Comment[tr]=Uniwill / Tongfang Laptoplar İçin Donanım, Klavye RGB ve EC Kontrol Merkezi
 Exec=txectrl-gui
 StartupWMClass=txectrl-gui
-Icon={{icon}}
-Name={{name}}
+Icon=tuxeren-control-center
 Terminal=false
 Type=Application
+Categories=Settings;HardwareSettings;
+Keywords=txectrl;tuxeren;monster;control;center;rgb;keyboard;backlight;uniwill;tongfang;

@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Tuxeren Control Center",
+  "productName": "tuxeren-control-center",
   "version": "1.1.3",
   "identifier": "org.txectrl.tcc",
   "build": {
@@ -26,6 +26,7 @@
   },
   "bundle": {
     "active": true,
+    "license": "GPL-3.0-or-later",
     "targets": [
       "deb",
       "appimage",
@@ -35,6 +36,7 @@
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
+      "icons/256x256.png",
       "icons/icon.png"
     ],
     "category": "Utility",
@@ -52,11 +54,39 @@
           "gcc",
           "make"
         ],
+        "files": {
+          "/usr/share/metainfo/tuxeren-control-center.metainfo.xml": "packaging/tuxeren-control-center.metainfo.xml",
+          "/usr/share/swcatalog/xml/tuxeren-control-center.xml": "packaging/tuxeren-control-center.swcatalog.xml",
+          "/usr/share/pixmaps/tuxeren-control-center.png": "icons/256x256.png",
+          "/usr/share/pixmaps/txectrl-gui.png": "icons/256x256.png",
+          "/usr/share/icons/hicolor/256x256/apps/tuxeren-control-center.png": "icons/256x256.png",
+          "/usr/share/icons/hicolor/256x256/apps/txectrl-gui.png": "icons/256x256.png",
+          "/usr/share/icons/hicolor/128x128/apps/tuxeren-control-center.png": "icons/128x128.png",
+          "/usr/share/icons/hicolor/128x128/apps/txectrl-gui.png": "icons/128x128.png",
+          "/usr/share/icons/hicolor/64x64/apps/tuxeren-control-center.png": "icons/64x64.png",
+          "/usr/share/icons/hicolor/64x64/apps/txectrl-gui.png": "icons/64x64.png",
+          "/usr/share/icons/hicolor/32x32/apps/tuxeren-control-center.png": "icons/32x32.png",
+          "/usr/share/icons/hicolor/scalable/apps/tuxeren-control-center.svg": "icons/tuxeren-control-center.svg"
+        },
         "postInstallScript": "packaging/rpm-postinstall.sh",
         "preRemoveScript": "packaging/rpm-preremove.sh"
       },
       "deb": {
-        "desktopTemplate": "packaging/desktop.template"
+        "desktopTemplate": "packaging/desktop.template",
+        "files": {
+          "/usr/share/metainfo/tuxeren-control-center.metainfo.xml": "packaging/tuxeren-control-center.metainfo.xml",
+          "/usr/share/swcatalog/xml/tuxeren-control-center.xml": "packaging/tuxeren-control-center.swcatalog.xml",
+          "/usr/share/pixmaps/tuxeren-control-center.png": "icons/256x256.png",
+          "/usr/share/pixmaps/txectrl-gui.png": "icons/256x256.png",
+          "/usr/share/icons/hicolor/256x256/apps/tuxeren-control-center.png": "icons/256x256.png",
+          "/usr/share/icons/hicolor/256x256/apps/txectrl-gui.png": "icons/256x256.png",
+          "/usr/share/icons/hicolor/128x128/apps/tuxeren-control-center.png": "icons/128x128.png",
+          "/usr/share/icons/hicolor/128x128/apps/txectrl-gui.png": "icons/128x128.png",
+          "/usr/share/icons/hicolor/64x64/apps/tuxeren-control-center.png": "icons/64x64.png",
+          "/usr/share/icons/hicolor/64x64/apps/txectrl-gui.png": "icons/64x64.png",
+          "/usr/share/icons/hicolor/32x32/apps/tuxeren-control-center.png": "icons/32x32.png",
+          "/usr/share/icons/hicolor/scalable/apps/tuxeren-control-center.svg": "icons/tuxeren-control-center.svg"
+        }
       }
     }
   }

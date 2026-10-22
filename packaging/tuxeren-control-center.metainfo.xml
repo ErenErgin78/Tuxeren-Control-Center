@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>tuxeren-control-center</id>
+  <pkgname>tuxeren-control-center</pkgname>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Tuxeren Control Center</name>
+  <name xml:lang="tr">Tuxeren Kontrol Merkezi</name>
+  <summary>Hardware, Keyboard RGB and EC Control for Uniwill / Tongfang Laptops</summary>
+  <summary xml:lang="tr">Uniwill / Tongfang Laptoplar İçin Donanım, Klavye RGB ve EC Kontrol Merkezi</summary>
+  <description>
+    <p>
+      Tuxeren Control Center (TxeCtrl) is a comprehensive hardware control suite designed for Tongfang and Uniwill chassis laptops (such as Monster Notebook and Tuxedo devices) running Linux.
+    </p>
+    <p xml:lang="tr">
+      Tuxeren Control Center (TxeCtrl), Linux işletim sisteminde çalışan Tongfang ve Uniwill kasa dizüstü bilgisayarlar (Monster Notebook ve Tuxedo cihazları) için tasarlanmış kapsamlı bir donanım kontrol merkezidir.
+    </p>
+    <p>
+      Features include custom RGB keyboard backlight configuration, hardware power profile switching (Office, Gaming, Turbo), real-time system performance telemetry, display calibration, and battery health monitoring.
+    </p>
+    <p xml:lang="tr">
+      Özellikler arasında özel RGB klavye aydınlatma kontrolü, donanım güç profilleri geçişi (Ofis, Oyun, Turbo), gerçek zamanlı sistem telemetrisi, ekran renk ve parlaklık kalibrasyonu ile batarya sağlığı takibi yer alır.
+    </p>
+  </description>
+  <launchable type="desktop-id">tuxeren-control-center.desktop</launchable>
+  <icon type="stock">tuxeren-control-center</icon>
+  <categories>
+    <category>Settings</category>
+    <category>HardwareSettings</category>
+    <category>Utility</category>
+  </categories>
+  <url type="homepage">https://github.com/ErenErgin78/Monster-Control-Center-Linux</url>
+  <developer id="org.txectrl">
+    <name>Eren Ergin</name>
+  </developer>
+  <screenshots>
+    <screenshot type="default">
+      <caption>System Overview and Telemetry Dashboard</caption>
+      <caption xml:lang="tr">Sistem Genel Bakış ve Telemetri Paneli</caption>
+      <image>https://raw.githubusercontent.com/ErenErgin78/Monster-Control-Center-Linux/master/ui/assets/ui_main.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Performance Profiles and Power Modes</caption>
+      <caption xml:lang="tr">Performans Profilleri ve Güç Modları</caption>
+      <image>https://raw.githubusercontent.com/ErenErgin78/Monster-Control-Center-Linux/master/ui/assets/ui_performance.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Keyboard Backlight RGB Control</caption>
+      <caption xml:lang="tr">Klavye RGB Aydınlatma Kontrolü</caption>
+      <image>https://raw.githubusercontent.com/ErenErgin78/Monster-Control-Center-Linux/master/ui/assets/ui_keyboard.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Display Color and Brightness Calibration</caption>
+      <caption xml:lang="tr">Ekran Renk ve Parlaklık Kalibrasyonu</caption>
+      <image>https://raw.githubusercontent.com/ErenErgin78/Monster-Control-Center-Linux/master/ui/assets/ui_display.png</image>
+    </screenshot>
+  </screenshots>
+  <content_rating type="oars-1.1" />
+  <releases>
+    <release version="1.1.3" date="2026-10-22">
+      <description>
+        <p>Release 1.1.3: Improved AppStream store metadata, high-resolution desktop icon integration, and system stability updates.</p>
+        <p xml:lang="tr">Sürüm 1.1.3: Geliştirilmiş AppStream mağaza metaverileri, yüksek çözünürlüklü masaüstü simge entegrasyonu ve kararlılık iyileştirmeleri.</p>
+      </description>
+    </release>
+  </releases>
+</component>

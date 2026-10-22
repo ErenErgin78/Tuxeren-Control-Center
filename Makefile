@@ -43,7 +43,7 @@ install-rpm: build-rpm ## Build RPM and reinstall on local system (sudo dnf)
 		bash scripts/uninstall.sh; \
 	fi
 	@echo "[+] Installing freshly built Tuxeren Control Center RPM package..."
-	@RPM_FILE=$$(ls dist/Tuxeren*Control*Center-$${APP_VERSION:-*}-*.rpm dist/txectrl-$${APP_VERSION:-*}-*.rpm dist/*$${APP_VERSION:-*}*.rpm 2>/dev/null | sort -V | tail -n 1); \
+	@RPM_FILE=$$(ls dist/tuxeren-control-center-$${APP_VERSION:-*}-*.rpm dist/Tuxeren*Control*Center-$${APP_VERSION:-*}-*.rpm dist/txectrl-$${APP_VERSION:-*}-*.rpm dist/*$${APP_VERSION:-*}*.rpm 2>/dev/null | sort -V | tail -n 1); \
 	if [ -z "$$RPM_FILE" ]; then \
 		RPM_FILE=$$(ls dist/*.rpm 2>/dev/null | sort -V | tail -n 1); \
 	fi; \
@@ -62,7 +62,7 @@ build-deb: ## Build DEB package only
 
 install-deb: build-deb ## Build DEB and reinstall on local system (sudo apt)
 	@echo "[+] Installing Tuxeren Control Center DEB package..."
-	@DEB_FILE=$$(ls dist/Tuxeren*Control*Center*$${APP_VERSION:-*}*.deb dist/txectrl*$${APP_VERSION:-*}*.deb dist/*$${APP_VERSION:-*}*.deb 2>/dev/null | sort -V | tail -n 1); \
+	@DEB_FILE=$$(ls dist/tuxeren-control-center*$${APP_VERSION:-*}*.deb dist/Tuxeren*Control*Center*$${APP_VERSION:-*}*.deb dist/txectrl*$${APP_VERSION:-*}*.deb dist/*$${APP_VERSION:-*}*.deb 2>/dev/null | sort -V | tail -n 1); \
 	if [ -z "$$DEB_FILE" ]; then \
 		DEB_FILE=$$(ls dist/*.deb 2>/dev/null | sort -V | tail -n 1); \
 	fi; \
@@ -83,7 +83,10 @@ build-appimage: ## Build AppImage package only
 
 install-appimage: build-appimage ## Build AppImage and integrate to user system (~/.local/bin)
 	@echo "[+] Installing Tuxeren Control Center AppImage to ~/.local/bin..."
-	@mkdir -p ~/.local/bin ~/.local/share/applications ~/.local/share/icons/hicolor/128x128/apps
+	@mkdir -p ~/.local/bin ~/.local/share/applications ~/.local/share/metainfo \
+		~/.local/share/icons/hicolor/256x256/apps \
+		~/.local/share/icons/hicolor/128x128/apps \
+		~/.local/share/icons/hicolor/scalable/apps
 	@APPIMAGE_PATH=$$(ls dist/Tuxeren*Control*Center*$${APP_VERSION:-*}*.AppImage dist/txectrl*$${APP_VERSION:-*}*.AppImage dist/*$${APP_VERSION:-*}*.AppImage 2>/dev/null | sort -V | tail -n 1); \
 	if [ -z "$$APPIMAGE_PATH" ]; then \
 		APPIMAGE_PATH=$$(ls dist/*.AppImage 2>/dev/null | sort -V | tail -n 1); \
@@ -91,10 +94,20 @@ install-appimage: build-appimage ## Build AppImage and integrate to user system 
 	if [ -n "$$APPIMAGE_PATH" ]; then \
 		cp "$$APPIMAGE_PATH" ~/.local/bin/txectrl-gui && chmod +x ~/.local/bin/txectrl-gui; \
 	fi
+	@cp -f packaging/tuxeren-control-center.desktop ~/.local/share/applications/tuxeren-control-center.desktop 2>/dev/null || true
+	@cp -f packaging/tuxeren-control-center.metainfo.xml ~/.local/share/metainfo/tuxeren-control-center.metainfo.xml 2>/dev/null || true
+	@if [ -f icons/256x256.png ]; then \
+		cp -f icons/256x256.png ~/.local/share/icons/hicolor/256x256/apps/tuxeren-control-center.png; \
+	fi
 	@if [ -f icons/128x128.png ]; then \
-		cp icons/128x128.png ~/.local/share/icons/hicolor/128x128/apps/txectrl.png; \
+		cp -f icons/128x128.png ~/.local/share/icons/hicolor/128x128/apps/tuxeren-control-center.png; \
+		cp -f icons/128x128.png ~/.local/share/icons/hicolor/128x128/apps/txectrl.png; \
+	fi
+	@if [ -f icons/tuxeren-control-center.svg ]; then \
+		cp -f icons/tuxeren-control-center.svg ~/.local/share/icons/hicolor/scalable/apps/tuxeren-control-center.svg; \
 	fi
 	@update-desktop-database ~/.local/share/applications 2>/dev/null || true
+	@gtk-update-icon-cache -f -t ~/.local/share/icons/hicolor 2>/dev/null || true
 	@echo "========================================================"
 	@echo "  Tuxeren Control Center AppImage installed to ~/.local/bin/txectrl-gui"
 	@echo "========================================================"

@@ -21,36 +21,58 @@ cp -f target/release/txectrl "$BIN_DIR/txectrl"
 cp -f target/release/txectrl-gui "$BIN_DIR/txectrl-gui"
 chmod +x "$BIN_DIR/txectrl" "$BIN_DIR/txectrl-gui"
 
-# 3. Setup application icon
-ICON_DIR="$HOME/.local/share/icons/hicolor/128x128/apps"
-mkdir -p "$ICON_DIR"
-echo "[*] Installing application icon..."
-cp -f icons/128x128.png "$ICON_DIR/txectrl.png"
-cp -f icons/128x128.png "$ICON_DIR/txectrl-gui.png"
+# 3. Setup application icons
+mkdir -p "$HOME/.local/share/icons/hicolor/256x256/apps" \
+         "$HOME/.local/share/icons/hicolor/128x128/apps" \
+         "$HOME/.local/share/icons/hicolor/64x64/apps" \
+         "$HOME/.local/share/icons/hicolor/scalable/apps" \
+         "$HOME/.local/share/pixmaps"
+echo "[*] Installing application icons..."
+cp -f icons/256x256.png "$HOME/.local/share/icons/hicolor/256x256/apps/tuxeren-control-center.png"
+cp -f icons/256x256.png "$HOME/.local/share/icons/hicolor/256x256/apps/txectrl-gui.png"
+cp -f icons/256x256.png "$HOME/.local/share/pixmaps/tuxeren-control-center.png"
+cp -f icons/256x256.png "$HOME/.local/share/pixmaps/txectrl-gui.png"
+cp -f icons/128x128.png "$HOME/.local/share/icons/hicolor/128x128/apps/tuxeren-control-center.png"
+cp -f icons/128x128.png "$HOME/.local/share/icons/hicolor/128x128/apps/txectrl-gui.png"
+cp -f icons/64x64.png "$HOME/.local/share/icons/hicolor/64x64/apps/tuxeren-control-center.png"
+cp -f icons/64x64.png "$HOME/.local/share/icons/hicolor/64x64/apps/txectrl-gui.png"
+cp -f icons/tuxeren-control-center.svg "$HOME/.local/share/icons/hicolor/scalable/apps/tuxeren-control-center.svg"
+cp -f icons/128x128.png "$HOME/.local/share/icons/hicolor/128x128/apps/txectrl.png"
 
-# 4. Setup Desktop Launcher
+# 4. Setup Desktop Launcher and AppStream MetaInfo
 DESKTOP_DIR="$HOME/.local/share/applications"
-mkdir -p "$DESKTOP_DIR"
-echo "[*] Registering desktop application..."
-cat << 'EOF' > "$DESKTOP_DIR/txectrl-gui.desktop"
+METAINFO_DIR="$HOME/.local/share/metainfo"
+SWCATALOG_DIR="$HOME/.local/share/swcatalog/xml"
+mkdir -p "$DESKTOP_DIR" "$METAINFO_DIR" "$SWCATALOG_DIR"
+
+echo "[*] Registering desktop application and AppStream metadata..."
+cp -f packaging/tuxeren-control-center.metainfo.xml "$METAINFO_DIR/tuxeren-control-center.metainfo.xml"
+cp -f packaging/tuxeren-control-center.swcatalog.xml "$SWCATALOG_DIR/tuxeren-control-center.xml"
+
+cat << 'EOF' > "$DESKTOP_DIR/tuxeren-control-center.desktop"
 [Desktop Entry]
 Name=Tuxeren Control Center
-Comment=Keyboard RGB & EC Control for Uniwill / Tongfang Laptops
+Comment=Hardware, Keyboard RGB and EC Control for Uniwill / Tongfang Laptops
+Comment[tr]=Uniwill / Tongfang Laptoplar İçin Donanım, Klavye RGB ve EC Kontrol Merkezi
 Exec=txectrl-gui
-Icon=txectrl
+Icon=tuxeren-control-center
 Terminal=false
 Type=Application
-Categories=System;HardwareSettings;
+Categories=Settings;HardwareSettings;
 Keywords=txectrl;tuxeren;monster;control;center;rgb;keyboard;backlight;uniwill;tongfang;
 StartupWMClass=txectrl-gui
 EOF
 
-cp -f "$DESKTOP_DIR/txectrl-gui.desktop" "$DESKTOP_DIR/org.txectrl.tcc.desktop"
-chmod +x "$DESKTOP_DIR/txectrl-gui.desktop" "$DESKTOP_DIR/org.txectrl.tcc.desktop"
+cp -f "$DESKTOP_DIR/tuxeren-control-center.desktop" "$DESKTOP_DIR/txectrl-gui.desktop"
+cp -f "$DESKTOP_DIR/tuxeren-control-center.desktop" "$DESKTOP_DIR/org.txectrl.tcc.desktop"
+chmod +x "$DESKTOP_DIR/tuxeren-control-center.desktop" "$DESKTOP_DIR/txectrl-gui.desktop" "$DESKTOP_DIR/org.txectrl.tcc.desktop"
 
 # 5. Update desktop caches
 update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
 gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
+if command -v appstreamcli &>/dev/null; then
+    appstreamcli refresh-cache --force 2>/dev/null || true
+fi
 
 # 6. Setup Systemd User Service for low-power background daemon
 echo "[*] Setting up systemd user service for background daemon..."
